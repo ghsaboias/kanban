@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  clerkId   String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  assignedCards Card[] @relation("CardAssignee")
+  createdCards  Card[] @relation("CardCreator")
+
+  @@map("users")
+}
+
+model Board {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  columns Column[]
+
+  @@map("boards")
+}
+
+model Column {
+  id       String @id @default(cuid())
+  title    String
+  position Int
+  boardId  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  cards Card[]
+
+  @@map("columns")
+}
+
+model Card {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  priority    Priority  @default(MEDIUM)
+  position    Int
+  columnId    String
+  assigneeId  String?
+  createdById String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  column    Column @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  assignee  User?  @relation("CardAssignee", fields: [assigneeId], references: [id])
+  createdBy User   @relation("CardCreator", fields: [createdById], references: [id])
+
+  @@map("cards")
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
