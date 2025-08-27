@@ -1,14 +1,25 @@
 # Sistema de Quadro Kanban
 
-Uma aplicação colaborativa de quadro Kanban construída com React, TypeScript e Express.
+Uma aplicação colaborativa de quadro Kanban construída com React, TypeScript e Express. Sistema desenvolvido para uso interno em empresa do mercado financeiro, focado em flexibilidade, organização e atribuição eficiente de tarefas.
 
 ## Stack Técnico
 
 ### Frontend
 - **Vite + React + TypeScript** - Desenvolvimento rápido e segurança de tipos
+- Interface responsiva para criação dinâmica de colunas e cards
+- Preparado para integração com drag & drop e rich text editor
 
 ### Backend
-- **Express + TypeScript** - Servidor de API
+- **Express + TypeScript** - Servidor de API REST completo
+- **Prisma ORM + SQLite** - Banco de dados com relacionamentos tipados
+- **Sistema de posicionamento** - Suporte nativo para drag & drop
+- **Middleware de erros** - Tratamento de erros em português
+
+### Banco de Dados
+- **4 Modelos principais**: User, Board, Column, Card
+- **Relacionamentos completos**: Usuários podem ser atribuídos a cards
+- **Sistema de posições**: Ordenação automática para drag & drop
+- **IDs seguros**: CUID para melhor performance e segurança
 
 ## Como Começar
 
@@ -29,7 +40,19 @@ cd kanban
 npm install
 ```
 
-3. Inicie os servidores de desenvolvimento:
+3. Configure o banco de dados:
+```bash
+# Gera o cliente Prisma
+npm run db:generate
+
+# Aplica o schema ao banco
+npm run db:push
+
+# Testa a conexão (opcional)
+npm run test:db
+```
+
+4. Inicie os servidores de desenvolvimento:
 ```bash
 npm run dev
 ```
@@ -54,13 +77,119 @@ npm run dev:backend
 
 ```
 kanban/
-├── frontend/          # Frontend React + Vite
-├── backend/           # Servidor de API Express
-├── shared/           # Tipos TypeScript compartilhados
-├── package.json      # Configuração do workspace
-└── README.md         # Este arquivo
+├── frontend/          # Frontend React + Vite + TypeScript
+├── backend/           # API REST Express + TypeScript
+│   ├── src/
+│   │   ├── routes/    # Rotas CRUD (boards, columns, cards, users)
+│   │   ├── middleware/# Tratamento de erros
+│   │   ├── types/     # Tipos TypeScript da API
+│   │   └── index.ts   # Servidor principal
+├── prisma/           # Schema e banco SQLite
+├── generated/        # Cliente Prisma auto-gerado
+├── shared/          # Tipos TypeScript compartilhados (futuro)
+└── package.json     # Configuração do workspace
 ```
 
-## Endpoints da API
+## API REST Completa
 
-- `GET /api/health` - Endpoint de verificação de saúde
+### Boards (Quadros)
+```bash
+GET    /api/boards          # Lista todos os boards
+POST   /api/boards          # Cria novo board
+GET    /api/boards/:id      # Obtém board com colunas e cards
+PUT    /api/boards/:id      # Atualiza board
+DELETE /api/boards/:id      # Remove board
+```
+
+### Columns (Colunas)
+```bash
+POST   /api/boards/:id/columns    # Cria coluna no board
+PUT    /api/columns/:id           # Atualiza coluna
+DELETE /api/columns/:id           # Remove coluna
+POST   /api/columns/:id/reorder   # Reordena colunas
+```
+
+### Cards (Tarefas)
+```bash
+POST   /api/columns/:id/cards     # Cria card na coluna
+GET    /api/cards/:id             # Obtém detalhes do card
+PUT    /api/cards/:id             # Atualiza card
+DELETE /api/cards/:id             # Remove card
+POST   /api/cards/:id/move        # Move card entre colunas
+```
+
+### Users (Usuários)
+```bash
+GET    /api/users          # Lista usuários
+POST   /api/users          # Cria usuário
+GET    /api/users/:id      # Obtém usuário com cards
+PUT    /api/users/:id      # Atualiza usuário
+DELETE /api/users/:id      # Remove usuário
+```
+
+### Health Check
+```bash
+GET    /api/health         # Status do servidor
+```
+
+## Exemplos de Uso da API
+
+### Criar um usuário
+```bash
+curl -X POST http://localhost:3001/api/users \
+  -H "Content-Type: application/json" \
+  -d '{"name": "João Silva", "email": "joao@empresa.com"}'
+```
+
+### Criar um board
+```bash
+curl -X POST http://localhost:3001/api/boards \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Projeto Sprint 1", "description": "Desenvolvimento da API"}'
+```
+
+### Criar uma coluna
+```bash
+curl -X POST http://localhost:3001/api/boards/{boardId}/columns \
+  -H "Content-Type: application/json" \
+  -d '{"title": "A Fazer"}'
+```
+
+### Criar um card
+```bash
+curl -X POST http://localhost:3001/api/columns/{columnId}/cards \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Implementar autenticação",
+    "description": "Integrar Clerk para controle de acesso",
+    "priority": "HIGH",
+    "createdById": "{userId}"
+  }'
+```
+
+### Mover card entre colunas
+```bash
+curl -X POST http://localhost:3001/api/cards/{cardId}/move \
+  -H "Content-Type: application/json" \
+  -d '{"columnId": "{newColumnId}", "position": 0}'
+```
+
+## Comandos de Desenvolvimento
+
+```bash
+# Database
+npm run db:generate    # Regenera cliente Prisma
+npm run db:push        # Atualiza schema no banco
+npm run test:db        # Testa conexão
+
+# Desenvolvimento
+npm run dev           # Inicia frontend + backend
+npm run dev:frontend  # Apenas React (5173)
+npm run dev:backend   # Apenas Express (3001)
+```
+
+## Tecnologias
+
+**Backend:** Express + TypeScript + Prisma + SQLite  
+**Frontend:** Vite + React + TypeScript  
+**Banco:** 4 modelos (User, Board, Column, Card) com relacionamentos
