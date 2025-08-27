@@ -1,0 +1,14 @@
+PLAN.md
+node_modules/
+*/node_modules/
+.env
+.env.local
+.env.*.local
+dist/
+build/
+*/dist/
+*/build/
+*.log
+.DS_Store
+CLAUDE.md
+PRD.md
