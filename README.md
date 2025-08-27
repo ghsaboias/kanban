@@ -1,66 +1,66 @@
-# Kanban Board System
+# Sistema de Quadro Kanban
 
-A collaborative Kanban board application built with React, TypeScript, and Express.
+Uma aplicação colaborativa de quadro Kanban construída com React, TypeScript e Express.
 
-## Tech Stack
+## Stack Técnico
 
 ### Frontend
-- **Vite + React + TypeScript** - Fast development and type safety
+- **Vite + React + TypeScript** - Desenvolvimento rápido e segurança de tipos
 
 ### Backend
-- **Express + TypeScript** - API server
+- **Express + TypeScript** - Servidor de API
 
-## Getting Started
+## Como Começar
 
-### Prerequisites
+### Pré-requisitos
 - Node.js 18+
-- npm or yarn
+- npm ou yarn
 
-### Installation
+### Instalação
 
-1. Clone the repository:
+1. Clone o repositório:
 ```bash
 git clone https://github.com/ghsaboias/kanban
 cd kanban
 ```
 
-2. Install dependencies:
+2. Instale as dependências:
 ```bash
 npm install
 ```
 
-3. Start development servers:
+3. Inicie os servidores de desenvolvimento:
 ```bash
 npm run dev
 ```
 
-This will start:
+Isso irá iniciar:
 - Frontend: http://localhost:5173
 - Backend: http://localhost:3001
 
-### Individual Development
+### Desenvolvimento Individual
 
-To run frontend and backend separately:
+Para executar frontend e backend separadamente:
 
 ```bash
-# Frontend only
+# Apenas frontend
 npm run dev:frontend
 
-# Backend only  
+# Apenas backend  
 npm run dev:backend
 ```
 
-## Project Structure
+## Estrutura do Projeto
 
 ```
 kanban/
-├── frontend/          # React + Vite frontend
-├── backend/           # Express API server
-├── shared/           # Shared TypeScript types
-├── package.json      # Workspace configuration
-└── README.md         # This file
+├── frontend/          # Frontend React + Vite
+├── backend/           # Servidor de API Express
+├── shared/           # Tipos TypeScript compartilhados
+├── package.json      # Configuração do workspace
+└── README.md         # Este arquivo
 ```
 
-## API Endpoints
+## Endpoints da API
 
-- `GET /api/health` - Health check endpoint
+- `GET /api/health` - Endpoint de verificação de saúde
