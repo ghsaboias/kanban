@@ -14,3 +14,4 @@ CLAUDE.md
 PRD.md
 /generated/prisma
 test-db.js
+prisma/dev.db
