@@ -169,4 +169,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Phase 2 (v0.2.0)**: ✅ REST API - Complete backend API with all CRUD operations
 - **Phase 3 (v0.3.0)**: ✅ Frontend Integration - Connect React app to REST API
 - **Phase 4 (v0.4.0)**: ✅ Complete CRUD Operations - Full CRUD in UI with TypeScript, validation, confirmations
-- **Phase 5 (Planned)**: 🎯 Advanced Features - Drag & drop, real-time updates, authentication
+- **Phase 5 (Planned)**: 🎯 Advanced Features - Drag & drop (cards and columns), card detail modal/editing, rich text editor, real-time updates, authentication
