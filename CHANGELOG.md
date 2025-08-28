@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2025-08-28
+
 ### Added
 - Card detail modal with 200ms open/close transition (backdrop fade + panel slide), Escape-to-close, body scroll lock, and focus management.
 - Reliable click-to-open for cards by using dnd-kit `PointerSensor` with distance activation.
