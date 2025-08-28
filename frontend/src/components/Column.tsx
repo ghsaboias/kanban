@@ -30,6 +30,7 @@ interface ColumnProps {
   onColumnDeleted?: (columnId: string) => void
   onCardUpdated?: (updatedCard: CardData) => void
   onCardDeleted?: (cardId: string) => void
+  onCardClick?: (card: CardData) => void
 }
 
 interface User {
@@ -38,7 +39,7 @@ interface User {
   email: string
 }
 
-export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted, onCardUpdated, onCardDeleted }: ColumnProps) {
+export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted, onCardUpdated, onCardDeleted, onCardClick }: ColumnProps) {
   const [showCreateCard, setShowCreateCard] = useState(false)
   const [createLoading, setCreateLoading] = useState(false)
   const [users, setUsers] = useState<User[]>([])
@@ -177,7 +178,6 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
     }}>
       <div style={{ 
         display: 'flex', 
-        justifyContent: 'space-between', 
         alignItems: 'center',
         marginBottom: '8px'
       }}>
@@ -213,44 +213,100 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
               fontSize: '16px', 
               cursor: 'pointer',
               flex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
               color: '#000'
             }}
             onClick={() => setEditingTitle(true)}
           >
             {column.title}
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                handleDeleteColumn()
-              }}
-              disabled={deleteLoading}
-              style={{
-                backgroundColor: deleteLoading ? '#999' : '#dc3545',
-                color: 'white',
-                border: 'none',
-                borderRadius: '3px',
-                padding: '2px 6px',
-                cursor: deleteLoading ? 'not-allowed' : 'pointer',
-                fontSize: '10px',
-                marginLeft: 'auto'
-              }}
-            >
-              {deleteLoading ? '...' : '×'}
-            </button>
           </h3>
         )}
-        <span style={{ 
-          backgroundColor: '#ddd', 
-          borderRadius: '12px', 
-          padding: '4px 8px', 
-          fontSize: '12px',
-          color: '#333'
-        }}>
-          {column.cards.length}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div
+            aria-label="Card count"
+            style={{
+              backgroundColor: '#eef2f7',
+              color: '#374151',
+              height: '24px',
+              minWidth: '24px',
+              padding: '0 8px',
+              boxSizing: 'border-box',
+              borderRadius: '9999px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '12px',
+              fontWeight: 600,
+              lineHeight: 1,
+              userSelect: 'none'
+            }}
+          >
+            {column.cards.length > 99 ? '99+' : column.cards.length}
+          </div>
+          <div style={{ width: '1px', height: '16px', backgroundColor: '#e5e7eb' }} />
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleDeleteColumn()
+            }}
+            disabled={deleteLoading}
+            style={{
+              backgroundColor: deleteLoading ? '#999' : 'white',
+              color: deleteLoading ? 'white' : '#dc3545',
+              border: deleteLoading ? '1px solid #999' : '1px solid #e5e7eb',
+              width: '24px',
+              height: '24px',
+              minWidth: '24px',
+              padding: 0,
+              boxSizing: 'border-box',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: deleteLoading ? 'not-allowed' : 'pointer',
+              lineHeight: 1,
+              colorScheme: 'light'
+            }}
+            title={deleteLoading ? 'Deleting…' : 'Delete column'}
+            onMouseEnter={(e) => {
+              if (!deleteLoading) {
+                e.currentTarget.style.backgroundColor = '#dc3545'
+                e.currentTarget.style.borderColor = '#dc3545'
+                e.currentTarget.style.color = 'white'
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!deleteLoading) {
+                e.currentTarget.style.backgroundColor = 'white'
+                e.currentTarget.style.borderColor = '#e5e7eb'
+                e.currentTarget.style.color = '#dc3545'
+              }
+            }}
+          >
+            {deleteLoading ? (
+              '…'
+            ) : (
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+                focusable="false"
+                style={{ display: 'block' }}
+              >
+                <path
+                  d="M3 6h18M8 6V4h8v2m1 0-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
       
       <div ref={setDroppableNodeRef} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -263,6 +319,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                 card={card}
                 onCardUpdated={onCardUpdated}
                 onCardDeleted={onCardDeleted}
+                onCardClick={onCardClick}
               />
             ))}
         </SortableContext>
