@@ -404,6 +404,8 @@ export function Board({ boardId }: BoardProps) {
                       border: '1px solid #ddd',
                       borderRadius: '4px',
                       fontSize: '14px',
+                      color: '#213547',
+                      backgroundColor: '#f8f9fa',
                       marginBottom: '12px'
                     }}
                     autoFocus

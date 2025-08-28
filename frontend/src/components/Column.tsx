@@ -194,26 +194,41 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                 setEditingTitle(false)
               }
             }}
+            onPointerDown={(e) => e.stopPropagation()}
             style={{
               border: '1px solid #007bff',
               borderRadius: '4px',
-              padding: '4px 8px',
+              boxSizing: 'border-box',
+              padding: '0 8px',
               fontSize: '16px',
-              fontWeight: '600',
+              fontWeight: 600,
+              lineHeight: '24px',
+              height: '24px',
+              color: '#213547',
               background: 'white',
               flex: 1,
-              marginRight: '8px'
+              marginRight: '8px',
+              minWidth: 0,
+              outline: 'none'
             }}
             autoFocus
+            aria-label="Edit column title"
           />
         ) : (
           <h3 
             style={{ 
               margin: 0, 
               fontSize: '16px', 
+              fontWeight: 600,
+              lineHeight: '24px',
+              height: '24px',
               cursor: 'pointer',
               flex: 1,
-              color: '#000'
+              color: '#000',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              minWidth: 0
             }}
             onClick={() => setEditingTitle(true)}
           >

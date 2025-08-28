@@ -186,7 +186,9 @@ export function BoardsList() {
                   padding: '8px 12px',
                   border: '1px solid #ddd',
                   borderRadius: '4px',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  color: '#213547',
+                  backgroundColor: '#f9f9f9'
                 }}
                 required
               />
@@ -206,6 +208,8 @@ export function BoardsList() {
                   border: '1px solid #ddd',
                   borderRadius: '4px',
                   fontSize: '14px',
+                  color: '#213547',
+                  backgroundColor: '#f9f9f9',
                   resize: 'vertical'
                 }}
               />
