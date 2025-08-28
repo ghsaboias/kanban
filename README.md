@@ -202,6 +202,7 @@ npm run dev:backend   # Apenas Express (3001)
   - `DndContext` e `SortableContext` em `Board.tsx` (colunas: horizontal; cards: vertical em cada coluna).
   - Colunas: `SortableColumn` (`Sortable`) com ids `column-<id>`.
   - Cards: `SortableCard` (`Sortable`) com ids `card-<id>` e coluna droppable `column-<id>` para suportar drop em colunas vazias.
+  - Sensor: `PointerSensor` com `activationConstraint: { distance: 8 }` para evitar que cliques sejam consumidos pelo início do drag (um clique sempre abre o modal do card).
   - Em `onDragEnd`, distinguimos colunas vs cards pelos prefixos, aplicamos atualização otimista e normalizamos `position` (0..N-1).
   - Persistência via API: 
     - Colunas: `POST /api/columns/:id/reorder { position }`.
@@ -216,3 +217,11 @@ npm run dev:backend   # Apenas Express (3001)
 
 ### Decisão técnica
 - Preferimos dnd-kit a alternativas (React DnD, @hello-pangea/dnd) por flexibilidade, acessibilidade e suporte nativo a múltiplos sensores. O PRD incentiva uso de bibliotecas prontas.
+
+## Detalhes do Card (Modal)
+
+- **Abertura**: clique no card abre um modal lateral com transição suave de 200ms (fade do backdrop + slide do painel).
+- **Fechamento**: `Esc`, clique no backdrop, no “×” ou ao salvar. O conteúdo permanece montado por ~200ms para completar a animação, depois desmonta.
+- **Edição**: título, descrição, prioridade e responsável com persistência via `PUT /api/cards/:id`.
+- **Acessibilidade**: travamos o scroll do `body` ao abrir; foco vai para o título.
+- **Ergonomia**: o botão excluir do card é discreto (aparece somente no hover do card). No header da coluna, o contador é um “chip” neutro (com `99+`) e o botão de excluir coluna é separado por um divisor e destaca no hover.

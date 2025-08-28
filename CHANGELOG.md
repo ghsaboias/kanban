@@ -8,8 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Text contrast accessibility improvements
-- Explicit color styling for headings and UI text
+- Card detail modal with 200ms open/close transition (backdrop fade + panel slide), Escape-to-close, body scroll lock, and focus management.
+- Reliable click-to-open for cards by using dnd-kit `PointerSensor` with distance activation.
+- UI: Neutral counter chip in column headers with `99+` cap and divider separating destructive actions.
+
+### Changed
+- Column header controls: delete column button now an icon button (trash), neutral by default and red on hover; counter is visually de-emphasized.
+- Card delete affordance: smaller (20px), appears on card hover, neutral by default and red on hover to reduce visual competition with column-level actions.
+
+### Fixed
+- Intermittent card clicks not opening modal by switching from delay-based to distance-based drag activation.
 
 ## [0.5.0] - 2025-08-28
 
