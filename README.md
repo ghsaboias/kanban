@@ -212,8 +212,8 @@ npm run dev:backend   # Apenas Express (3001)
 
 ### Endpoints usados na persistência
 - Reordenar coluna: `POST /api/columns/:id/reorder` com `{ position }`.
-- (Próximos) Reordenar card: `PUT /api/cards/:id` com `{ position }`.
-- (Próximos) Mover card: `POST /api/cards/:id/move` com `{ columnId, position }`.
+- Reordenar card: `PUT /api/cards/:id` com `{ position }`.
+- Mover card: `POST /api/cards/:id/move` com `{ columnId, position }`.
 
 ### Decisão técnica
 - Preferimos dnd-kit a alternativas (React DnD, @hello-pangea/dnd) por flexibilidade, acessibilidade e suporte nativo a múltiplos sensores. O PRD incentiva uso de bibliotecas prontas.
