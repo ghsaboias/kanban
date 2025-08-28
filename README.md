@@ -7,7 +7,7 @@ Uma aplicação colaborativa de quadro Kanban construída com React, TypeScript 
 ### Frontend
 - **Vite + React + TypeScript** - Desenvolvimento rápido e segurança de tipos
 - Interface responsiva para criação dinâmica de colunas e cards
-- Preparado para integração com drag & drop e rich text editor
+- **Drag & Drop com dnd-kit** (colunas já reordenáveis e persistidas)
 
 ### Backend
 - **Express + TypeScript** - Servidor de API REST completo
@@ -193,3 +193,26 @@ npm run dev:backend   # Apenas Express (3001)
 **Backend:** Express + TypeScript + Prisma + SQLite  
 **Frontend:** Vite + React + TypeScript  
 **Banco:** 4 modelos (User, Board, Column, Card) com relacionamentos
+
+## Drag & Drop (dnd-kit)
+
+- **Biblioteca**: `@dnd-kit/core` + `@dnd-kit/sortable` (ergonomia moderna, suporte mouse/touch/teclado, ótima para listas ordenáveis e múltiplos contêineres).
+- **Escopo atual**: Reordenação de colunas e reordenação/movimentação de cards com persistência.
+- **Como funciona**:
+  - `DndContext` e `SortableContext` em `Board.tsx` (colunas: horizontal; cards: vertical em cada coluna).
+  - Colunas: `SortableColumn` (`Sortable`) com ids `column-<id>`.
+  - Cards: `SortableCard` (`Sortable`) com ids `card-<id>` e coluna droppable `column-<id>` para suportar drop em colunas vazias.
+  - Em `onDragEnd`, distinguimos colunas vs cards pelos prefixos, aplicamos atualização otimista e normalizamos `position` (0..N-1).
+  - Persistência via API: 
+    - Colunas: `POST /api/columns/:id/reorder { position }`.
+    - Cards (mesma coluna): `PUT /api/cards/:id { position }`.
+    - Cards (entre colunas): `POST /api/cards/:id/move { columnId, position }`.
+  - Falha na API → rollback do estado anterior e mensagem no console (UI permanece consistente).
+
+### Endpoints usados na persistência
+- Reordenar coluna: `POST /api/columns/:id/reorder` com `{ position }`.
+- (Próximos) Reordenar card: `PUT /api/cards/:id` com `{ position }`.
+- (Próximos) Mover card: `POST /api/cards/:id/move` com `{ columnId, position }`.
+
+### Decisão técnica
+- Preferimos dnd-kit a alternativas (React DnD, @hello-pangea/dnd) por flexibilidade, acessibilidade e suporte nativo a múltiplos sensores. O PRD incentiva uso de bibliotecas prontas.
