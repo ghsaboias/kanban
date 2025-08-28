@@ -278,13 +278,16 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
         )}
 
         {showCreateCard && (
-          <div style={{
-            backgroundColor: 'white',
-            border: '1px solid #ddd',
-            borderRadius: '6px',
-            padding: '12px',
-            marginTop: '8px'
-          }}>
+          <div 
+            style={{
+              backgroundColor: 'white',
+              border: '1px solid #ddd',
+              borderRadius: '6px',
+              padding: '12px',
+              marginTop: '8px'
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
             <form onSubmit={handleCreateCard}>
               <div style={{ marginBottom: '12px' }}>
                 <input
@@ -398,6 +401,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
 
         {!showCreateCard && (
           <button
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={() => setShowCreateCard(true)}
             style={{
               width: '100%',
