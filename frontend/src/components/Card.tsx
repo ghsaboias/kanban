@@ -118,7 +118,7 @@ export function Card({ card, onCardUpdated, onCardDeleted }: CardProps) {
         <p style={{ 
           margin: '0 0 8px 0', 
           fontSize: '12px', 
-          color: '#666',
+          color: '#333',
           lineHeight: '1.4'
         }}>
           {card.description.length > 100 
@@ -149,7 +149,7 @@ export function Card({ card, onCardUpdated, onCardDeleted }: CardProps) {
         {card.assignee && (
           <div style={{ 
             fontSize: '10px', 
-            color: '#666',
+            color: '#333',
             backgroundColor: '#f0f0f0',
             padding: '2px 6px',
             borderRadius: '10px'

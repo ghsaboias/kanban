@@ -215,7 +215,8 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
               flex: 1,
               display: 'flex',
               alignItems: 'center',
-              gap: '8px'
+              gap: '8px',
+              color: '#000'
             }}
             onClick={() => setEditingTitle(true)}
           >
@@ -227,7 +228,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
               }}
               disabled={deleteLoading}
               style={{
-                backgroundColor: deleteLoading ? '#ccc' : '#dc3545',
+                backgroundColor: deleteLoading ? '#999' : '#dc3545',
                 color: 'white',
                 border: 'none',
                 borderRadius: '3px',
@@ -246,7 +247,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
           borderRadius: '12px', 
           padding: '4px 8px', 
           fontSize: '12px',
-          color: '#666'
+          color: '#333'
         }}>
           {column.cards.length}
         </span>
@@ -270,7 +271,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
           <div style={{ 
             padding: '20px', 
             textAlign: 'center', 
-            color: '#999',
+            color: '#333',
             fontStyle: 'italic'
           }}>
             No cards in this column
@@ -364,7 +365,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                   type="submit"
                   disabled={createLoading || !formData.title.trim()}
                   style={{
-                    backgroundColor: createLoading ? '#ccc' : '#007bff',
+                    backgroundColor: createLoading ? '#999' : '#007bff',
                     color: 'white',
                     border: 'none',
                     borderRadius: '4px',
@@ -411,7 +412,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
               borderRadius: '4px',
               cursor: 'pointer',
               fontSize: '12px',
-              color: '#666',
+              color: '#333',
               marginTop: '8px'
             }}
           >

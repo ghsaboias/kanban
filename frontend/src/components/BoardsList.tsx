@@ -142,7 +142,7 @@ export function BoardsList() {
   return (
     <div style={{ padding: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h1 style={{ margin: 0 }}>Kanban Boards</h1>
+        <h1 style={{ margin: 0, color: '#000' }}>Kanban Boards</h1>
         <button
           onClick={() => setShowCreateForm(true)}
           style={{
@@ -215,7 +215,7 @@ export function BoardsList() {
                 type="submit"
                 disabled={createLoading || !formData.title.trim()}
                 style={{
-                  backgroundColor: createLoading ? '#ccc' : '#28a745',
+                  backgroundColor: createLoading ? '#999' : '#28a745',
                   color: 'white',
                   border: 'none',
                   borderRadius: '4px',
@@ -300,7 +300,7 @@ export function BoardsList() {
                   }}
                   disabled={deleteLoading === board.id}
                   style={{
-                    backgroundColor: deleteLoading === board.id ? '#ccc' : '#dc3545',
+                    backgroundColor: deleteLoading === board.id ? '#999' : '#dc3545',
                     color: 'white',
                     border: 'none',
                     borderRadius: '4px',
@@ -317,12 +317,12 @@ export function BoardsList() {
                 to={`/board/${board.id}`}
                 style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
               >
-                <h3 style={{ margin: '0 0 8px 0', paddingRight: '80px' }}>{board.title}</h3>
-                {board.description && <p style={{ margin: '0 0 12px 0', color: '#666' }}>{board.description}</p>}
-                <p style={{ fontSize: '14px', color: '#666', margin: '0 0 8px 0' }}>
+                <h3 style={{ margin: '0 0 8px 0', paddingRight: '80px', color: '#000' }}>{board.title}</h3>
+                {board.description && <p style={{ margin: '0 0 12px 0', color: '#333' }}>{board.description}</p>}
+                <p style={{ fontSize: '14px', color: '#333', margin: '0 0 8px 0' }}>
                   {board._count.columns} columns
                 </p>
-                <p style={{ fontSize: '12px', color: '#999', margin: 0 }}>
+                <p style={{ fontSize: '12px', color: '#333', margin: 0 }}>
                   Created: {new Date(board.createdAt).toLocaleDateString()}
                 </p>
               </Link>

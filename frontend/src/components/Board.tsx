@@ -234,8 +234,8 @@ export function Board({ boardId }: BoardProps) {
   return (
     <div style={{ padding: '20px' }}>
       <div style={{ marginBottom: '20px' }}>
-        <h1>{board.title}</h1>
-        {board.description && <p style={{ color: '#666' }}>{board.description}</p>}
+        <h1 style={{ color: '#000' }}>{board.title}</h1>
+        {board.description && <p style={{ color: '#333' }}>{board.description}</p>}
       </div>
       
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel} collisionDetection={closestCenter}>
@@ -349,7 +349,7 @@ export function Board({ boardId }: BoardProps) {
                       type="submit"
                       disabled={createLoading || !columnTitle.trim()}
                       style={{
-                        backgroundColor: createLoading ? '#ccc' : '#28a745',
+                        backgroundColor: createLoading ? '#999' : '#28a745',
                         color: 'white',
                         border: 'none',
                         borderRadius: '4px',
