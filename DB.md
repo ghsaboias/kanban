@@ -112,7 +112,7 @@ const userWithCards = await prisma.user.findUnique({
 **Position Management:**
 - Automatic position calculation for new items
 - Position recalculation when reordering
-- Proper handling of drag & drop operations
+- Proper handling of item positions to support drag & drop in the UI (when enabled)
 
 **Relationship Handling:**
 - Cards properly linked to columns and users
@@ -178,5 +178,4 @@ POST /api/cards/{cardId}/move
 - ✅ All endpoints tested and working
 - ✅ Error handling verified
 - ✅ Position management confirmed
-- ✅ Ready for frontend integration
-
+- ✅ Integrated with frontend (v0.3.0+); powering full CRUD in the UI
