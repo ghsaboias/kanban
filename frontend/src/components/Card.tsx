@@ -30,6 +30,8 @@ const priorityLabels = {
 }
 
 export function Card({ card, onCardUpdated, onCardDeleted }: CardProps) {
+  // mark onCardUpdated as used for now (edit feature later)
+  void onCardUpdated
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this card?')) {
       return

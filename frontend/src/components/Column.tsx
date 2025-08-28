@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Card } from './Card'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { useDroppable } from '@dnd-kit/core'
+import { SortableCard } from './SortableCard'
 
 interface CardData {
   id: string
@@ -49,6 +51,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleValue, setTitleValue] = useState(column.title)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const { setNodeRef: setDroppableNodeRef } = useDroppable({ id: `column-${column.id}` })
 
   useEffect(() => {
     // Fetch users for assignment
@@ -249,17 +252,19 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
         </span>
       </div>
       
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {column.cards
-          .sort((a, b) => a.position - b.position)
-          .map(card => (
-            <Card 
-              key={card.id} 
-              card={card}
-              onCardUpdated={onCardUpdated}
-              onCardDeleted={onCardDeleted}
-            />
-          ))}
+      <div ref={setDroppableNodeRef} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <SortableContext items={column.cards.map(c => `card-${c.id}`)} strategy={verticalListSortingStrategy}>
+          {column.cards
+            .sort((a, b) => a.position - b.position)
+            .map(card => (
+              <SortableCard 
+                key={card.id} 
+                card={card}
+                onCardUpdated={onCardUpdated}
+                onCardDeleted={onCardDeleted}
+              />
+            ))}
+        </SortableContext>
         
         {column.cards.length === 0 && !showCreateCard && (
           <div style={{ 
