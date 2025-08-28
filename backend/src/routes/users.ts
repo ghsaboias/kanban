@@ -1,11 +1,11 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../database';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { CreateUserRequest } from '../types/api';
 
 const router = Router();
 
-router.get('/', asyncHandler(async (req, res) => {
+router.get('/', asyncHandler(async (req: Request, res: Response) => {
   const users = await prisma.user.findMany({
     select: {
       id: true,
@@ -28,7 +28,7 @@ router.get('/', asyncHandler(async (req, res) => {
   });
 }));
 
-router.post('/', asyncHandler(async (req, res) => {
+router.post('/', asyncHandler(async (req: Request, res: Response) => {
   const { name, email }: CreateUserRequest = req.body;
 
   if (!name || !email) {
@@ -68,7 +68,7 @@ router.post('/', asyncHandler(async (req, res) => {
   });
 }));
 
-router.get('/:id', asyncHandler(async (req, res) => {
+router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
   const id = req.params.id;
 
   const user = await prisma.user.findUnique({
@@ -125,7 +125,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
   });
 }));
 
-router.put('/:id', asyncHandler(async (req, res) => {
+router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
   const id = req.params.id;
   const { name, email } = req.body;
 
@@ -173,7 +173,7 @@ router.put('/:id', asyncHandler(async (req, res) => {
   });
 }));
 
-router.delete('/:id', asyncHandler(async (req, res) => {
+router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
   const id = req.params.id;
 
   const existingUser = await prisma.user.findUnique({

@@ -1,11 +1,11 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../database';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { CreateBoardRequest, UpdateBoardRequest, ApiResponse } from '../types/api';
 
 const router = Router();
 
-router.get('/', asyncHandler(async (req, res) => {
+router.get('/', asyncHandler(async (req: Request, res: Response) => {
   const boards = await prisma.board.findMany({
     include: {
       _count: {
@@ -21,7 +21,7 @@ router.get('/', asyncHandler(async (req, res) => {
   });
 }));
 
-router.post('/', asyncHandler(async (req, res) => {
+router.post('/', asyncHandler(async (req: Request, res: Response) => {
   const { title, description }: CreateBoardRequest = req.body;
 
   if (!title) {
@@ -42,7 +42,7 @@ router.post('/', asyncHandler(async (req, res) => {
   });
 }));
 
-router.get('/:id', asyncHandler(async (req, res) => {
+router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
   const id = req.params.id;
 
   const board = await prisma.board.findUnique({
@@ -74,7 +74,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
   });
 }));
 
-router.put('/:id', asyncHandler(async (req, res) => {
+router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
   const id = req.params.id;
   const { title, description }: UpdateBoardRequest = req.body;
 
@@ -101,7 +101,7 @@ router.put('/:id', asyncHandler(async (req, res) => {
   });
 }));
 
-router.delete('/:id', asyncHandler(async (req, res) => {
+router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
   const id = req.params.id;
 
   const existingBoard = await prisma.board.findUnique({

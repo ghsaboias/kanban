@@ -1,11 +1,11 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../database';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { CreateCardRequest, UpdateCardRequest, MoveCardRequest } from '../types/api';
 
 const router = Router();
 
-router.post('/columns/:columnId/cards', asyncHandler(async (req, res) => {
+router.post('/columns/:columnId/cards', asyncHandler(async (req: Request, res: Response) => {
   const columnId = req.params.columnId;
   const { title, description, priority, assigneeId, createdById, position }: CreateCardRequest = req.body;
 
@@ -77,7 +77,7 @@ router.post('/columns/:columnId/cards', asyncHandler(async (req, res) => {
   });
 }));
 
-router.get('/cards/:id', asyncHandler(async (req, res) => {
+router.get('/cards/:id', asyncHandler(async (req: Request, res: Response) => {
   const id = req.params.id;
 
   const card = await prisma.card.findUnique({
@@ -102,7 +102,7 @@ router.get('/cards/:id', asyncHandler(async (req, res) => {
   });
 }));
 
-router.put('/cards/:id', asyncHandler(async (req, res) => {
+router.put('/cards/:id', asyncHandler(async (req: Request, res: Response) => {
   const id = req.params.id;
   const { title, description, priority, assigneeId, position }: UpdateCardRequest = req.body;
 
@@ -185,7 +185,7 @@ router.put('/cards/:id', asyncHandler(async (req, res) => {
   });
 }));
 
-router.delete('/cards/:id', asyncHandler(async (req, res) => {
+router.delete('/cards/:id', asyncHandler(async (req: Request, res: Response) => {
   const id = req.params.id;
 
   const existingCard = await prisma.card.findUnique({
@@ -216,7 +216,7 @@ router.delete('/cards/:id', asyncHandler(async (req, res) => {
   });
 }));
 
-router.post('/cards/:id/move', asyncHandler(async (req, res) => {
+router.post('/cards/:id/move', asyncHandler(async (req: Request, res: Response) => {
   const id = req.params.id;
   const { columnId, position }: MoveCardRequest = req.body;
 

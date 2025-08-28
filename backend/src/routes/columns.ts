@@ -1,11 +1,11 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../database';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { CreateColumnRequest, UpdateColumnRequest, ReorderColumnRequest } from '../types/api';
 
 const router = Router();
 
-router.post('/boards/:boardId/columns', asyncHandler(async (req, res) => {
+router.post('/boards/:boardId/columns', asyncHandler(async (req: Request, res: Response) => {
   const boardId = req.params.boardId;
   const { title, position }: CreateColumnRequest = req.body;
 
@@ -60,7 +60,7 @@ router.post('/boards/:boardId/columns', asyncHandler(async (req, res) => {
   });
 }));
 
-router.put('/columns/:id', asyncHandler(async (req, res) => {
+router.put('/columns/:id', asyncHandler(async (req: Request, res: Response) => {
   const id = req.params.id;
   const { title, position }: UpdateColumnRequest = req.body;
 
@@ -126,7 +126,7 @@ router.put('/columns/:id', asyncHandler(async (req, res) => {
   });
 }));
 
-router.delete('/columns/:id', asyncHandler(async (req, res) => {
+router.delete('/columns/:id', asyncHandler(async (req: Request, res: Response) => {
   const id = req.params.id;
 
   const existingColumn = await prisma.column.findUnique({
@@ -166,7 +166,7 @@ router.delete('/columns/:id', asyncHandler(async (req, res) => {
   });
 }));
 
-router.post('/columns/:id/reorder', asyncHandler(async (req, res) => {
+router.post('/columns/:id/reorder', asyncHandler(async (req: Request, res: Response) => {
   const id = req.params.id;
   const { position }: ReorderColumnRequest = req.body;
 
