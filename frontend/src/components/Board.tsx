@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
-import { DndContext, closestCenter, DragOverlay } from '@dnd-kit/core'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { DndContext, closestCenter, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import type { DragStartEvent } from '@dnd-kit/core'
 import { Card as CardView } from './Card'
 import type { DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from '@dnd-kit/sortable'
 import { SortableColumn } from './SortableColumn'
+import { CardDetailModal } from './CardDetailModal'
 
 interface Card {
   id: string
@@ -45,6 +46,17 @@ export function Board({ boardId }: BoardProps) {
   const [createLoading, setCreateLoading] = useState(false)
   const [columnTitle, setColumnTitle] = useState('')
   const [activeCard, setActiveCard] = useState<Card | null>(null)
+  const [selectedCard, setSelectedCard] = useState<Card | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // Configure sensors with activation constraints to allow click events
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  )
 
   useEffect(() => {
     fetch(`http://localhost:3001/api/boards/${boardId}`)
@@ -227,6 +239,52 @@ export function Board({ boardId }: BoardProps) {
     setActiveCard(null)
   }, [])
 
+  const handleCardClick = useCallback((card: Card) => {
+    setSelectedCard(card)
+    setIsModalOpen(true)
+  }, [])
+
+  const closeTimerRef = useRef<number | null>(null)
+
+  const handleModalClose = useCallback(() => {
+    setIsModalOpen(false)
+  }, [])
+
+  useEffect(() => {
+    // Delay unmount to allow close transition to play
+    if (!isModalOpen && selectedCard) {
+      closeTimerRef.current = window.setTimeout(() => {
+        setSelectedCard(null)
+        closeTimerRef.current = null
+      }, 200)
+    } else if (isModalOpen && closeTimerRef.current) {
+      // If re-opened before the timer fires, cancel cleanup
+      clearTimeout(closeTimerRef.current)
+      closeTimerRef.current = null
+    }
+    return () => {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current)
+        closeTimerRef.current = null
+      }
+    }
+  }, [isModalOpen, selectedCard])
+
+  const handleCardUpdated = useCallback((updatedCard: Card) => {
+    setBoard(prev => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        columns: prev.columns.map(col => ({
+          ...col,
+          cards: col.cards.map(card => 
+            card.id === updatedCard.id ? updatedCard : card
+          )
+        }))
+      }
+    })
+  }, [])
+
   if (loading) return <div>Loading board...</div>
   if (error) return <div>Error: {error}</div>
   if (!board) return <div>Board not found</div>
@@ -238,7 +296,13 @@ export function Board({ boardId }: BoardProps) {
         {board.description && <p style={{ color: '#333' }}>{board.description}</p>}
       </div>
       
-      <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel} collisionDetection={closestCenter}>
+      <DndContext 
+        sensors={sensors}
+        onDragStart={handleDragStart} 
+        onDragEnd={handleDragEnd} 
+        onDragCancel={handleDragCancel} 
+        collisionDetection={closestCenter}
+      >
         <div style={{ 
           display: 'flex', 
           gap: '20px', 
@@ -310,6 +374,7 @@ export function Board({ boardId }: BoardProps) {
                       )
                     } : null)
                   }}
+                  onCardClick={handleCardClick}
                 />
               ))}
           </SortableContext>
@@ -417,6 +482,16 @@ export function Board({ boardId }: BoardProps) {
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      {/* Card Detail Modal */}
+      {selectedCard && (
+        <CardDetailModal
+          card={selectedCard}
+          isOpen={isModalOpen}
+          onClose={handleModalClose}
+          onCardUpdated={handleCardUpdated}
+        />
+      )}
     </div>
   )
 }
