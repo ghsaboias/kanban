@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-08-28
+
+### Added - Phase 4: Complete CRUD Operations
+- **Board Management**: Full create, read, update, delete functionality
+  - Create board form with title and description validation
+  - Edit board functionality with pre-populated form
+  - Delete board with confirmation dialog and loading states
+  - Edit/delete buttons with proper positioning and styling
+- **Column Management**: Dynamic column operations with position handling
+  - Create column with inline "Add Column" button
+  - Edit column title by clicking (inline editing with Enter/Escape)
+  - Delete column with validation (prevents deletion if cards exist)
+  - Automatic position recalculation after column operations
+- **Card Management**: Rich card operations with full metadata
+  - Create card form with title, description, priority, and user assignment
+  - Priority selection with Portuguese labels (Baixa, Média, Alta)
+  - User assignment dropdown with all available users
+  - Delete card with confirmation and position cleanup
+  - Visual priority indicators with color coding
+- **Real-time UI Updates**: All operations update interface without page refresh
+  - State management with React hooks for instant feedback
+  - Optimistic updates with error fallback handling
+  - Proper loading states for all async operations
+
+### Technical Implementation
+- **Component Architecture**: Props-based callback system for parent-child communication
+- **State Management**: Local React state with callback propagation for data consistency
+- **Error Handling**: User-friendly error messages and proper fallback states
+- **TypeScript Integration**: Full type safety across all CRUD operations
+- **Form Validation**: Required field validation and business logic enforcement
+- **UI/UX**: Confirmation dialogs, loading states, and hover effects
+
+### Enhanced User Experience
+- **Visual Feedback**: Loading states, hover effects, and visual confirmations
+- **Keyboard Support**: Enter/Escape for column title editing
+- **Responsive Design**: All forms and buttons work across screen sizes
+- **Confirmation Dialogs**: Prevent accidental deletions with native confirm dialogs
+- **Form Persistence**: Form data maintained during operations
+
 ## [0.3.0] - 2025-08-28
 
 ### Added - Phase 3: Basic Frontend Integration

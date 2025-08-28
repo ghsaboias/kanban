@@ -13,6 +13,8 @@ interface CardData {
 
 interface CardProps {
   card: CardData
+  onCardUpdated?: (updatedCard: CardData) => void
+  onCardDeleted?: (cardId: string) => void
 }
 
 const priorityColors = {
@@ -27,7 +29,27 @@ const priorityLabels = {
   LOW: 'Baixa'
 }
 
-export function Card({ card }: CardProps) {
+export function Card({ card, onCardUpdated, onCardDeleted }: CardProps) {
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this card?')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3001/api/cards/${card.id}`, {
+        method: 'DELETE'
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        onCardDeleted?.(card.id)
+      } else {
+        console.error('Failed to delete card')
+      }
+    } catch (err) {
+      console.error('Error deleting card:', err)
+    }
+  }
   return (
     <div style={{
       backgroundColor: 'white',
@@ -37,6 +59,7 @@ export function Card({ card }: CardProps) {
       cursor: 'pointer',
       boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
       transition: 'box-shadow 0.2s',
+      position: 'relative'
     }}
     onMouseEnter={(e) => {
       e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)'
@@ -45,12 +68,45 @@ export function Card({ card }: CardProps) {
       e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'
     }}
     >
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          handleDelete()
+        }}
+        style={{
+          position: 'absolute',
+          top: '4px',
+          right: '4px',
+          backgroundColor: '#dc3545',
+          color: 'white',
+          border: 'none',
+          borderRadius: '50%',
+          width: '16px',
+          height: '16px',
+          cursor: 'pointer',
+          fontSize: '10px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: 0.7
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.opacity = '1'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.opacity = '0.7'
+        }}
+      >
+        ×
+      </button>
+
       <div style={{ marginBottom: '8px' }}>
         <h4 style={{ 
           margin: 0, 
           fontSize: '14px', 
           fontWeight: '600',
-          color: '#333'
+          color: '#333',
+          paddingRight: '20px'
         }}>
           {card.title}
         </h4>
