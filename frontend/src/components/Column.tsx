@@ -398,12 +398,21 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                     flex: 1,
                     boxSizing: 'border-box',
                     padding: '8px 12px',
+                    paddingRight: '36px',
                     border: '1px solid #ddd',
                     borderRadius: '4px',
                     backgroundColor: '#f8f9fa',
                     fontSize: '14px',
                     fontFamily: 'inherit',
-                    color: '#213547'
+                    color: '#213547',
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    MozAppearance: 'none',
+                    backgroundImage: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 20 20\' fill=\'%236c757d\'><path d=\'M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z\'/></svg>")',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 10px center',
+                    backgroundSize: '16px 16px'
                   }}
                 >
                   <option value="LOW">Baixa</option>
@@ -418,12 +427,21 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                     flex: 1,
                     boxSizing: 'border-box',
                     padding: '8px 12px',
+                    paddingRight: '36px',
                     border: '1px solid #ddd',
                     borderRadius: '4px',
                     backgroundColor: '#f8f9fa',
                     fontSize: '14px',
                     fontFamily: 'inherit',
-                    color: '#213547'
+                    color: '#213547',
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    MozAppearance: 'none',
+                    backgroundImage: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 20 20\' fill=\'%236c757d\'><path d=\'M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z\'/></svg>")',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 10px center',
+                    backgroundSize: '16px 16px'
                   }}
                 >
                   <option value="">Sem responsável</option>
