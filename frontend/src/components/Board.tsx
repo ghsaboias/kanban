@@ -115,6 +115,9 @@ export function Board({ boardId }: BoardProps) {
           break
         }
       }
+    } else {
+      // Clear activeCard when dragging anything else (like columns)
+      setActiveCard(null)
     }
   }, [board])
 
