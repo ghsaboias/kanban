@@ -8,15 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Text contrast accessibility improvements
+- Explicit color styling for headings and UI text
+
+## [0.5.0] - 2025-08-28
+
+### Added - Phase 5: Drag & Drop Implementation
 - Drag & drop (dnd-kit) for columns and cards
   - Columns: horizontal `SortableContext` with persistence via `POST /api/columns/:id/reorder { position }`.
   - Cards: per-column vertical `SortableContext` with same-column reorder via `PUT /api/cards/:id { position }` and cross-column move via `POST /api/cards/:id/move { columnId, position }`.
   - ID scheme to avoid collisions: `column-<id>`, `card-<id>`.
 - DragOverlay for smooth cross-column dragging.
+- Text contrast accessibility improvements (replaced #999, #666, #888 with darker colors)
 
 ### Fixed
 - Eliminated mid-drag snap-back by rendering a `DragOverlay` and hiding the in-place item while dragging.
 - Adjusted TypeScript imports to `import type { ... }` to comply with `verbatimModuleSyntax`.
+- Improved text contrast for better accessibility compliance
 
 ### Docs
 - README: Documented DnD approach, ids, and persistence endpoints.
