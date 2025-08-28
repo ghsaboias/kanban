@@ -33,6 +33,20 @@ html, body, #root {
   width: 100%;
 }
 
+/* Form control defaults and placeholder consistency */
+input, textarea, select, button {
+  font-family: inherit;
+}
+
+input, textarea, select {
+  font-size: 14px;
+}
+
+::placeholder {
+  font-family: inherit;
+  font-size: 14px;
+}
+
 h1 {
   font-size: 3.2em;
   line-height: 1.1;

@@ -355,10 +355,14 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                   placeholder="Enter card title"
                   style={{
                     width: '100%',
-                    padding: '8px',
+                    boxSizing: 'border-box',
+                    padding: '8px 12px',
                     border: '1px solid #ddd',
                     borderRadius: '4px',
-                    fontSize: '14px'
+                    backgroundColor: '#f8f9fa',
+                    fontSize: '14px',
+                    fontFamily: 'inherit',
+                    color: '#213547'
                   }}
                   autoFocus
                   required
@@ -373,10 +377,14 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                   rows={2}
                   style={{
                     width: '100%',
-                    padding: '8px',
+                    boxSizing: 'border-box',
+                    padding: '8px 12px',
                     border: '1px solid #ddd',
                     borderRadius: '4px',
-                    fontSize: '12px',
+                    backgroundColor: '#f8f9fa',
+                    fontSize: '14px',
+                    fontFamily: 'inherit',
+                    color: '#213547',
                     resize: 'vertical'
                   }}
                 />
@@ -388,10 +396,14 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                   onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value as 'LOW' | 'MEDIUM' | 'HIGH' }))}
                   style={{
                     flex: 1,
-                    padding: '6px',
+                    boxSizing: 'border-box',
+                    padding: '8px 12px',
                     border: '1px solid #ddd',
                     borderRadius: '4px',
-                    fontSize: '12px'
+                    backgroundColor: '#f8f9fa',
+                    fontSize: '14px',
+                    fontFamily: 'inherit',
+                    color: '#213547'
                   }}
                 >
                   <option value="LOW">Baixa</option>
@@ -404,10 +416,14 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                   onChange={(e) => setFormData(prev => ({ ...prev, assigneeId: e.target.value }))}
                   style={{
                     flex: 1,
-                    padding: '6px',
+                    boxSizing: 'border-box',
+                    padding: '8px 12px',
                     border: '1px solid #ddd',
                     borderRadius: '4px',
-                    fontSize: '12px'
+                    backgroundColor: '#f8f9fa',
+                    fontSize: '14px',
+                    fontFamily: 'inherit',
+                    color: '#213547'
                   }}
                 >
                   <option value="">Sem responsável</option>
@@ -463,14 +479,23 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
             onClick={() => setShowCreateCard(true)}
             style={{
               width: '100%',
-              padding: '8px',
-              backgroundColor: 'transparent',
-              border: 'none',
-              borderRadius: '4px',
+              padding: '16px',
+              backgroundColor: '#f8f9fa',
+              border: '2px dashed #dee2e6',
+              borderRadius: '8px',
               cursor: 'pointer',
-              fontSize: '12px',
-              color: '#333',
-              marginTop: '8px'
+              fontSize: '14px',
+              color: '#6c757d',
+              marginTop: '8px',
+              transition: 'border-color 0.2s, color 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.borderColor = '#007bff'
+              ;(e.currentTarget as HTMLButtonElement).style.color = '#007bff'
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.borderColor = '#dee2e6'
+              ;(e.currentTarget as HTMLButtonElement).style.color = '#6c757d'
             }}
           >
             + Add a card
