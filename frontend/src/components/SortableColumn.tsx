@@ -30,6 +30,7 @@ interface SortableColumnProps {
   onColumnDeleted?: (columnId: string) => void
   onCardUpdated?: (updatedCard: CardData) => void
   onCardDeleted?: (cardId: string) => void
+  onCardClick?: (card: CardData) => void
 }
 
 export function SortableColumn({
@@ -38,7 +39,8 @@ export function SortableColumn({
   onColumnUpdated,
   onColumnDeleted,
   onCardUpdated,
-  onCardDeleted
+  onCardDeleted,
+  onCardClick
 }: SortableColumnProps) {
   const {
     attributes,
@@ -64,6 +66,7 @@ export function SortableColumn({
         onColumnDeleted={onColumnDeleted}
         onCardUpdated={onCardUpdated}
         onCardDeleted={onCardDeleted}
+        onCardClick={onCardClick}
       />
     </div>
   )

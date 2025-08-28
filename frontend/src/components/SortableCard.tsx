@@ -20,9 +20,10 @@ interface SortableCardProps {
   card: CardData
   onCardUpdated?: (updatedCard: CardData) => void
   onCardDeleted?: (cardId: string) => void
+  onCardClick?: (card: CardData) => void
 }
 
-export function SortableCard({ card, onCardUpdated, onCardDeleted }: SortableCardProps) {
+export function SortableCard({ card, onCardUpdated, onCardDeleted, onCardClick }: SortableCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: `card-${card.id}` })
 
   const style: CSSProperties = {
@@ -34,7 +35,12 @@ export function SortableCard({ card, onCardUpdated, onCardDeleted }: SortableCar
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <CardComponent card={card} onCardUpdated={onCardUpdated} onCardDeleted={onCardDeleted} />
+      <CardComponent 
+        card={card} 
+        onCardUpdated={onCardUpdated} 
+        onCardDeleted={onCardDeleted}
+        onCardClick={onCardClick}
+      />
     </div>
   )
 }
