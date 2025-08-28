@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-08-28
+
+### Added - Phase 3: Basic Frontend Integration
+- **React Components Architecture**: Modular component system for Kanban UI
+  - `Board` component for displaying complete board with columns and cards
+  - `Column` component with card count and responsive layout
+  - `Card` component with priority colors, assignee display, and hover effects
+  - `BoardsList` component for board navigation with grid layout
+  - `BoardPage` wrapper component with navigation breadcrumbs
+- **Routing System**: React Router implementation
+  - `/` route for boards list view
+  - `/board/:id` route for individual board detail view
+  - Navigation between boards list and board detail with back button
+- **API Integration**: Frontend consuming REST API endpoints
+  - Fetch boards list from `/api/boards`
+  - Fetch board details with columns and cards from `/api/boards/:id`
+  - Proper error handling and loading states
+  - TypeScript interfaces matching API response structure
+- **Visual Design**: Responsive and polished UI
+  - Grid layouts for boards and responsive column display
+  - Priority color coding (High: red, Medium: yellow, Low: green)
+  - Card hover effects and visual hierarchy
+  - Portuguese labels for priority levels
+  - Clean typography and spacing
+
+### Technical Implementation
+- **TypeScript Integration**: Full type safety across frontend components
+- **Component Structure**: Organized in `/src/components/` directory
+- **State Management**: React hooks (useState, useEffect) for API data
+- **Responsive Design**: CSS Grid and Flexbox layouts
+- **Dependencies**: Added React Router for navigation
+
+### Fixed
+- **Frontend Structure**: Removed default Vite boilerplate for clean Kanban interface
+- **Type Safety**: Proper TypeScript interfaces for all API data structures
+
 ## [0.2.0] - 2025-08-27
 
 ### Added - Phase 2: REST API Implementation
