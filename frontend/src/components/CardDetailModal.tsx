@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { RichTextEditor } from './RichTextEditor'
-import { toPlainText } from '../utils/html'
+import { toPlainText, hasContent, extractImages } from '../utils/html'
 
 interface CardData {
   id: string
@@ -54,6 +54,7 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
   })
   const modalRef = useRef<HTMLDivElement>(null)
   const titleInputRef = useRef<HTMLInputElement>(null)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
 
   useEffect(() => {
     if (isOpen) {
@@ -135,7 +136,7 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
         },
         body: JSON.stringify({
           title: formData.title.trim(),
-          description: toPlainText(formData.description).trim() ? formData.description : null,
+          description: hasContent(formData.description) ? formData.description : null,
           priority: formData.priority,
           assigneeId: formData.assigneeId || null
         })
@@ -379,6 +380,54 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
               value={formData.description}
               onChange={(html) => setFormData(prev => ({ ...prev, description: html }))}
             />
+            
+            {/* Image Preview */}
+            {(() => {
+              const images = extractImages(formData.description)
+              if (images.length === 0) return null
+              
+              return (
+                <div style={{ marginTop: '8px' }}>
+                  <span style={{ 
+                    fontSize: '12px', 
+                    color: '#666', 
+                    display: 'block', 
+                    marginBottom: '6px' 
+                  }}>Images ({images.length})</span>
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '8px', 
+                    flexWrap: 'wrap' 
+                  }}>
+                    {images.map((src, index) => (
+                      <div
+                        key={index}
+                        onClick={() => setSelectedImage(src)}
+                        style={{
+                          width: '60px',
+                          height: '40px',
+                          border: '1px solid #e1e1e1',
+                          borderRadius: '4px',
+                          overflow: 'hidden',
+                          cursor: 'pointer',
+                          backgroundColor: '#f8f9fa'
+                        }}
+                      >
+                        <img
+                          src={src}
+                          alt={`Preview ${index + 1}`}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
           </div>
 
           {/* Add Property Button */}
@@ -496,5 +545,54 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
     </div>
   )
 
-  return createPortal(modalContent, document.body)
+  // Image Modal
+  const imageModal = selectedImage && (
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 2000,
+        padding: '20px'
+      }}
+      onClick={() => setSelectedImage(null)}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          maxWidth: '90vw',
+          maxHeight: '90vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        <img
+          src={selectedImage}
+          alt="Full size"
+          style={{
+            maxWidth: '100%',
+            maxHeight: '100%',
+            objectFit: 'contain',
+            borderRadius: '8px',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)'
+          }}
+          onClick={() => setSelectedImage(null)}
+        />
+      </div>
+    </div>
+  )
+
+  return (
+    <>
+      {createPortal(modalContent, document.body)}
+      {imageModal && createPortal(imageModal, document.body)}
+    </>
+  )
 }
