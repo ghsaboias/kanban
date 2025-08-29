@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { BoardsList } from './components/BoardsList'
 import { BoardPage } from './components/BoardPage'
+import { SocketProvider } from './contexts/SocketContext'
 import './App.css'
 import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/clerk-react'
 
@@ -37,10 +38,12 @@ function App() {
         </SignedOut>
 
         <SignedIn>
-          <Routes>
-            <Route path="/" element={<BoardsList />} />
-            <Route path="/board/:id" element={<BoardPage />} />
-          </Routes>
+          <SocketProvider>
+            <Routes>
+              <Route path="/" element={<BoardsList />} />
+              <Route path="/board/:id" element={<BoardPage />} />
+            </Routes>
+          </SocketProvider>
         </SignedIn>
       </div>
     </Router>
