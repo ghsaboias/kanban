@@ -3,6 +3,7 @@ import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
+import Image from '@tiptap/extension-image'
 
 interface RichTextEditorProps {
   value: string
@@ -25,6 +26,13 @@ export function RichTextEditor({ value, onChange, readOnly }: RichTextEditorProp
       }),
       Placeholder.configure({
         placeholder: 'Add a description…'
+      }),
+      Image.configure({
+        inline: true,
+        allowBase64: true,
+        HTMLAttributes: {
+          class: 'uploaded-image'
+        }
       })
     ],
     content: value || '',
@@ -101,6 +109,9 @@ export function RichTextEditor({ value, onChange, readOnly }: RichTextEditorProp
         }
         .rte .ProseMirror a:hover {
           color: #1d4ed8;
+        }
+        .rte .ProseMirror img {
+          display: none;
         }
         `}
       </style>
@@ -231,6 +242,54 @@ export function RichTextEditor({ value, onChange, readOnly }: RichTextEditorProp
             onFocus={(e) => { e.currentTarget.style.outline = '2px solid #0ea5e9' }}
             onBlur={(e) => { e.currentTarget.style.outline = 'none' }}
           >Link</button>
+
+          <button
+            type="button"
+            style={getBtnStyle(false)}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={(e) => {
+              const button = e.currentTarget as HTMLButtonElement
+              const input = document.createElement('input')
+              input.type = 'file'
+              input.accept = 'image/*'
+              input.onchange = (fileEvent) => {
+                const file = (fileEvent.target as HTMLInputElement).files?.[0]
+                if (file) {
+                  // Show loading feedback
+                  const originalText = button.textContent
+                  button.textContent = '⏳ Loading...'
+                  button.disabled = true
+                  
+                  const reader = new FileReader()
+                  reader.onload = (readerEvent) => {
+                    const src = readerEvent.target?.result as string
+                    // Insert image as inline element
+                    editor.chain().focus().insertContent(`<img src="${src}" alt="Uploaded image" />`).run()
+                    
+                    // Restore button
+                    setTimeout(() => {
+                      button.textContent = originalText
+                      button.disabled = false
+                    }, 500)
+                  }
+                  reader.onerror = () => {
+                    // Handle error
+                    button.textContent = '❌ Error'
+                    setTimeout(() => {
+                      button.textContent = originalText
+                      button.disabled = false
+                    }, 2000)
+                  }
+                  reader.readAsDataURL(file)
+                }
+              }
+              input.click()
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f3f4f6' }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#ffffff' }}
+            onFocus={(e) => { e.currentTarget.style.outline = '2px solid #0ea5e9' }}
+            onBlur={(e) => { e.currentTarget.style.outline = 'none' }}
+          >📷 Image</button>
 
           <button
             type="button"
