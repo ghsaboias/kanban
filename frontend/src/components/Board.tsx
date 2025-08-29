@@ -6,6 +6,7 @@ import type { DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from '@dnd-kit/sortable'
 import { SortableColumn } from './SortableColumn'
 import { CardDetailModal } from './CardDetailModal'
+import { useApi } from '../useApi'
 
 interface Card {
   id: string
@@ -39,6 +40,7 @@ interface BoardProps {
 }
 
 export function Board({ boardId }: BoardProps) {
+  const apiFetch = useApi()
   const [board, setBoard] = useState<BoardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -59,7 +61,7 @@ export function Board({ boardId }: BoardProps) {
   )
 
   useEffect(() => {
-    fetch(`http://localhost:3001/api/boards/${boardId}`)
+    apiFetch(`/api/boards/${boardId}`)
       .then(response => response.json())
       .then(data => {
         if (data.success) {
@@ -82,7 +84,7 @@ export function Board({ boardId }: BoardProps) {
 
     setCreateLoading(true)
     try {
-      const response = await fetch(`http://localhost:3001/api/boards/${boardId}/columns`, {
+      const response = await apiFetch(`/api/boards/${boardId}/columns`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -151,7 +153,7 @@ export function Board({ boardId }: BoardProps) {
       setBoard(prev => prev ? { ...prev, columns: reordered } : prev)
 
       try {
-        await fetch(`http://localhost:3001/api/columns/${prevColumns[oldIndex].id}/reorder`, {
+        await apiFetch(`/api/columns/${prevColumns[oldIndex].id}/reorder`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ position: newIndex })
@@ -204,7 +206,7 @@ export function Board({ boardId }: BoardProps) {
         col.cards = arrayMove(col.cards, fromIndex, targetIndex).map((card, idx) => ({ ...card, position: idx }))
         setBoard(prev => prev ? { ...prev, columns: nextColumns } : prev)
         try {
-          await fetch(`http://localhost:3001/api/cards/${cardId}`, {
+          await apiFetch(`/api/cards/${cardId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ position: targetIndex })
@@ -222,7 +224,7 @@ export function Board({ boardId }: BoardProps) {
         toCol.cards = toCol.cards.map((card, idx) => ({ ...card, position: idx }))
         setBoard(prev => prev ? { ...prev, columns: nextColumns } : prev)
         try {
-          await fetch(`http://localhost:3001/api/cards/${cardId}/move`, {
+          await apiFetch(`/api/cards/${cardId}/move`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ columnId: board.columns[targetColIndex].id, position: targetIndex })

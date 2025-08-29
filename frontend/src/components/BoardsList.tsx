@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useApi } from '../useApi'
 
 interface Board {
   id: string
@@ -22,8 +23,10 @@ export function BoardsList() {
   const [editingBoard, setEditingBoard] = useState<Board | null>(null)
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
 
+  const apiFetch = useApi()
+
   useEffect(() => {
-    fetch('http://localhost:3001/api/boards')
+    apiFetch('/api/boards')
       .then(response => response.json())
       .then(data => {
         if (data.success) {
@@ -46,7 +49,7 @@ export function BoardsList() {
 
     setCreateLoading(true)
     try {
-      const response = await fetch('http://localhost:3001/api/boards', {
+      const response = await apiFetch('/api/boards', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -78,7 +81,7 @@ export function BoardsList() {
 
     setCreateLoading(true)
     try {
-      const response = await fetch(`http://localhost:3001/api/boards/${editingBoard.id}`, {
+      const response = await apiFetch(`/api/boards/${editingBoard.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -113,7 +116,7 @@ export function BoardsList() {
 
     setDeleteLoading(boardId)
     try {
-      const response = await fetch(`http://localhost:3001/api/boards/${boardId}`, {
+      const response = await apiFetch(`/api/boards/${boardId}`, {
         method: 'DELETE'
       })
 

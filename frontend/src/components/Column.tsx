@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableCard } from './SortableCard'
+import { useApi } from '../useApi'
 
 interface CardData {
   id: string
@@ -53,10 +54,11 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
   const [titleValue, setTitleValue] = useState(column.title)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const { setNodeRef: setDroppableNodeRef } = useDroppable({ id: `column-${column.id}` })
+  const apiFetch = useApi()
 
   useEffect(() => {
     // Fetch users for assignment
-    fetch('http://localhost:3001/api/users')
+    apiFetch('/api/users')
       .then(response => response.json())
       .then(data => {
         if (data.success) {
@@ -72,10 +74,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
 
     setCreateLoading(true)
     try {
-      // We need a default user for createdById - using first user or empty string
-      const createdById = users.length > 0 ? users[0].id : ''
-      
-      const response = await fetch(`http://localhost:3001/api/columns/${column.id}/cards`, {
+      const response = await apiFetch(`/api/columns/${column.id}/cards`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -84,8 +83,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
           title: formData.title.trim(),
           description: formData.description.trim() || null,
           priority: formData.priority,
-          assigneeId: formData.assigneeId || null,
-          createdById
+          assigneeId: formData.assigneeId || null
         })
       })
 
@@ -112,7 +110,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
     }
 
     try {
-      const response = await fetch(`http://localhost:3001/api/columns/${column.id}`, {
+      const response = await apiFetch(`/api/columns/${column.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -150,7 +148,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
 
     setDeleteLoading(true)
     try {
-      const response = await fetch(`http://localhost:3001/api/columns/${column.id}`, {
+      const response = await apiFetch(`/api/columns/${column.id}`, {
         method: 'DELETE'
       })
 

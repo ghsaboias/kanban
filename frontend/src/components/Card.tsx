@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { toPlainText, truncate, extractImages } from '../utils/html'
+import { useApi } from '../useApi'
 
 interface CardData {
   id: string
@@ -34,6 +35,7 @@ const priorityLabels = {
 }
 
 export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardProps) {
+  const apiFetch = useApi()
   // mark onCardUpdated as used for now (edit feature later)
   void onCardUpdated
   const [hovering, setHovering] = useState(false)
@@ -43,7 +45,7 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
     }
 
     try {
-      const response = await fetch(`http://localhost:3001/api/cards/${card.id}`, {
+      const response = await apiFetch(`/api/cards/${card.id}`, {
         method: 'DELETE'
       })
 
@@ -167,13 +169,13 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
           color: '#333',
           lineHeight: '1.4'
         }}>
-          {truncate(toPlainText(card.description), 100)}
+          {truncate(toPlainText(card.description || ''), 100)}
         </p>
       )}
       
       {/* Images Section in Card */}
       {(() => {
-        const images = extractImages(card.description)
+        const images = extractImages(card.description || '')
         if (images.length === 0) return null
         
         return (

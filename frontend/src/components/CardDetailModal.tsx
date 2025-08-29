@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { RichTextEditor } from './RichTextEditor'
-import { toPlainText, hasContent, extractImages } from '../utils/html'
+import { hasContent, extractImages } from '../utils/html'
+import { useApi } from '../useApi'
 
 interface CardData {
   id: string
@@ -55,6 +56,7 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
   const modalRef = useRef<HTMLDivElement>(null)
   const titleInputRef = useRef<HTMLInputElement>(null)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const apiFetch = useApi()
 
   useEffect(() => {
     if (isOpen) {
@@ -83,7 +85,7 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
 
   useEffect(() => {
     // Fetch users for assignment dropdown
-    fetch('http://localhost:3001/api/users')
+    apiFetch('/api/users')
       .then(response => response.json())
       .then(data => {
         if (data.success) {
@@ -129,7 +131,7 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
   const handleSave = async () => {
     setLoading(true)
     try {
-      const response = await fetch(`http://localhost:3001/api/cards/${card.id}`, {
+      const response = await apiFetch(`/api/cards/${card.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
