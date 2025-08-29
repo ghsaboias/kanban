@@ -68,6 +68,7 @@ const userWithCards = await prisma.user.findUnique({
 - All tables created
 - TypeScript client generated
 - Test utilities available (`npm run test:db`)
+- All API endpoints protected by authentication (Clerk)
 
 **🎯 Perfect for Kanban needs:**
 - Card positioning for drag & drop
@@ -76,7 +77,7 @@ const userWithCards = await prisma.user.findUnique({
 - Priority levels (HIGH/MEDIUM/LOW)
 - Rich relationships between entities
 
-## **✅ REST API Implementation Complete**
+## **✅ REST API Implementation Complete (Auth-protected)**
 
 ### **All CRUD Endpoints Working**
 
@@ -99,6 +100,8 @@ const userWithCards = await prisma.user.findUnique({
 - `PUT /api/cards/:id` - Update card (title, description, priority, assignee)
 - `DELETE /api/cards/:id` - Delete card
 - `POST /api/cards/:id/move` - Move card between columns
+
+All requests must include an `Authorization: Bearer <token>` header from Clerk.
 
 **Users:**
 - `GET /api/users` - List users for assignment
@@ -144,6 +147,10 @@ backend/src/
 └── index.ts          # Server setup with all routes
 ```
 
+### **Authentication**
+
+- `GET /api/auth/me` — Returns the authenticated local user (created/upserted via Clerk).
+
 ### **Example Usage**
 
 ```typescript
@@ -164,13 +171,21 @@ POST /api/columns/{columnId}/cards
 { 
   "title": "Primeira tarefa", 
   "description": "Descrição da tarefa",
-  "priority": "HIGH",
-  "createdById": "{userId}"
+  "priority": "HIGH"
 }
 
 // Move card between columns
 POST /api/cards/{cardId}/move
 { "columnId": "{newColumnId}", "position": 0 }
+```
+
+All curl examples require auth, for example:
+
+```bash
+curl -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Meu Projeto"}' \
+  http://localhost:3001/api/boards
 ```
 
 ### **Server Status**

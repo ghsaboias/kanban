@@ -40,7 +40,18 @@ cd kanban
 npm install
 ```
 
-3. Configure o banco de dados:
+3. Configure as variáveis de ambiente (Autenticação):
+```bash
+# frontend/.env.local
+VITE_CLERK_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
+VITE_API_URL=http://localhost:3001
+
+# backend/.env.local
+CLERK_SECRET_KEY=YOUR_SECRET_KEY
+CORS_ORIGIN=http://localhost:5173
+```
+
+4. Configure o banco de dados:
 ```bash
 # Gera o cliente Prisma
 npm run db:generate
@@ -52,7 +63,7 @@ npm run db:push
 npm run test:db
 ```
 
-4. Inicie os servidores de desenvolvimento:
+5. Inicie os servidores de desenvolvimento:
 ```bash
 npm run dev
 ```
@@ -91,6 +102,7 @@ kanban/
 ```
 
 ## API REST Completa
+Todas as rotas exigem autenticação (Clerk). Adicione o header `Authorization: Bearer <token>`.
 
 ### Boards (Quadros)
 ```bash
@@ -111,7 +123,7 @@ POST   /api/columns/:id/reorder   # Reordena colunas
 
 ### Cards (Tarefas)
 ```bash
-POST   /api/columns/:id/cards     # Cria card na coluna
+POST   /api/columns/:id/cards     # Cria card na coluna (createdById é derivado do usuário autenticado)
 GET    /api/cards/:id             # Obtém detalhes do card
 PUT    /api/cards/:id             # Atualiza card
 DELETE /api/cards/:id             # Remove card
@@ -141,9 +153,10 @@ curl -X POST http://localhost:3001/api/users \
   -d '{"name": "João Silva", "email": "joao@empresa.com"}'
 ```
 
-### Criar um board
+### Criar um board (com auth)
 ```bash
 curl -X POST http://localhost:3001/api/boards \
+  -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{"title": "Projeto Sprint 1", "description": "Desenvolvimento da API"}'
 ```
@@ -155,15 +168,15 @@ curl -X POST http://localhost:3001/api/boards/{boardId}/columns \
   -d '{"title": "A Fazer"}'
 ```
 
-### Criar um card
+### Criar um card (com auth)
 ```bash
 curl -X POST http://localhost:3001/api/columns/{columnId}/cards \
+  -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Implementar autenticação",
     "description": "Integrar Clerk para controle de acesso",
-    "priority": "HIGH",
-    "createdById": "{userId}"
+    "priority": "HIGH"
   }'
 ```
 
@@ -173,6 +186,12 @@ curl -X POST http://localhost:3001/api/cards/{cardId}/move \
   -H "Content-Type: application/json" \
   -d '{"columnId": "{newColumnId}", "position": 0}'
 ```
+
+### Autenticação (Clerk)
+
+- Frontend: App envolve `ClerkProvider` e as chamadas de API usam token via hook `useApi()`.
+- Backend: `@clerk/express` protege `/api/*` e sincroniza usuário local via upsert (`ensureUser`).
+- Endpoint de bootstrap: `GET /api/auth/me` (retorna o usuário local autenticado).
 
 ## Comandos de Desenvolvimento
 
@@ -187,6 +206,11 @@ npm run dev           # Inicia frontend + backend
 npm run dev:frontend  # Apenas React (5173)
 npm run dev:backend   # Apenas Express (3001)
 ```
+
+## Observações
+
+- O diretório `generated/` (cliente Prisma) e o banco `prisma/dev.db` são gerados localmente e ignorados pelo Git.
+- `postinstall` executa `prisma generate` automaticamente após `npm install`.
 
 ## Tecnologias
 

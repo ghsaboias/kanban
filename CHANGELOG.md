@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-08-29
+
 ### Added
+
+- Authentication with Clerk
+  - Frontend: `ClerkProvider` integration and tokenized API calls via `useApi()`
+  - Backend: `@clerk/express` middleware, auth-protected `/api/*` routes, `ensureUser` upsert, and `GET /api/auth/me`
 - Rich text editor for card descriptions using TipTap
   - Full formatting toolbar: bold, italic, strikethrough, code, headings (H2/H3), bullet/ordered lists, blockquotes, links
   - HTML sanitization on backend for XSS prevention
@@ -22,23 +28,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Backend payload size limits increased to 50MB for image support
 - Utility functions for HTML processing (text extraction, truncation, content validation, image extraction)
 
+### Changed
+
+- `POST /api/columns/:id/cards` now derives `createdById` from the authenticated user; clients should not send this field
+- Documentation updated to include auth setup, token usage, and updated curl examples
+
 ## [0.6.0] - 2025-08-28
 
 ### Added
+
 - Card detail modal with 200ms open/close transition (backdrop fade + panel slide), Escape-to-close, body scroll lock, and focus management.
 - Reliable click-to-open for cards by using dnd-kit `PointerSensor` with distance activation.
 - UI: Neutral counter chip in column headers with `99+` cap and divider separating destructive actions.
 
 ### Changed
+
 - Column header controls: delete column button now an icon button (trash), neutral by default and red on hover; counter is visually de-emphasized.
 - Card delete affordance: smaller (20px), appears on card hover, neutral by default and red on hover to reduce visual competition with column-level actions.
 
 ### Fixed
+
 - Intermittent card clicks not opening modal by switching from delay-based to distance-based drag activation.
 
 ## [0.5.0] - 2025-08-28
 
 ### Added - Phase 5: Drag & Drop Implementation
+
 - Drag & drop (dnd-kit) for columns and cards
   - Columns: horizontal `SortableContext` with persistence via `POST /api/columns/:id/reorder { position }`.
   - Cards: per-column vertical `SortableContext` with same-column reorder via `PUT /api/cards/:id { position }` and cross-column move via `POST /api/cards/:id/move { columnId, position }`.
@@ -47,11 +62,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Text contrast accessibility improvements (replaced #999, #666, #888 with darker colors)
 
 ### Fixed
+
 - Eliminated mid-drag snap-back by rendering a `DragOverlay` and hiding the in-place item while dragging.
 - Adjusted TypeScript imports to `import type { ... }` to comply with `verbatimModuleSyntax`.
 - Improved text contrast for better accessibility compliance
 
 ### Docs
+
 - README: Documented DnD approach, ids, and persistence endpoints.
 - PLAN: Marked columns DnD done; set next focus; noted cards DnD completion.
 - CLAUDE: Added DnD implementation tips and updated type-check commands.
@@ -59,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.0] - 2025-08-28
 
 ### Added - Phase 4: Complete CRUD Operations
+
 - **Board Management**: Full create, read, update, delete functionality
   - Create board form with title and description validation
   - Edit board functionality with pre-populated form
@@ -81,6 +99,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Proper loading states for all async operations
 
 ### Technical Implementation
+
 - **Component Architecture**: Props-based callback system for parent-child communication
 - **State Management**: Local React state with callback propagation for data consistency
 - **Error Handling**: User-friendly error messages and proper fallback states
@@ -89,6 +108,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **UI/UX**: Confirmation dialogs, loading states, and hover effects
 
 ### Enhanced User Experience
+
 - **Visual Feedback**: Loading states, hover effects, and visual confirmations
 - **Keyboard Support**: Enter/Escape for column title editing
 - **Responsive Design**: All forms and buttons work across screen sizes
@@ -98,6 +118,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.3.0] - 2025-08-28
 
 ### Added - Phase 3: Basic Frontend Integration
+
 - **React Components Architecture**: Modular component system for Kanban UI
   - `Board` component for displaying complete board with columns and cards
   - `Column` component with card count and responsive layout
@@ -121,6 +142,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Clean typography and spacing
 
 ### Technical Implementation
+
 - **TypeScript Integration**: Full type safety across frontend components
 - **Component Structure**: Organized in `/src/components/` directory
 - **State Management**: React hooks (useState, useEffect) for API data
@@ -128,12 +150,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dependencies**: Added React Router for navigation
 
 ### Fixed
+
 - **Frontend Structure**: Removed default Vite boilerplate for clean Kanban interface
 - **Type Safety**: Proper TypeScript interfaces for all API data structures
 
 ## [0.2.0] - 2025-08-27
 
 ### Added - Phase 2: REST API Implementation
+
 - **Complete REST API** with all CRUD endpoints for Kanban functionality
 - **Boards Management** endpoints:
   - GET `/api/boards` - List all boards
@@ -168,6 +192,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Complete TypeScript integration throughout API layer
 
 ### Technical Implementation
+
 - **API Structure**: Organized routes in separate files (boards.ts, columns.ts, cards.ts, users.ts)
 - **Middleware**: Error handling and async wrapper utilities
 - **Type Safety**: Request/response type definitions in `types/api.ts`
@@ -175,6 +200,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Testing**: All endpoints manually tested and verified working
 
 ### Fixed
+
 - **String ID Handling**: Updated all routes to properly handle CUID string IDs instead of integers
 - **Schema Alignment**: Corrected API implementation to match actual Prisma schema relationships
 - **Required Fields**: Added proper validation for `createdById` field in card creation
@@ -182,6 +208,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2025-08-27
 
 ### Added - Phase 1: Project Foundation
+
 - **Project Structure**: Monorepo setup with npm workspaces
 - **Frontend**: React + Vite + TypeScript application (port 5173)
 - **Backend**: Express + TypeScript server (port 3001)
@@ -191,7 +218,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Board model for project organization
   - Column model with position field for ordering
   - Card model with priority, descriptions, and assignments
-- **Development Environment**: 
+- **Development Environment**:
   - Concurrent development servers (`npm run dev`)
   - Database utilities (test, push, generate commands)
   - Individual service commands
@@ -204,6 +231,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Auto timestamps (createdAt/updatedAt)
 
 ### Technical Setup
+
 - TypeScript configuration for both frontend and backend
 - Prisma client generation and database connection
 - CORS and JSON middleware configuration
@@ -218,4 +246,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Phase 2 (v0.2.0)**: ✅ REST API - Complete backend API with all CRUD operations
 - **Phase 3 (v0.3.0)**: ✅ Frontend Integration - Connect React app to REST API
 - **Phase 4 (v0.4.0)**: ✅ Complete CRUD Operations - Full CRUD in UI with TypeScript, validation, confirmations
-- **Phase 5 (Planned)**: 🎯 Advanced Features - Drag & drop (cards and columns), card detail modal/editing, rich text editor, real-time updates, authentication
+- **Phase 5 (v0.5.0)**: ✅ Drag & Drop - Card and column drag & drop with position persistence
+- **Phase 6 (v0.6.0)**: ✅ Card Details - Card detail modal with click-to-open functionality
+- **Phase 7 (v0.7.0)**: ✅ Rich Text & Images - TipTap editor, image upload, authentication (Clerk)
+- **Phase 8 (Planned)**: 🎯 Real-time Updates - Socket.io integration for collaborative features
