@@ -21,19 +21,26 @@ export const useSocket = () => {
   const [socketId, setSocketId] = useState<string | null>(null);
 
   useEffect(() => {
+    let isUnmounted = false;
+
     const initializeSocket = async () => {
       try {
-        const token = await getToken();
-        if (!token) {
-          setError('Authentication token not available');
-          return;
-        }
-
         const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:3001', {
-          auth: {
-            token,
-          },
+          autoConnect: false,
         });
+
+        // Refresh token prior to connecting
+        const refreshAuth = async () => {
+          try {
+            const fresh = await getToken({ skipCache: true });
+            if (!fresh) {
+              throw new Error('Authentication token not available');
+            }
+            socket.auth = { token: fresh } as any;
+          } catch (e: any) {
+            throw e;
+          }
+        };
 
         socket.on('connect', () => {
           console.log('Connected to server');
@@ -48,13 +55,36 @@ export const useSocket = () => {
           setSocketId(null);
         });
 
-        socket.on('connect_error', (error) => {
-          console.error('Connection error:', error.message);
-          setError(error.message);
+        // If the server rejects the auth (expired/invalid), refresh token and retry once
+        socket.on('connect_error', async (err: any) => {
+          console.error('Connection error:', err?.message);
+          setError(err?.message || 'Connection error');
           setIsConnected(false);
+          if (err?.message && (err.message.includes('Authentication failed') || err.message.includes('Authentication token'))) {
+            try {
+              await refreshAuth();
+              socket.connect();
+            } catch {
+              // leave as disconnected; UI remains in SignedIn gate which may prompt re-auth
+            }
+          }
+        });
+
+        // On each reconnect attempt, refresh the token
+        socket.io.on('reconnect_attempt', async () => {
+          try {
+            await refreshAuth();
+          } catch (e) {
+            // Ignore; server will fail auth and trigger connect_error
+          }
         });
 
         socketRef.current = socket;
+
+        await refreshAuth();
+        if (!isUnmounted) {
+          socket.connect();
+        }
       } catch (error) {
         console.error('Failed to initialize socket:', error);
         setError('Failed to connect to server');
@@ -64,6 +94,7 @@ export const useSocket = () => {
     initializeSocket();
 
     return () => {
+      isUnmounted = true;
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
