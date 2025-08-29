@@ -27,7 +27,7 @@ export interface CreateCardRequest {
   description?: string;
   priority?: 'LOW' | 'MEDIUM' | 'HIGH';
   assigneeId?: string;
-  createdById: string;
+  createdById?: string; // ignored when auth is enabled
   position?: number;
 }
 

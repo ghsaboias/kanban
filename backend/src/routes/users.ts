@@ -40,9 +40,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     throw new AppError('Email inválido', 400);
   }
 
-  const existingUser = await prisma.user.findUnique({
-    where: { email }
-  });
+  const existingUser = await prisma.user.findUnique({ where: { email } });
 
   if (existingUser) {
     throw new AppError('Já existe um usuário com este email', 400);

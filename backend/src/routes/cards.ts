@@ -8,10 +8,16 @@ const router = Router();
 
 router.post('/columns/:columnId/cards', asyncHandler(async (req: Request, res: Response) => {
   const columnId = req.params.columnId;
-  const { title, description, priority, assigneeId, createdById, position }: CreateCardRequest = req.body;
+  const { title, description, priority, assigneeId, position }: CreateCardRequest = req.body;
 
-  if (!title || !createdById) {
-    throw new AppError('Título e ID do criador são obrigatórios', 400);
+  if (!title) {
+    throw new AppError('Título é obrigatório', 400);
+  }
+
+  // Authenticated user is the creator
+  const currentUser = res.locals.user;
+  if (!currentUser) {
+    throw new AppError('Usuário não autenticado', 401);
   }
 
   const columnExists = await prisma.column.findUnique({
@@ -58,7 +64,7 @@ router.post('/columns/:columnId/cards', asyncHandler(async (req: Request, res: R
       priority: priority || 'MEDIUM',
       position: finalPosition,
       columnId,
-      createdById,
+      createdById: currentUser.id,
       ...(assigneeId && { assigneeId })
     },
     include: {
