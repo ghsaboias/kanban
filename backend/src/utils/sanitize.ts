@@ -2,14 +2,15 @@ import sanitizeHtml, { IOptions, Transformer } from 'sanitize-html'
 
 const allowedTags = [
   'p', 'br', 'strong', 'em', 's', 'code', 'pre',
-  'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'a'
+  'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'a', 'img'
 ]
 
 const allowedAttributes: IOptions['allowedAttributes'] = {
-  a: ['href']
+  a: ['href'],
+  img: ['src', 'alt', 'style']
 }
 
-const allowedSchemes = ['http', 'https']
+const allowedSchemes = ['http', 'https', 'data']
 
 export function sanitizeDescription(input?: string | null): string | null {
   if (input == null) return null
@@ -34,6 +35,18 @@ export function sanitizeDescription(input?: string | null): string | null {
           attrs.rel = 'noopener noreferrer'
         }
         return { tagName: 'a', attribs: attrs }
+      }) as Transformer,
+      img: ((tagName, attribs) => {
+        const src = attribs.src || ''
+        // Allow data URLs (base64 images) and http/https
+        const safe = allowedSchemes.some(s => src.startsWith(s + ':'))
+        const attrs: Record<string, string> = {}
+        if (safe) {
+          attrs.src = src
+          if (attribs.alt) attrs.alt = attribs.alt
+          if (attribs.style) attrs.style = attribs.style
+        }
+        return { tagName: 'img', attribs: attrs }
       }) as Transformer
     }
   })
