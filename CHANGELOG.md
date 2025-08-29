@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Rich text editor for card descriptions using TipTap
+  - Full formatting toolbar: bold, italic, strikethrough, code, headings (H2/H3), bullet/ordered lists, blockquotes, links
+  - HTML sanitization on backend for XSS prevention
+  - Clean UX with no visual input field confusion
+  - Safe link handling with `target="_blank"` and `rel="noopener noreferrer"`
+- Utility functions for HTML processing (text extraction, truncation)
+
 ## [0.6.0] - 2025-08-28
 
 ### Added

@@ -223,5 +223,6 @@ npm run dev:backend   # Apenas Express (3001)
 - **Abertura**: clique no card abre um modal lateral com transição suave de 200ms (fade do backdrop + slide do painel).
 - **Fechamento**: `Esc`, clique no backdrop, no “×” ou ao salvar. O conteúdo permanece montado por ~200ms para completar a animação, depois desmonta.
 - **Edição**: título, descrição, prioridade e responsável com persistência via `PUT /api/cards/:id`.
+- **Editor de texto rico**: descrições suportam formatação completa (negrito, itálico, títulos, listas, citações, links) via TipTap com sanitização HTML no backend.
 - **Acessibilidade**: travamos o scroll do `body` ao abrir; foco vai para o título.
 - **Ergonomia**: o botão excluir do card é discreto (aparece somente no hover do card). No header da coluna, o contador é um “chip” neutro (com `99+`) e o botão de excluir coluna é separado por um divisor e destaca no hover.
