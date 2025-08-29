@@ -13,7 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - HTML sanitization on backend for XSS prevention
   - Clean UX with no visual input field confusion
   - Safe link handling with `target="_blank"` and `rel="noopener noreferrer"`
-- Utility functions for HTML processing (text extraction, truncation)
+- Image upload functionality for card descriptions
+  - Base64 image storage with TipTap Image extension
+  - File picker integration with loading feedback
+  - Image preview sections in card modal and board cards
+  - Full-screen image modal viewer (click to enlarge, click outside to close)
+  - Images hidden from rich text editor input area for clean UX
+  - Backend payload size limits increased to 50MB for image support
+- Utility functions for HTML processing (text extraction, truncation, content validation, image extraction)
 
 ## [0.6.0] - 2025-08-28
 

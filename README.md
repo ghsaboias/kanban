@@ -224,5 +224,6 @@ npm run dev:backend   # Apenas Express (3001)
 - **Fechamento**: `Esc`, clique no backdrop, no “×” ou ao salvar. O conteúdo permanece montado por ~200ms para completar a animação, depois desmonta.
 - **Edição**: título, descrição, prioridade e responsável com persistência via `PUT /api/cards/:id`.
 - **Editor de texto rico**: descrições suportam formatação completa (negrito, itálico, títulos, listas, citações, links) via TipTap com sanitização HTML no backend.
+- **Upload de imagens**: suporte a upload de imagens via base64 com preview em seções separadas e modal de visualização em tela cheia.
 - **Acessibilidade**: travamos o scroll do `body` ao abrir; foco vai para o título.
 - **Ergonomia**: o botão excluir do card é discreto (aparece somente no hover do card). No header da coluna, o contador é um “chip” neutro (com `99+`) e o botão de excluir coluna é separado por um divisor e destaca no hover.
