@@ -17,3 +17,17 @@ TESTS.md
 /generated/prisma
 test-db.js
 prisma/dev.db
+
+# Additions (keep original patterns above intact)
+# Per-package env files (frontend/backend)
+frontend/.env
+frontend/.env.*
+backend/.env
+backend/.env.*
+
+# Keep example env files tracked
+!frontend/.env.example
+!backend/.env.example
+
+# Broader SQLite artifacts (in addition to dev.db)
+prisma/*.db*
