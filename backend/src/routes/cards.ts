@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { prisma } from '../database';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { CreateCardRequest, UpdateCardRequest, MoveCardRequest } from '../types/api';
+import { sanitizeDescription } from '../utils/sanitize';
 
 const router = Router();
 
@@ -53,7 +54,7 @@ router.post('/columns/:columnId/cards', asyncHandler(async (req: Request, res: R
   const card = await prisma.card.create({
     data: {
       title,
-      description,
+      description: sanitizeDescription(description),
       priority: priority || 'MEDIUM',
       position: finalPosition,
       columnId,
@@ -160,7 +161,7 @@ router.put('/cards/:id', asyncHandler(async (req: Request, res: Response) => {
 
   const updateData: any = {};
   if (title) updateData.title = title;
-  if (description !== undefined) updateData.description = description;
+  if (description !== undefined) updateData.description = sanitizeDescription(description);
   if (priority) updateData.priority = priority;
   if (assigneeId !== undefined) updateData.assigneeId = assigneeId;
   if (position !== undefined) updateData.position = position;
