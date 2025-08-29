@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
+import { RichTextEditor } from './RichTextEditor'
+import { toPlainText } from '../utils/html'
 
 interface CardData {
   id: string
@@ -133,7 +135,7 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
         },
         body: JSON.stringify({
           title: formData.title.trim(),
-          description: formData.description.trim() || null,
+          description: toPlainText(formData.description).trim() ? formData.description : null,
           priority: formData.priority,
           assigneeId: formData.assigneeId || null
         })
@@ -373,27 +375,10 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
                 color: '#666'
               }}>Description</span>
             </div>
-          <textarea
-            value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-            placeholder="Add a description..."
-            style={{
-              width: '100%',
-              minHeight: '120px',
-              padding: '12px',
-              border: '1px solid #e1e1e1',
-              borderRadius: '6px',
-              fontSize: '14px',
-              color: '#213547',
-              backgroundColor: '#f8f9fa',
-              resize: 'vertical',
-              fontFamily: 'inherit',
-              lineHeight: '1.5',
-              boxSizing: 'border-box',
-              maxWidth: '100%',
-              overflowWrap: 'anywhere'
-            }}
-          />
+            <RichTextEditor
+              value={formData.description}
+              onChange={(html) => setFormData(prev => ({ ...prev, description: html }))}
+            />
           </div>
 
           {/* Add Property Button */}

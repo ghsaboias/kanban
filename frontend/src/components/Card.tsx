@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toPlainText, truncate } from '../utils/html'
 
 interface CardData {
   id: string
@@ -166,10 +167,7 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
           color: '#333',
           lineHeight: '1.4'
         }}>
-          {card.description.length > 100 
-            ? `${card.description.substring(0, 100)}...` 
-            : card.description
-          }
+          {truncate(toPlainText(card.description), 100)}
         </p>
       )}
       
