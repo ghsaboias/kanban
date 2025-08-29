@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { toPlainText, truncate } from '../utils/html'
+import { toPlainText, truncate, extractImages } from '../utils/html'
 
 interface CardData {
   id: string
@@ -170,6 +170,68 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
           {truncate(toPlainText(card.description), 100)}
         </p>
       )}
+      
+      {/* Images Section in Card */}
+      {(() => {
+        const images = extractImages(card.description)
+        if (images.length === 0) return null
+        
+        return (
+          <div style={{ marginBottom: '8px' }}>
+            <span style={{ 
+              fontSize: '10px', 
+              color: '#666', 
+              display: 'block', 
+              marginBottom: '4px' 
+            }}>Images ({images.length})</span>
+            <div style={{ 
+              display: 'flex', 
+              gap: '4px', 
+              flexWrap: 'wrap' 
+            }}>
+              {images.slice(0, 3).map((src, index) => (
+                <div
+                  key={index}
+                  style={{
+                    width: '32px',
+                    height: '24px',
+                    border: '1px solid #e1e1e1',
+                    borderRadius: '3px',
+                    overflow: 'hidden',
+                    backgroundColor: '#f8f9fa'
+                  }}
+                >
+                  <img
+                    src={src}
+                    alt={`Preview ${index + 1}`}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                  />
+                </div>
+              ))}
+              {images.length > 3 && (
+                <div style={{
+                  width: '32px',
+                  height: '24px',
+                  border: '1px solid #e1e1e1',
+                  borderRadius: '3px',
+                  backgroundColor: '#f8f9fa',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '8px',
+                  color: '#666'
+                }}>
+                  +{images.length - 3}
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      })()}
       
       <div style={{ 
         display: 'flex', 
