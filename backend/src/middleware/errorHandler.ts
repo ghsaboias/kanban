@@ -37,7 +37,9 @@ export const errorHandler = (
     details = error.message;
   }
 
-  console.error(`[${new Date().toISOString()}] ${error.name}: ${error.message}`, error.stack);
+  if (process.env.NODE_ENV !== 'test') {
+    console.error(`[${new Date().toISOString()}] ${error.name}: ${error.message}`, error.stack);
+  }
 
   res.status(status).json({
     success: false,
