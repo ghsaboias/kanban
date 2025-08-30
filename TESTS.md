@@ -1,101 +1,221 @@
-# Tests
+# Testing Guide
 
-This document explains how tests are organized and run in this monorepo, what’s currently covered, known gaps, and how to extend coverage safely.
+This document provides comprehensive information on the testing setup and how to run tests in the Kanban project.
 
-## Quick Start
+## Test Infrastructure
 
-- All tests: `npm test`
-- Backend only: `npm run test:backend`
-- Frontend only: `npm run test:frontend`
-- Coverage (backend + frontend): `npm run test:coverage`
-- Watch mode (both): `npm run test:watch`
+### Architecture
+- **Backend**: Jest with Supertest for API testing
+- **Frontend**: Vitest with React Testing Library for component testing
+- **Database**: SQLite with separate test database
+- **Coverage**: Integrated coverage reporting with custom summary script
 
-Frontend coverage is enabled via `@vitest/coverage-v8`.
+### Directory Structure
+```
+kanban/
+├── backend/src/__tests__/          # Backend tests
+│   ├── setup.ts                    # Jest test setup
+│   ├── auth/clerk.test.ts          # Authentication tests
+│   ├── middleware/                 # Middleware tests
+│   ├── routes/                     # API endpoint tests
+│   └── utils/                      # Utility function tests
+├── frontend/src/__tests__/         # Frontend tests
+│   ├── api.test.ts                 # API utility tests
+│   └── components/                 # Component tests
+├── scripts/coverage.mjs            # Custom coverage reporter
+└── TESTS.md                        # This file
+```
 
-## Repository Layout
+## Environment Setup
 
-- `backend/src/__tests__/`
-  - `auth/clerk.test.ts` — ensureUser middleware
-  - `database.test.ts` — Prisma connection, CRUD, relations, constraints
-  - `middleware/errorHandler.test.ts` — AppError, errorHandler, asyncHandler, notFound
-  - `routes/boards.test.ts` — Boards REST endpoints
-  - `setup.ts` — loads `.env.test`, connects Prisma, truncates tables before each test
-- `backend/jest.config.js` — Jest configuration
-- `frontend/src/__tests__/`
-  - `api.test.ts` — API client behavior
-  - `components/Board.test.tsx` — Board component states/interactions (active)
-  - `setup.ts` — jsdom setup + mocks (fetch, socket.io-client, Clerk)
-- `frontend/vitest.config.ts` — Vitest configuration
+### Backend Test Environment
+- **Configuration**: `backend/.env.test` (not tracked in git)
+- **Database**: Uses separate test database (`../prisma/test.db`)
+- **Environment**: `NODE_ENV=test`
+- **Note**: The `.env.test` file is automatically ignored by git for security
 
-## Backend Tests (Jest)
+### Test Database
+- **Location**: `prisma/test.db`
+- **Auto-cleanup**: Database is cleaned between each test
+- **Schema**: Shares the same schema as development database
 
-- Runner: Jest 29 with `ts-jest`.
-- HTTP: `supertest` against the Express app instance (no real server listen).
-- DB: Prisma client from `generated/` using `.env.test` (SQLite).
-- Auth: Clerk middleware is mocked where required.
+## Running Tests
 
-Key configuration:
-- `roots: ["<rootDir>/src"]` and `testMatch: **/__tests__/**/*.test.ts`.
-- `setupFilesAfterEnv: ["<rootDir>/src/__tests__/setup.ts"]` handles Prisma connect/disconnect and DB cleanup (delete in order: card → column → board → user).
-- `maxWorkers: 1` prevents parallel test interference with the shared test DB.
+### Root (Monorepo) Commands
 
-Current coverage focus:
-- Error utilities: `AppError`, `errorHandler`, `asyncHandler`, `notFound`.
-- Clerk integration: `ensureUser` creates/updates local users from Clerk data.
-- Database sanity: connection, CRUD, relations, unique constraints, cascades.
-- Boards REST API: GET (list/detail), POST, PUT, DELETE with validation and ordering.
+**Run all tests (backend + frontend):**
+```bash
+npm test
+```
 
-Coverage notes:
-- Summary file after runs: `backend/coverage/coverage-summary.json`.
-- Temporarily ignored to keep baseline signal clean: `src/socket/*`, `src/routes/cards.ts`, `src/routes/columns.ts`, `src/routes/users.ts`.
-- To raise coverage, add tests for the ignored paths and remove them from `coveragePathIgnorePatterns` in `backend/jest.config.js`.
+**Individual test suites:**
+```bash
+npm run test:backend        # Backend tests only
+npm run test:frontend       # Frontend tests only
+```
 
-Tips:
-- Use `request(app)` with `supertest` (do not call `app.listen`).
-- Keep DB cleanup in `beforeEach`; avoid reusing state across tests.
-- When mocking Clerk, stub `withAuth`, `requireAuthMw`, and provide `res.locals.user` as needed.
+**Coverage reports:**
+```bash
+npm run test:coverage       # Full coverage with banners + summary
+npm run test:backend:coverage    # Backend coverage only  
+npm run test:frontend:coverage   # Frontend coverage only
+```
 
-## Frontend Tests (Vitest)
+**Watch mode:**
+```bash
+npm run test:watch          # Watch both backend and frontend
+```
 
-- Runner: Vitest 3 with jsdom and React Testing Library.
-- Setup: `frontend/src/__tests__/setup.ts` mocks `global.fetch`, `socket.io-client`, and `@clerk/clerk-react` to avoid real network/auth.
-- API client: `frontend/src/api.ts` provides `api.request/get/post/put/delete` used by tests, merging auth and socket headers and handling JSON responses, 204 nulls, and error propagation.
+### Backend Commands (from backend/)
 
-What’s covered:
-- `src/__tests__/api.test.ts` — end-to-end API client behavior (headers, body serialization, success/error handling, JSON parse errors, empty responses).
-- `src/__tests__/components/Board.test.tsx` — Board rendering, loading/error states, column/card presence, basic DnD context, and add‑column flow (with mocks).
+```bash
+npm test                    # Run all backend tests
+npm run test:watch          # Run tests in watch mode
+npm run test:coverage       # Run tests with coverage
+```
 
-Known gaps:
-- Pages: `BoardsList.tsx`, `BoardPage.tsx` do not have tests yet (navigation, empty/error states, create board flow).
-- Realtime and DnD: interactions beyond the basic mocked context (e.g., invoking `onDragEnd` and socket event reactions) are not covered.
-- Rich card details: `CardDetailModal.tsx`, `RichTextEditor.tsx` and socket hooks are largely untested.
+### Frontend Commands (from frontend/)
 
-Frontend coverage:
-- Coverage is already enabled with `@vitest/coverage-v8`. Run `npm run test:coverage` from the repo root.
+```bash
+npm test                    # Run all frontend tests
+npm run test:ui             # Open Vitest UI (interactive)
+npm run test:coverage       # Run tests with coverage
+```
 
-## Current Coverage (summary)
+## Test Configuration
 
-- Backend (Jest): Lines 92.9%, Statements 92.81%, Branches 86.66%, Functions 84.21%.
-- Frontend (Vitest, src only): Lines ~44.34%, Statements ~44.34%, Branches ~84.61%, Functions ~77.77%.
+### Backend (Jest)
+- **Config**: `backend/jest.config.js`
+- **Environment**: Node.js
+- **Workers**: Sequential execution (`maxWorkers: 1`) to avoid database races
+- **Timeout**: 10 seconds per test
+- **Setup**: Automatic database cleanup between tests
 
-Tips:
-- Avoid JSX in the `.ts` test setup; return `null` from mocked components.
-- Prefer queries by role/text over internal test ids when possible.
-- Ensure mocks match the actual hooks (e.g., `useApi` function vs. client object).
+### Frontend (Vitest)  
+- **Config**: `frontend/vitest.config.ts`
+- **Environment**: jsdom (browser simulation)
+- **Coverage**: v8 provider
+- **Testing Library**: React Testing Library for component testing
 
-## Environment & DB
+## Coverage Targets
 
-- `backend/.env.test` should configure the Prisma test database (SQLite). The test setup connects/disconnects Prisma and truncates tables before each test in FK-safe order.
-- No real network calls are performed by tests (frontend fetch/socket are mocked; backend uses in-memory Express via `supertest`).
+### Backend Coverage (Current: 92.2%)
+- **Statements**: 92.2%
+- **Branches**: 84.78%
+- **Functions**: 84.21%
+- **Lines**: 92.25%
 
-## Planned Improvements
+### Frontend Coverage (Current: 35.77%)
+- **Statements**: 35.77%
+- **Branches**: 63.63%
+- **Functions**: 34.06%
 
-- Re-enable and update Board component tests to match current UI (English strings, hook shape, realistic queries).
-- Add coverage for: `src/routes/columns.ts`, `src/routes/cards.ts`, `src/routes/users.ts`, and `src/socket/*`.
-- Enable frontend coverage in CI after installing `@vitest/coverage-v8`.
+**Areas for improvement:**
+- App.tsx: 0% (main entry point, hard to test)
+- useApi.ts: 0% (auth hook)
+- Socket contexts and hooks
+- Rich text editor component
+
+## Writing Tests
+
+### Backend API Tests
+```typescript
+import request from 'supertest'
+import { app } from '../../app'
+import { testPrisma } from '../setup'
+
+describe('Boards API', () => {
+  it('should create a board', async () => {
+    const response = await request(app)
+      .post('/api/boards')
+      .send({ title: 'Test Board' })
+      .expect(201)
+      
+    expect(response.body.success).toBe(true)
+  })
+})
+```
+
+### Frontend Component Tests
+```typescript
+import { render, screen } from '@testing-library/react'
+import { BrowserRouter } from 'react-router-dom'
+import { BoardsList } from '../../components/BoardsList'
+
+describe('BoardsList', () => {
+  it('renders boards after loading', async () => {
+    render(
+      <BrowserRouter>
+        <BoardsList />
+      </BrowserRouter>
+    )
+    
+    expect(screen.getByText('Loading boards...')).toBeInTheDocument()
+  })
+})
+```
+
+## Test Database Management
+
+### Automatic Cleanup
+- **Before each test**: All tables are cleared in proper order (respecting foreign keys)
+- **Setup**: Database connection established
+- **Teardown**: Connection properly closed
+
+### Manual Database Operations
+```bash
+npm run test:db            # Test database connection
+npm run db:push            # Update database schema  
+npm run db:generate        # Regenerate Prisma client
+```
 
 ## Troubleshooting
 
-- EPERM / port binding errors in backend tests: ensure you use `request(app)` (no server listen) and keep Jest `maxWorkers: 1`.
-- TypeScript errors in tests: ensure tests compile with project tsconfigs; avoid JSX in `.ts` setup files.
-- Missing frontend coverage: install `@vitest/coverage-v8` as shown above.
+### Common Issues
+
+**Tests fail when run from monorepo root but pass from subdirectories:**
+- **Cause**: Database path resolution issues
+- **Solution**: Ensure `.env.test` uses correct relative paths (`../prisma/test.db`)
+
+**Database connection errors:**
+- **Check**: Database file exists in `prisma/` directory
+- **Verify**: `.env.test` points to correct database path
+- **Regenerate**: Run `npm run db:generate` if schema changed
+
+**Frontend tests fail with "apiFetch is not a function":**
+- **Cause**: Mock setup incorrect for `useApi` hook
+- **Solution**: Mock should return function directly, not wrapped in object
+
+### Performance Tips
+
+- Backend tests run sequentially to avoid database race conditions
+- Use `--watch` mode for development to run only changed tests
+- Frontend tests use jsdom which is faster than real browser testing
+
+## Environment Files
+
+### .env.test Security Analysis
+
+**Current contents:**
+```bash
+DATABASE_URL="file:../prisma/test.db"
+NODE_ENV=test
+```
+
+**Security Assessment**: ✅ **Safe to track in git**
+- Contains only test database path (local SQLite file)
+- No secrets, API keys, or sensitive credentials
+- Environment is clearly marked as `test`
+- Database path is relative and non-sensitive
+
+**Recommendation**: Unlike production `.env` files, `.env.test` could be tracked in git since it contains no sensitive information and would help ensure consistent test environments across developers.
+
+## Coverage Reports
+
+The custom coverage script (`scripts/coverage.mjs`) provides:
+- **Formatted output** with clear sections for backend/frontend
+- **Summary statistics** showing overall project health
+- **Low coverage alerts** highlighting files needing attention
+- **Combined reporting** for the entire monorepo
+
+Use `npm run test:coverage` for the best overview of project test health.
