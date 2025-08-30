@@ -13,7 +13,6 @@ build/
 .DS_Store
 CLAUDE.md
 PRD.md
-TESTS.md
 /generated/prisma
 test-db.js
 prisma/dev.db
