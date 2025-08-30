@@ -17,7 +17,14 @@ export default defineConfig({
         'src/__tests__/',
         '**/*.d.ts',
         'src/main.tsx',
-        'src/vite-env.d.ts'
+        'src/vite-env.d.ts',
+        // Exclude non-app config files from coverage totals
+        '../eslint.config.js',
+        '../vite.config.ts',
+        '../vitest.config.ts',
+        'eslint.config.js',
+        'vite.config.ts',
+        'vitest.config.ts'
       ]
     }
   },
