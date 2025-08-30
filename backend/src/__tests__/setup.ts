@@ -1,8 +1,9 @@
 import { config } from 'dotenv';
 import { PrismaClient } from '../../../generated/prisma';
 
-// Load test environment variables
-config({ path: '.env.test' });
+// Load environment variables (root .env for development vars, .env.test for test overrides)
+config({ path: '../.env' });
+config({ path: '.env.test', override: true });
 
 // Create a test Prisma client instance
 export const testPrisma = new PrismaClient();
