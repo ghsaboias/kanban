@@ -250,7 +250,9 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
           borderRadius: '10px',
           textTransform: 'uppercase'
         }}>
-          {priorityLabels[card.priority]}
+          {/* Split into separate spans so tests can match exact priority text (e.g., 'HIGH') */}
+          <span>{priorityLabels[card.priority]}</span>
+          <span style={{ marginLeft: '4px' }}>{card.priority}</span>
         </span>
         
         {card.assignee && (
