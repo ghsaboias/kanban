@@ -32,6 +32,11 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     data: {
       title,
       description
+    },
+    include: {
+      _count: {
+        select: { columns: true }
+      }
     }
   });
 
@@ -91,6 +96,11 @@ router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
     data: {
       ...(title && { title }),
       ...(description !== undefined && { description })
+    },
+    include: {
+      _count: {
+        select: { columns: true }
+      }
     }
   });
 

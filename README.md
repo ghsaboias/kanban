@@ -14,6 +14,7 @@ Uma aplicação colaborativa de quadro Kanban construída com React, TypeScript 
 - **Prisma ORM + SQLite** - Banco de dados com relacionamentos tipados
 - **Sistema de posicionamento** - Suporte nativo para drag & drop
 - **Middleware de erros** - Tratamento de erros em português
+- **Socket.IO** - Realtime implementado (salas por board, presença, emissões server-authoritative)
 
 ### Banco de Dados
 - **4 Modelos principais**: User, Board, Column, Card
@@ -192,6 +193,15 @@ curl -X POST http://localhost:3001/api/cards/{cardId}/move \
 - Frontend: App envolve `ClerkProvider` e as chamadas de API usam token via hook `useApi()`.
 - Backend: `@clerk/express` protege `/api/*` e sincroniza usuário local via upsert (`ensureUser`).
 - Endpoint de bootstrap: `GET /api/auth/me` (retorna o usuário local autenticado).
+
+## Realtime (Socket.IO)
+
+- Conexão autenticada: o frontend envia o token do Clerk no `handshake.auth.token`.
+- Salas por board: o cliente emite `join:board`/`leave:board`; o servidor valida e entra em `board-<id>`.
+- Presença: `user:joined`/`user:left` para todos na sala; no join, o servidor envia `board:joined` com o roster atual.
+- Emissões server-authoritative: as rotas REST emitem para a sala após o sucesso no banco (cards/columns `created|updated|deleted|reordered|moved`).
+- Evitando eco do iniciador: o frontend envia `X-Socket-Id` nos writes; o servidor usa `.except(socketId)` para não reenviar ao autor.
+- Tipos compartilhados: `shared/realtime.ts` define a tipagem dos eventos consumida por FE/BE.
 
 ## Comandos de Desenvolvimento
 

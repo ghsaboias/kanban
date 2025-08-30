@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useApi } from '../useApi'
 
@@ -94,7 +94,7 @@ export function BoardsList() {
 
       const result = await response.json()
       if (result.success) {
-        setBoards(prev => prev.map(board => 
+        setBoards(prev => prev.map(board =>
           board.id === editingBoard.id ? result.data : board
         ))
         setFormData({ title: '', description: '' })
@@ -171,12 +171,12 @@ export function BoardsList() {
           padding: '20px',
           marginBottom: '24px'
         }}>
-          <h3 style={{ margin: '0 0 16px 0' }}>
+          <h3 style={{ margin: '0 0 16px 0', color: '#000' }}>
             {editingBoard ? 'Edit Board' : 'Create New Board'}
           </h3>
           <form onSubmit={editingBoard ? handleEditBoard : handleCreateBoard}>
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#000' }}>
                 Title *
               </label>
               <input
@@ -197,7 +197,7 @@ export function BoardsList() {
               />
             </div>
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#000' }}>
                 Description
               </label>
               <textarea
@@ -231,8 +231,8 @@ export function BoardsList() {
                   fontSize: '14px'
                 }}
               >
-                {createLoading 
-                  ? (editingBoard ? 'Updating...' : 'Creating...') 
+                {createLoading
+                  ? (editingBoard ? 'Updating...' : 'Creating...')
                   : (editingBoard ? 'Update Board' : 'Create Board')
                 }
               </button>
@@ -265,20 +265,20 @@ export function BoardsList() {
       ) : (
         <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
           {boards.map(board => (
-            <div 
-              key={board.id} 
-              style={{ 
-                border: '1px solid #ccc', 
-                borderRadius: '8px', 
+            <div
+              key={board.id}
+              style={{
+                border: '1px solid #ccc',
+                borderRadius: '8px',
                 padding: '16px',
                 transition: 'box-shadow 0.2s',
                 backgroundColor: 'white',
                 position: 'relative'
               }}
             >
-              <div style={{ 
-                position: 'absolute', 
-                top: '8px', 
+              <div style={{
+                position: 'absolute',
+                top: '8px',
                 right: '8px',
                 display: 'flex',
                 gap: '4px'
@@ -320,14 +320,14 @@ export function BoardsList() {
                 </button>
               </div>
 
-              <Link 
+              <Link
                 to={`/board/${board.id}`}
                 style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
               >
                 <h3 style={{ margin: '0 0 8px 0', paddingRight: '80px', color: '#000' }}>{board.title}</h3>
                 {board.description && <p style={{ margin: '0 0 12px 0', color: '#333' }}>{board.description}</p>}
                 <p style={{ fontSize: '14px', color: '#333', margin: '0 0 8px 0' }}>
-                  {board._count.columns} columns
+                  {(board._count?.columns ?? 0)} columns
                 </p>
                 <p style={{ fontSize: '12px', color: '#333', margin: 0 }}>
                   Created: {new Date(board.createdAt).toLocaleDateString()}
