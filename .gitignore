@@ -32,3 +32,13 @@ backend/.env.*
 prisma/*.db*
 
 PRD_TASKS.md
+
+# Test coverage and reports
+coverage/
+*/coverage/
+jest-out.json
+jest-results.json
+*/jest-out.json
+*/jest-results.json
+vitest-out.json
+*/vitest-out.json
