@@ -17,6 +17,11 @@
     "build:backend": "cd backend && npm run build",
     "build:shared": "cd shared && npm run build",
     "postinstall": "npm run db:generate",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test",
+    "test:coverage": "npm run test:backend -- --coverage && npm run test:frontend -- --coverage",
+    "test:watch": "concurrently \"npm run test:backend -- --watch\" \"npm run test:frontend -- --watch\"",
     "test:db": "npx ts-node test-db.js",
     "db:push": "npx prisma db push",
     "db:generate": "npx prisma generate"
