@@ -41,7 +41,7 @@ interface BoardProps {
 }
 
 export function Board({ boardId }: BoardProps) {
-  const apiFetch = useApi()
+  const { apiFetch } = useApi()
   const [board, setBoard] = useState<BoardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

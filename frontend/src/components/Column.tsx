@@ -54,7 +54,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
   const [titleValue, setTitleValue] = useState(column.title)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const { setNodeRef: setDroppableNodeRef } = useDroppable({ id: `column-${column.id}` })
-  const apiFetch = useApi()
+  const { apiFetch } = useApi()
 
   useEffect(() => {
     // Fetch users for assignment
@@ -165,7 +165,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
     }
   }
   return (
-    <div style={{ 
+    <div data-testid={`column-${column.id}`} style={{ 
       minWidth: '300px',
       backgroundColor: '#f5f5f5',
       borderRadius: '8px',
