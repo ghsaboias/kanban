@@ -1,4 +1,4 @@
-# Sistema de Quadro Kanban
+# KanBrain 🧠
 
 Uma aplicação colaborativa de quadro Kanban construída com React, TypeScript e Express. Sistema desenvolvido para uso interno em empresa do mercado financeiro, focado em flexibilidade, organização e atribuição eficiente de tarefas.
 
