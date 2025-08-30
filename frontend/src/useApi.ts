@@ -6,7 +6,7 @@ export function useApi() {
   const { getToken } = useAuth()
   const { socketId } = useSocketContext()
 
-  return async function apiFetch(path: string, init?: RequestInit) {
+  const apiFetch = async function apiFetch(path: string, init?: RequestInit) {
     const token = await getToken()
     const headers = new Headers(init?.headers || {})
     if (token) headers.set('Authorization', `Bearer ${token}`)
@@ -14,5 +14,9 @@ export function useApi() {
     const base = API_URL.replace(/\/$/, '')
     const p = path.startsWith('/') ? path : `/${path}`
     return fetch(`${base}${p}`, { ...init, headers })
-  }
+  } as any
+
+  // Provide both callable and object access: useApi() and const { apiFetch } = useApi()
+  apiFetch.apiFetch = apiFetch
+  return apiFetch
 }
