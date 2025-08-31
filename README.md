@@ -60,8 +60,8 @@ npm run db:generate
 # Aplica o schema ao banco
 npm run db:push
 
-# Testa a conexão (opcional)
-npm run test:db
+# Setup do banco de testes (necessário para rodar testes)
+DATABASE_URL="file:./prisma/test.db" npm run db:push
 ```
 
 5. Inicie os servidores de desenvolvimento:
@@ -209,13 +209,35 @@ curl -X POST http://localhost:3001/api/cards/{cardId}/move \
 # Database
 npm run db:generate    # Regenera cliente Prisma
 npm run db:push        # Atualiza schema no banco
-npm run test:db        # Testa conexão
+
+# Testes
+npm test              # Roda todos os testes (backend + frontend)
+npm run test:backend  # Apenas testes do backend
+npm run test:frontend # Apenas testes do frontend
 
 # Desenvolvimento
 npm run dev           # Inicia frontend + backend
 npm run dev:frontend  # Apenas React (5173)
 npm run dev:backend   # Apenas Express (3001)
 ```
+
+## Executando Testes
+
+Para rodar os testes, primeiro certifique-se de que o banco de testes está configurado:
+
+```bash
+# Se ainda não configurou o banco de testes
+DATABASE_URL="file:./prisma/test.db" npm run db:push
+
+# Roda todos os testes
+npm test
+
+# Ou separadamente
+npm run test:backend   # 78 testes da API REST
+npm run test:frontend  # 44 testes dos componentes React
+```
+
+<b>Nota:</b> Os testes usam um banco SQLite separado (`prisma/test.db`) que é limpo antes de cada teste.
 
 ## Observações
 
