@@ -2,6 +2,8 @@ import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Board } from '../../components/Board';
 
+let mockedBoardData: any = null;
+
 // Mock all dependencies to isolate performance testing
 vi.mock('@dnd-kit/core', () => ({
   DndContext: ({ children }: { children: any }) => <div data-testid="dnd-context">{children}</div>,
@@ -45,13 +47,14 @@ vi.mock('../../hooks/useRealtimeBoard', () => ({
 
 vi.mock('../../useApi', () => ({
   useApi: () => {
-    const mockApiFetch = vi.fn().mockResolvedValue({ 
-      ok: true, 
-      json: () => Promise.resolve({ success: true, data: null }) 
+    const mockApiFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ success: true, data: mockedBoardData })
     });
     // Set up the apiFetch property for compatibility
-    mockApiFetch.apiFetch = mockApiFetch;
-    return mockApiFetch;
+    const m: any = mockApiFetch;
+    m.apiFetch = mockApiFetch;
+    return m;
   },
 }));
 
@@ -103,7 +106,8 @@ describe('Board Performance Tests', () => {
     const board = generateBoard(3, 5);
     
     const startTime = performance.now();
-    render(<Board board={board} />);
+    mockedBoardData = board;
+    render(<Board boardId="board-1" />);
     const endTime = performance.now();
     
     const renderTime = endTime - startTime;
@@ -121,7 +125,8 @@ describe('Board Performance Tests', () => {
     const board = generateBoard(5, 10);
     
     const startTime = performance.now();
-    render(<Board board={board} />);
+    mockedBoardData = board;
+    render(<Board boardId="board-1" />);
     const endTime = performance.now();
     
     const renderTime = endTime - startTime;
@@ -138,7 +143,8 @@ describe('Board Performance Tests', () => {
     const board = generateBoard(10, 20);
     
     const startTime = performance.now();
-    render(<Board board={board} />);
+    mockedBoardData = board;
+    render(<Board boardId="board-1" />);
     const endTime = performance.now();
     
     const renderTime = endTime - startTime;
@@ -155,7 +161,8 @@ describe('Board Performance Tests', () => {
     const board = generateBoard(15, 50);
     
     const startTime = performance.now();
-    render(<Board board={board} />);
+    mockedBoardData = board;
+    render(<Board boardId="board-1" />);
     const endTime = performance.now();
     
     const renderTime = endTime - startTime;
@@ -175,10 +182,12 @@ describe('Board Performance Tests', () => {
     
     // Perform multiple renders to test consistency
     for (let i = 0; i < 5; i++) {
-      const { unmount } = render(<Board board={board} />);
+      mockedBoardData = board;
+      const { unmount } = render(<Board boardId="board-1" />);
       
       const startTime = performance.now();
-      render(<Board board={board} />);
+      mockedBoardData = board;
+      render(<Board boardId="board-1" />);
       const endTime = performance.now();
       
       renderTimes.push(endTime - startTime);
@@ -213,7 +222,8 @@ describe('Board Performance Tests', () => {
     };
     
     const startTime = performance.now();
-    render(<Board board={board} />);
+    mockedBoardData = board;
+    render(<Board boardId="board-1" />);
     const endTime = performance.now();
     
     const renderTime = endTime - startTime;

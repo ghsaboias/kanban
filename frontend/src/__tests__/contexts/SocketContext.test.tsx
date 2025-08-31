@@ -3,7 +3,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SocketProvider, useSocketContext } from '../../contexts/SocketContext';
 
 // Mock useSocket hook
-const mockSocketValue = {
+const mockSocketValue: {
+  isConnected: boolean;
+  socketId: string | null;
+  error: string | null;
+  joinBoard: ReturnType<typeof vi.fn>;
+  leaveBoard: ReturnType<typeof vi.fn>;
+  on: ReturnType<typeof vi.fn>;
+  off: ReturnType<typeof vi.fn>;
+  emit: ReturnType<typeof vi.fn>;
+} = {
   isConnected: false,
   socketId: null,
   error: null,
