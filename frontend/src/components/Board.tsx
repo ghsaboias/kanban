@@ -8,6 +8,7 @@ import { SortableColumn } from './SortableColumn'
 import { CardDetailModal } from './CardDetailModal'
 import { RealtimeBoardWrapper } from './RealtimeBoardWrapper'
 import { useApi } from '../useApi'
+import { useTheme } from '../theme/ThemeProvider'
 
 interface Card {
   id: string
@@ -42,6 +43,7 @@ interface BoardProps {
 
 export function Board({ boardId }: BoardProps) {
   const { apiFetch } = useApi()
+  const { theme } = useTheme()
   const [board, setBoard] = useState<BoardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -311,8 +313,8 @@ export function Board({ boardId }: BoardProps) {
           <div style={{ marginBottom: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
               <div>
-                <h1 style={{ color: '#000', margin: '0 0 8px 0' }}>{board.title}</h1>
-                {board.description && <p style={{ color: '#333', margin: 0 }}>{board.description}</p>}
+                <h1 style={{ color: theme.textPrimary, margin: '0 0 8px 0' }}>{board.title}</h1>
+                {board.description && <p style={{ color: theme.textSecondary, margin: 0 }}>{board.description}</p>}
               </div>
               
               {/* Connection Status & Online Users */}
@@ -333,7 +335,7 @@ export function Board({ boardId }: BoardProps) {
                 </div>
                 
                 {onlineUsers.length > 0 && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#666' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: theme.textMuted }}>
                     <span>👥</span>
                     <span>{onlineUsers.length} online</span>
                     <div style={{ display: 'flex', gap: '4px', marginLeft: '8px' }}>
@@ -345,8 +347,8 @@ export function Board({ boardId }: BoardProps) {
                             width: '24px',
                             height: '24px',
                             borderRadius: '50%',
-                            backgroundColor: '#007bff',
-                            color: 'white',
+                            backgroundColor: theme.accent,
+                            color: theme.accentText,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -362,8 +364,8 @@ export function Board({ boardId }: BoardProps) {
                           width: '24px',
                           height: '24px',
                           borderRadius: '50%',
-                          backgroundColor: '#6c757d',
-                          color: 'white',
+                          backgroundColor: theme.muted,
+                          color: theme.accentText,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -471,7 +473,7 @@ export function Board({ boardId }: BoardProps) {
           }}>
             {showCreateColumn ? (
               <div style={{
-                backgroundColor: '#f5f5f5',
+                backgroundColor: theme.surfaceAlt,
                 borderRadius: '8px',
                 padding: '16px',
                 width: '100%'
@@ -485,11 +487,11 @@ export function Board({ boardId }: BoardProps) {
                     style={{
                       width: '100%',
                       padding: '8px 12px',
-                      border: '1px solid #ddd',
+                      border: `1px solid ${theme.border}`,
                       borderRadius: '4px',
                       fontSize: '14px',
-                      color: '#213547',
-                      backgroundColor: '#f8f9fa',
+                      color: theme.textPrimary,
+                      backgroundColor: theme.inputBg,
                       marginBottom: '12px'
                     }}
                     autoFocus
@@ -500,9 +502,9 @@ export function Board({ boardId }: BoardProps) {
                       type="submit"
                       disabled={createLoading || !columnTitle.trim()}
                       style={{
-                        backgroundColor: createLoading ? '#999' : '#28a745',
-                        color: 'white',
-                        border: 'none',
+                        backgroundColor: createLoading ? theme.muted : theme.accent,
+                        color: theme.accentText,
+                        border: `1px solid ${theme.border}`,
                         borderRadius: '4px',
                         padding: '6px 12px',
                         cursor: createLoading ? 'not-allowed' : 'pointer',
@@ -518,9 +520,9 @@ export function Board({ boardId }: BoardProps) {
                         setColumnTitle('')
                       }}
                       style={{
-                        backgroundColor: '#6c757d',
-                        color: 'white',
-                        border: 'none',
+                        backgroundColor: theme.muted,
+                        color: theme.accentText,
+                        border: `1px solid ${theme.border}`,
                         borderRadius: '4px',
                         padding: '6px 12px',
                         cursor: 'pointer',
@@ -538,21 +540,21 @@ export function Board({ boardId }: BoardProps) {
                 style={{
                   width: '100%',
                   padding: '16px',
-                  backgroundColor: '#f8f9fa',
-                  border: '2px dashed #dee2e6',
+                  backgroundColor: theme.surfaceAlt,
+                  border: `2px dashed ${theme.border}`,
                   borderRadius: '8px',
                   cursor: 'pointer',
                   fontSize: '14px',
-                  color: '#6c757d',
+                  color: theme.textMuted,
                   transition: 'border-color 0.2s, color 0.2s'
                 }}
                 onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = '#007bff'
-                  ;(e.currentTarget as HTMLButtonElement).style.color = '#007bff'
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = theme.accent
+                  ;(e.currentTarget as HTMLButtonElement).style.color = theme.accent
                 }}
                 onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = '#dee2e6'
-                  ;(e.currentTarget as HTMLButtonElement).style.color = '#6c757d'
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = theme.border
+                  ;(e.currentTarget as HTMLButtonElement).style.color = theme.textMuted
                 }}
               >
                 + Add Column

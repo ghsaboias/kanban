@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useApi } from '../useApi'
+import { useTheme } from '../theme/ThemeProvider'
 
 interface Board {
   id: string
@@ -14,6 +15,7 @@ interface Board {
 }
 
 export function BoardsList() {
+  const { theme } = useTheme()
   const [boards, setBoards] = useState<Board[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -145,13 +147,13 @@ export function BoardsList() {
   return (
     <div style={{ padding: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h1 style={{ margin: 0, color: '#000' }}>Kanban Boards</h1>
+        <h1 style={{ margin: 0, color: theme.textPrimary }}>Kanban Boards</h1>
         <button
           onClick={() => setShowCreateForm(true)}
           style={{
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: 'none',
+            backgroundColor: theme.accent,
+            color: theme.accentText,
+            border: `1px solid ${theme.border}`,
             borderRadius: '6px',
             padding: '10px 16px',
             cursor: 'pointer',
@@ -165,18 +167,18 @@ export function BoardsList() {
 
       {showCreateForm && (
         <div style={{
-          backgroundColor: 'white',
-          border: '1px solid #ddd',
+          backgroundColor: theme.surface,
+          border: `1px solid ${theme.border}`,
           borderRadius: '8px',
           padding: '20px',
           marginBottom: '24px'
         }}>
-          <h3 style={{ margin: '0 0 16px 0', color: '#000' }}>
+          <h3 style={{ margin: '0 0 16px 0', color: theme.textPrimary }}>
             {editingBoard ? 'Edit Board' : 'Create New Board'}
           </h3>
           <form onSubmit={editingBoard ? handleEditBoard : handleCreateBoard}>
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#000' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: theme.textPrimary }}>
                 Title *
               </label>
               <input
@@ -187,17 +189,17 @@ export function BoardsList() {
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #ddd',
+                  border: `1px solid ${theme.border}`,
                   borderRadius: '4px',
                   fontSize: '14px',
-                  color: '#213547',
-                  backgroundColor: '#f9f9f9'
+                  color: theme.textPrimary,
+                  backgroundColor: theme.inputBg
                 }}
                 required
               />
             </div>
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#000' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: theme.textPrimary }}>
                 Description
               </label>
               <textarea
@@ -208,11 +210,11 @@ export function BoardsList() {
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #ddd',
+                  border: `1px solid ${theme.border}`,
                   borderRadius: '4px',
                   fontSize: '14px',
-                  color: '#213547',
-                  backgroundColor: '#f9f9f9',
+                  color: theme.textPrimary,
+                  backgroundColor: theme.inputBg,
                   resize: 'vertical'
                 }}
               />
@@ -222,9 +224,9 @@ export function BoardsList() {
                 type="submit"
                 disabled={createLoading || !formData.title.trim()}
                 style={{
-                  backgroundColor: createLoading ? '#999' : '#28a745',
-                  color: 'white',
-                  border: 'none',
+                  backgroundColor: createLoading ? theme.muted : theme.accent,
+                  color: theme.accentText,
+                  border: `1px solid ${theme.border}`,
                   borderRadius: '4px',
                   padding: '8px 16px',
                   cursor: createLoading ? 'not-allowed' : 'pointer',
@@ -244,9 +246,9 @@ export function BoardsList() {
                   setEditingBoard(null)
                 }}
                 style={{
-                  backgroundColor: '#6c757d',
-                  color: 'white',
-                  border: 'none',
+                  backgroundColor: theme.muted,
+                  color: theme.accentText,
+                  border: `1px solid ${theme.border}`,
                   borderRadius: '4px',
                   padding: '8px 16px',
                   cursor: 'pointer',
@@ -268,11 +270,11 @@ export function BoardsList() {
             <div
               key={board.id}
               style={{
-                border: '1px solid #ccc',
+                border: `1px solid ${theme.border}`,
                 borderRadius: '8px',
                 padding: '16px',
                 transition: 'box-shadow 0.2s',
-                backgroundColor: 'white',
+                backgroundColor: theme.card,
                 position: 'relative'
               }}
             >
@@ -289,9 +291,9 @@ export function BoardsList() {
                     startEdit(board)
                   }}
                   style={{
-                    backgroundColor: '#007bff',
-                    color: 'white',
-                    border: 'none',
+                    backgroundColor: theme.accent,
+                    color: theme.accentText,
+                    border: `1px solid ${theme.border}`,
                     borderRadius: '4px',
                     padding: '4px 8px',
                     cursor: 'pointer',
@@ -307,9 +309,9 @@ export function BoardsList() {
                   }}
                   disabled={deleteLoading === board.id}
                   style={{
-                    backgroundColor: deleteLoading === board.id ? '#999' : '#dc3545',
-                    color: 'white',
-                    border: 'none',
+                    backgroundColor: deleteLoading === board.id ? theme.muted : '#dc3545',
+                    color: theme.accentText,
+                    border: `1px solid ${theme.border}`,
                     borderRadius: '4px',
                     padding: '4px 8px',
                     cursor: deleteLoading === board.id ? 'not-allowed' : 'pointer',
@@ -324,12 +326,12 @@ export function BoardsList() {
                 to={`/board/${board.id}`}
                 style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
               >
-                <h3 style={{ margin: '0 0 8px 0', paddingRight: '80px', color: '#000' }}>{board.title}</h3>
-                {board.description && <p style={{ margin: '0 0 12px 0', color: '#333' }}>{board.description}</p>}
-                <p style={{ fontSize: '14px', color: '#333', margin: '0 0 8px 0' }}>
+                <h3 style={{ margin: '0 0 8px 0', paddingRight: '80px', color: theme.textPrimary }}>{board.title}</h3>
+                {board.description && <p style={{ margin: '0 0 12px 0', color: theme.textSecondary }}>{board.description}</p>}
+                <p style={{ fontSize: '14px', color: theme.textSecondary, margin: '0 0 8px 0' }}>
                   {(board._count?.columns ?? 0)} columns
                 </p>
-                <p style={{ fontSize: '12px', color: '#333', margin: 0 }}>
+                <p style={{ fontSize: '12px', color: theme.textSecondary, margin: 0 }}>
                   Created: {new Date(board.createdAt).toLocaleDateString()}
                 </p>
               </Link>

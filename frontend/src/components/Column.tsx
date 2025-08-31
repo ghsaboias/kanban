@@ -3,6 +3,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableCard } from './SortableCard'
 import { useApi } from '../useApi'
+import { useTheme } from '../theme/ThemeProvider'
 
 interface CardData {
   id: string
@@ -55,6 +56,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
   const [deleteLoading, setDeleteLoading] = useState(false)
   const { setNodeRef: setDroppableNodeRef } = useDroppable({ id: `column-${column.id}` })
   const { apiFetch } = useApi()
+  const { theme } = useTheme()
 
   useEffect(() => {
     // Fetch users for assignment
@@ -167,7 +169,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
   return (
     <div data-testid={`column-${column.id}`} style={{ 
       minWidth: '300px',
-      backgroundColor: '#f5f5f5',
+      backgroundColor: theme.surfaceAlt,
       borderRadius: '8px',
       padding: '16px',
       display: 'flex',
@@ -194,7 +196,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
             }}
             onPointerDown={(e) => e.stopPropagation()}
             style={{
-              border: '1px solid #007bff',
+              border: `1px solid ${theme.accent}`,
               borderRadius: '4px',
               boxSizing: 'border-box',
               padding: '0 8px',
@@ -202,8 +204,8 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
               fontWeight: 600,
               lineHeight: '24px',
               height: '24px',
-              color: '#213547',
-              background: 'white',
+              color: theme.textPrimary,
+              background: theme.surface,
               flex: 1,
               marginRight: '8px',
               minWidth: 0,
@@ -222,7 +224,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
               height: '24px',
               cursor: 'pointer',
               flex: 1,
-              color: '#000',
+              color: theme.textPrimary,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -237,8 +239,8 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
           <div
             aria-label="Card count"
             style={{
-              backgroundColor: '#eef2f7',
-              color: '#374151',
+              backgroundColor: theme.surfaceAlt,
+              color: theme.textSecondary,
               height: '24px',
               minWidth: '24px',
               padding: '0 8px',
@@ -255,7 +257,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
           >
             {column.cards.length > 99 ? '99+' : column.cards.length}
           </div>
-          <div style={{ width: '1px', height: '16px', backgroundColor: '#e5e7eb' }} />
+          <div style={{ width: '1px', height: '16px', backgroundColor: theme.border }} />
           <button
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
@@ -264,9 +266,9 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
             }}
             disabled={deleteLoading}
             style={{
-              backgroundColor: deleteLoading ? '#999' : 'white',
-              color: deleteLoading ? 'white' : '#dc3545',
-              border: deleteLoading ? '1px solid #999' : '1px solid #e5e7eb',
+              backgroundColor: deleteLoading ? theme.muted : theme.card,
+              color: deleteLoading ? theme.accentText : '#dc3545',
+              border: deleteLoading ? `1px solid ${theme.muted}` : `1px solid ${theme.border}`,
               width: '24px',
               height: '24px',
               minWidth: '24px',
@@ -290,8 +292,8 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
             }}
             onMouseLeave={(e) => {
               if (!deleteLoading) {
-                e.currentTarget.style.backgroundColor = 'white'
-                e.currentTarget.style.borderColor = '#e5e7eb'
+                e.currentTarget.style.backgroundColor = theme.card
+                e.currentTarget.style.borderColor = theme.border
                 e.currentTarget.style.color = '#dc3545'
               }
             }}
@@ -341,7 +343,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
           <div style={{ 
             padding: '20px', 
             textAlign: 'center', 
-            color: '#333',
+            color: theme.textSecondary,
             fontStyle: 'italic'
           }}>
             No cards in this column
@@ -351,8 +353,8 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
         {showCreateCard && (
           <div 
             style={{
-              backgroundColor: 'white',
-              border: '1px solid #ddd',
+              backgroundColor: theme.card,
+              border: `1px solid ${theme.border}`,
               borderRadius: '6px',
               padding: '12px',
               marginTop: '8px'
@@ -370,12 +372,12 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                     width: '100%',
                     boxSizing: 'border-box',
                     padding: '8px 12px',
-                    border: '1px solid #ddd',
+                    border: `1px solid ${theme.border}`,
                     borderRadius: '4px',
-                    backgroundColor: '#f8f9fa',
+                    backgroundColor: theme.inputBg,
                     fontSize: '14px',
                     fontFamily: 'inherit',
-                    color: '#213547'
+                    color: theme.textPrimary
                   }}
                   autoFocus
                   required
@@ -392,12 +394,12 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                     width: '100%',
                     boxSizing: 'border-box',
                     padding: '8px 12px',
-                    border: '1px solid #ddd',
+                    border: `1px solid ${theme.border}`,
                     borderRadius: '4px',
-                    backgroundColor: '#f8f9fa',
+                    backgroundColor: theme.inputBg,
                     fontSize: '14px',
                     fontFamily: 'inherit',
-                    color: '#213547',
+                    color: theme.textPrimary,
                     resize: 'vertical'
                   }}
                 />
@@ -412,12 +414,12 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                     boxSizing: 'border-box',
                     padding: '8px 12px',
                     paddingRight: '36px',
-                    border: '1px solid #ddd',
+                    border: `1px solid ${theme.border}`,
                     borderRadius: '4px',
-                    backgroundColor: '#f8f9fa',
+                    backgroundColor: theme.inputBg,
                     fontSize: '14px',
                     fontFamily: 'inherit',
-                    color: '#213547',
+                    color: theme.textPrimary,
                     cursor: 'pointer',
                     appearance: 'none',
                     WebkitAppearance: 'none',
@@ -441,12 +443,12 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                     boxSizing: 'border-box',
                     padding: '8px 12px',
                     paddingRight: '36px',
-                    border: '1px solid #ddd',
+                    border: `1px solid ${theme.border}`,
                     borderRadius: '4px',
-                    backgroundColor: '#f8f9fa',
+                    backgroundColor: theme.inputBg,
                     fontSize: '14px',
                     fontFamily: 'inherit',
-                    color: '#213547',
+                    color: theme.textPrimary,
                     cursor: 'pointer',
                     appearance: 'none',
                     WebkitAppearance: 'none',
@@ -469,8 +471,8 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                   type="submit"
                   disabled={createLoading || !formData.title.trim()}
                   style={{
-                    backgroundColor: createLoading ? '#999' : '#007bff',
-                    color: 'white',
+                    backgroundColor: createLoading ? theme.muted : theme.accent,
+                    color: theme.accentText,
                     border: 'none',
                     borderRadius: '4px',
                     padding: '6px 12px',
@@ -488,8 +490,8 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                     setFormData({ title: '', description: '', priority: 'MEDIUM', assigneeId: '' })
                   }}
                   style={{
-                    backgroundColor: '#6c757d',
-                    color: 'white',
+                    backgroundColor: theme.muted,
+                    color: theme.accentText,
                     border: 'none',
                     borderRadius: '4px',
                     padding: '6px 12px',
@@ -511,22 +513,22 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
             style={{
               width: '100%',
               padding: '16px',
-              backgroundColor: '#f8f9fa',
-              border: '2px dashed #dee2e6',
+              backgroundColor: theme.surfaceAlt,
+              border: `2px dashed ${theme.border}`,
               borderRadius: '8px',
               cursor: 'pointer',
               fontSize: '14px',
-              color: '#6c757d',
+              color: theme.textMuted,
               marginTop: '8px',
               transition: 'border-color 0.2s, color 0.2s'
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.borderColor = '#007bff'
-              ;(e.currentTarget as HTMLButtonElement).style.color = '#007bff'
+              (e.currentTarget as HTMLButtonElement).style.borderColor = theme.accent
+              ;(e.currentTarget as HTMLButtonElement).style.color = theme.accent
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.borderColor = '#dee2e6'
-              ;(e.currentTarget as HTMLButtonElement).style.color = '#6c757d'
+              (e.currentTarget as HTMLButtonElement).style.borderColor = theme.border
+              ;(e.currentTarget as HTMLButtonElement).style.color = theme.textMuted
             }}
           >
             + Add a card

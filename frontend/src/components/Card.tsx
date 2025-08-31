@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { toPlainText, truncate, extractImages } from '../utils/html'
 import { useApi } from '../useApi'
+import { useTheme } from '../theme/ThemeProvider'
 
 interface CardData {
   id: string
@@ -22,11 +23,6 @@ interface CardProps {
   onCardClick?: (card: CardData) => void
 }
 
-const priorityColors = {
-  HIGH: '#ff6b6b',
-  MEDIUM: '#ffd93d',
-  LOW: '#6bcf7f'
-}
 
 const priorityLabels = {
   HIGH: 'Alta',
@@ -36,6 +32,7 @@ const priorityLabels = {
 
 export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardProps) {
   const apiFetch = useApi()
+  const { theme } = useTheme()
   // mark onCardUpdated as used for now (edit feature later)
   void onCardUpdated
   const [hovering, setHovering] = useState(false)
@@ -70,8 +67,8 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
   return (
     <div 
       style={{
-        backgroundColor: 'white',
-        border: '1px solid #e1e1e1',
+        backgroundColor: theme.card,
+        border: `1px solid ${theme.border}`,
         borderRadius: '6px',
         padding: '12px',
         cursor: 'pointer',
@@ -101,9 +98,9 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
           position: 'absolute',
           top: '4px',
           right: '4px',
-          backgroundColor: 'white',
+          backgroundColor: theme.card,
           color: '#dc3545',
-          border: '1px solid #e5e7eb',
+          border: `1px solid ${theme.border}`,
           width: '20px',
           height: '20px',
           minWidth: '20px',
@@ -125,8 +122,8 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
           e.currentTarget.style.color = 'white'
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'white'
-          e.currentTarget.style.borderColor = '#e5e7eb'
+          e.currentTarget.style.backgroundColor = theme.card
+          e.currentTarget.style.borderColor = theme.border
           e.currentTarget.style.color = '#dc3545'
         }}
       >
@@ -155,7 +152,7 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
           margin: 0, 
           fontSize: '14px', 
           fontWeight: '600',
-          color: '#333',
+          color: theme.textSecondary,
           paddingRight: '20px'
         }}>
           {card.title}
@@ -166,7 +163,7 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
         <p style={{ 
           margin: '0 0 8px 0', 
           fontSize: '12px', 
-          color: '#333',
+          color: theme.textSecondary,
           lineHeight: '1.4'
         }}>
           {truncate(toPlainText(card.description || ''), 100)}
@@ -182,7 +179,7 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
           <div style={{ marginBottom: '8px' }}>
             <span style={{ 
               fontSize: '10px', 
-              color: '#666', 
+              color: theme.textMuted, 
               display: 'block', 
               marginBottom: '4px' 
             }}>Images ({images.length})</span>
@@ -197,10 +194,10 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
                   style={{
                     width: '32px',
                     height: '24px',
-                    border: '1px solid #e1e1e1',
+                    border: `1px solid ${theme.border}`,
                     borderRadius: '3px',
                     overflow: 'hidden',
-                    backgroundColor: '#f8f9fa'
+                    backgroundColor: theme.surfaceAlt
                   }}
                 >
                   <img
@@ -218,14 +215,14 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
                 <div style={{
                   width: '32px',
                   height: '24px',
-                  border: '1px solid #e1e1e1',
+                  border: `1px solid ${theme.border}`,
                   borderRadius: '3px',
-                  backgroundColor: '#f8f9fa',
+                  backgroundColor: theme.surfaceAlt,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '8px',
-                  color: '#666'
+                  color: theme.textMuted
                 }}>
                   +{images.length - 3}
                 </div>
@@ -242,7 +239,7 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
         marginTop: '8px'
       }}>
         <span style={{
-          backgroundColor: priorityColors[card.priority],
+          backgroundColor: theme.priority[card.priority],
           color: 'white',
           fontSize: '10px',
           fontWeight: '600',
@@ -256,10 +253,10 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
         </span>
         
         {card.assignee && (
-          <div style={{ 
+          <div style={{
             fontSize: '10px', 
-            color: '#333',
-            backgroundColor: '#f0f0f0',
+            color: theme.textSecondary,
+            backgroundColor: theme.surfaceAlt,
             padding: '2px 6px',
             borderRadius: '10px'
           }}>

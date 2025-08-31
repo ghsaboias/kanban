@@ -1,7 +1,9 @@
 import { useParams, Link } from 'react-router-dom'
 import { Board } from './Board'
+import { useTheme } from '../theme/ThemeProvider'
 
 export function BoardPage() {
+  const { theme } = useTheme()
   const { id } = useParams<{ id: string }>()
   
   if (!id) {
@@ -12,14 +14,14 @@ export function BoardPage() {
     <div>
       <div style={{ 
         padding: '10px 20px', 
-        backgroundColor: '#f8f9fa', 
-        borderBottom: '1px solid #e1e5e9',
+        backgroundColor: theme.surfaceAlt, 
+        borderBottom: `1px solid ${theme.border}`,
         marginBottom: '0'
       }}>
         <Link 
           to="/"
           style={{ 
-            color: '#007bff',
+            color: theme.accent,
             textDecoration: 'none',
             fontSize: '14px'
           }}
