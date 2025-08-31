@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { RichTextEditor } from './RichTextEditor'
 import { hasContent, extractImages } from '../utils/html'
 import { useApi } from '../useApi'
+import type { ApiResponse } from '../types/api'
 
 interface CardData {
   id: string
@@ -86,13 +87,13 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
   useEffect(() => {
     // Fetch users for assignment dropdown
     apiFetch('/api/users')
-      .then(response => response.json())
-      .then(data => {
+      .then((response: Response) => response.json())
+      .then((data: ApiResponse<User[]>) => {
         if (data.success) {
           setUsers(data.data)
         }
       })
-      .catch(err => console.error('Error loading users:', err))
+      .catch((err: unknown) => console.error('Error loading users:', err))
   }, [])
 
   useEffect(() => {

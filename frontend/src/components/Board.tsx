@@ -8,6 +8,7 @@ import { SortableColumn } from './SortableColumn'
 import { CardDetailModal } from './CardDetailModal'
 import { RealtimeBoardWrapper } from './RealtimeBoardWrapper'
 import { useApi } from '../useApi'
+import type { ApiResponse } from '../types/api'
 
 interface Card {
   id: string
@@ -64,16 +65,17 @@ export function Board({ boardId }: BoardProps) {
 
   useEffect(() => {
     apiFetch(`/api/boards/${boardId}`)
-      .then(response => response.json())
-      .then(data => {
+      .then((response: Response) => response.json())
+      .then((data: ApiResponse<BoardData>) => {
         if (data.success) {
           setBoard(data.data)
         } else {
           setError('Failed to load board')
         }
       })
-      .catch(err => {
-        setError('Error connecting to API: ' + err.message)
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err)
+        setError('Error connecting to API: ' + msg)
       })
       .finally(() => {
         setLoading(false)
@@ -96,7 +98,7 @@ export function Board({ boardId }: BoardProps) {
         })
       })
 
-      const result = await response.json()
+      const result: ApiResponse<ColumnData> = await response.json()
       if (result.success) {
         const newColumn: ColumnData = {
           ...result.data,

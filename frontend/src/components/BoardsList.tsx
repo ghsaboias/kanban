@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useApi } from '../useApi'
+import type { ApiResponse } from '../types/api'
 
 interface Board {
   id: string
@@ -27,16 +28,17 @@ export function BoardsList() {
 
   useEffect(() => {
     apiFetch('/api/boards')
-      .then(response => response.json())
-      .then(data => {
+      .then((response: Response) => response.json())
+      .then((data: ApiResponse<Board[]>) => {
         if (data.success) {
           setBoards(data.data)
         } else {
           setError('Failed to load boards')
         }
       })
-      .catch(err => {
-        setError('Error connecting to API: ' + err.message)
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err)
+        setError('Error connecting to API: ' + msg)
       })
       .finally(() => {
         setLoading(false)
