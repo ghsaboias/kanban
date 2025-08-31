@@ -15,7 +15,7 @@ describe('BoardsList', () => {
   })
 
   it('renders boards after loading', async () => {
-    const boards = [
+    const boards: Array<{ id: string; title: string; description: string | null; createdAt: string; updatedAt: string; _count: { columns: number } }> = [
       { id: 'b1', title: 'Board 1', description: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), _count: { columns: 0 } },
       { id: 'b2', title: 'Board 2', description: 'desc', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), _count: { columns: 2 } },
     ]
@@ -36,7 +36,7 @@ describe('BoardsList', () => {
   })
 
   it('creates a board from the form', async () => {
-    const boards = []
+    const boards: Array<{ id: string; title: string; description: string | null; createdAt: string; updatedAt: string; _count: { columns: number } }> = []
     mockApiFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ success: true, data: boards }) })
 
     render(
@@ -65,4 +65,3 @@ describe('BoardsList', () => {
     })
   })
 })
-

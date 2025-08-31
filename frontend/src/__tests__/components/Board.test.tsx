@@ -13,7 +13,7 @@ vi.mock('../../useApi', () => ({
 
 // Mock drag and drop library
 vi.mock('@dnd-kit/core', () => ({
-  DndContext: ({ children, onDragEnd }: any) => <div data-testid="dnd-context">{children}</div>,
+  DndContext: ({ children }: any) => <div data-testid="dnd-context">{children}</div>,
   DragOverlay: ({ children }: any) => <div data-testid="drag-overlay">{children}</div>,
   useSensor: vi.fn(),
   useSensors: vi.fn(() => []),
@@ -343,7 +343,7 @@ describe('Board Component', () => {
   });
 
   it('should handle board data updates', async () => {
-    const { rerender } = renderBoard();
+    renderBoard();
 
     await waitFor(() => {
       expect(screen.getByText('Test Board')).toBeInTheDocument();
