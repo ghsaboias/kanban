@@ -31,5 +31,6 @@ backend/.env.*
 
 # Broader SQLite artifacts (in addition to dev.db)
 prisma/*.db*
+prisma/**/*.db*
 
 PRD_TASKS.md
