@@ -19,6 +19,7 @@ afterAll(async () => {
 beforeEach(async () => {
   // Clean database before each test
   // Delete in correct order to respect foreign keys
+  await testPrisma.activity?.deleteMany();
   await testPrisma.card.deleteMany();
   await testPrisma.column.deleteMany();
   await testPrisma.board.deleteMany();

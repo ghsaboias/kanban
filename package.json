@@ -23,7 +23,7 @@
     "test:backend:coverage": "cd backend && npm test -- --coverage",
     "test:frontend:coverage": "cd frontend && npm run test:coverage",
     "test:coverage": "node scripts/coverage.mjs",
-    "test:watch": "concurrently \"npm run test:backend -- --watch\" \"npm run test:frontend -- --watch\"",
+    "test:watch": "concurrently \"cd backend && npx jest --watch --passWithNoTests\" \"cd frontend && npx vitest\"",
     "test:db": "npx ts-node test-db.js",
     "db:push": "npx prisma db push",
     "db:generate": "npx prisma generate"

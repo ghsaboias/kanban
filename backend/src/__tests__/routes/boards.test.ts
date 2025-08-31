@@ -21,9 +21,10 @@ describe('Boards API', () => {
   let testUser: any;
 
   beforeEach(async () => {
-    // Create a test user for all tests
+    // Create a test user with the same ID used by the mock so FK constraints work
     testUser = await testPrisma.user.create({
       data: {
+        id: 'test-user-id',
         name: 'Test User',
         email: 'test@example.com',
         clerkId: 'test-clerk-id',

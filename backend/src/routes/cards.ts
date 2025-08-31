@@ -4,8 +4,12 @@ import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { CreateCardRequest, UpdateCardRequest, MoveCardRequest } from '../types/api';
 import { sanitizeDescription } from '../utils/sanitize';
 import { CardCreatedEvent, CardUpdatedEvent, CardDeletedEvent, CardMovedEvent } from '../../../shared/realtime';
+import { ActivityLogger } from '../services/activityLogger';
 
 const router = Router();
+
+// Activity logger instance
+const activityLogger = new ActivityLogger(prisma, global.io);
 
 router.post('/columns/:columnId/cards', asyncHandler(async (req: Request, res: Response) => {
   const columnId = req.params.columnId;
@@ -78,6 +82,34 @@ router.post('/columns/:columnId/cards', asyncHandler(async (req: Request, res: R
     }
   });
 
+  // Log activity
+  try {
+    await activityLogger.logActivity({
+      entityType: 'CARD',
+      entityId: card.id,
+      action: 'CREATE',
+      boardId: card.column.boardId,
+      columnId: card.columnId,
+      userId: currentUser.id,
+      meta: {
+        title: card.title,
+        description: card.description,
+        priority: card.priority,
+        assigneeId: card.assigneeId,
+        assigneeName: card.assignee?.name || null,
+        columnId: card.columnId,
+        columnTitle: card.column.title,
+        position: card.position
+      },
+      priority: 'HIGH',
+      broadcastRealtime: true,
+      initiatorSocketId: req.get('x-socket-id')
+    });
+  } catch (error) {
+    console.error('Failed to log card creation activity:', error);
+    // Don't fail the request if activity logging fails
+  }
+
   // Emit real-time event to all users in the board room
   const cardCreatedEvent: CardCreatedEvent = {
     boardId: card.column.boardId,
@@ -135,19 +167,35 @@ router.put('/cards/:id', asyncHandler(async (req: Request, res: Response) => {
   const { title, description, priority, assigneeId, position }: UpdateCardRequest = req.body;
 
   const existingCard = await prisma.card.findUnique({
-    where: { id }
+    where: { id },
+    include: {
+      assignee: {
+        select: { id: true, name: true }
+      },
+      column: {
+        select: { id: true, title: true, boardId: true }
+      }
+    }
   });
 
   if (!existingCard) {
     throw new AppError('Card não encontrado', 404);
   }
 
+  // Authenticated user
+  const currentUser = res.locals.user;
+  if (!currentUser) {
+    throw new AppError('Usuário não autenticado', 401);
+  }
+
+  let assigneeUser = null;
   if (assigneeId) {
-    const assigneeExists = await prisma.user.findUnique({
-      where: { id: assigneeId }
+    assigneeUser = await prisma.user.findUnique({
+      where: { id: assigneeId },
+      select: { id: true, name: true }
     });
 
-    if (!assigneeExists) {
+    if (!assigneeUser) {
       throw new AppError('Usuário responsável não encontrado', 404);
     }
   }
@@ -186,6 +234,38 @@ router.put('/cards/:id', asyncHandler(async (req: Request, res: Response) => {
     }
   }
 
+  // Track changes for activity logging
+  const changes: string[] = [];
+  const oldValues: any = {};
+  const newValues: any = {};
+
+  if (title && title !== existingCard.title) {
+    changes.push('title');
+    oldValues.title = existingCard.title;
+    newValues.title = title;
+  }
+
+  if (description !== undefined && sanitizeDescription(description) !== existingCard.description) {
+    changes.push('description');
+    oldValues.description = existingCard.description;
+    newValues.description = sanitizeDescription(description);
+  }
+
+  if (priority && priority !== existingCard.priority) {
+    changes.push('priority');
+    oldValues.priority = existingCard.priority;
+    newValues.priority = priority;
+  }
+
+  if (assigneeId !== undefined && assigneeId !== existingCard.assigneeId) {
+    changes.push('assigneeId');
+    oldValues.assigneeId = existingCard.assigneeId;
+    newValues.assigneeId = assigneeId;
+  }
+
+  // Handle position changes separately (for reorder detection)
+  const isPositionChange = position !== undefined && position !== existingCard.position;
+
   const updateData: any = {};
   if (title) updateData.title = title;
   if (description !== undefined) updateData.description = sanitizeDescription(description);
@@ -205,6 +285,61 @@ router.put('/cards/:id', asyncHandler(async (req: Request, res: Response) => {
       }
     }
   });
+
+  // Log activity based on what changed
+  if (isPositionChange && changes.length === 0) {
+    // Pure position change = REORDER
+    try {
+      await activityLogger.logActivity({
+      entityType: 'CARD',
+      entityId: card.id,
+      action: 'REORDER',
+      boardId: card.column.boardId,
+      columnId: card.columnId,
+      userId: currentUser.id,
+      meta: {
+        oldPosition: existingCard.position,
+        newPosition: position,
+        columnId: card.columnId,
+        columnTitle: card.column.title
+      },
+      priority: 'LOW', // REORDER actions are low priority (rate limited)
+      broadcastRealtime: true,
+      initiatorSocketId: req.get('x-socket-id')
+    });
+    } catch (error) {
+      console.error('Failed to log card reorder activity:', error);
+    }
+  } else if (changes.length > 0) {
+    // Field changes = UPDATE
+    try {
+      const meta: any = {
+        changes,
+        oldValues,
+        newValues
+      };
+
+      // Add assignee name if assignee was changed
+      if (changes.includes('assigneeId') && assigneeUser) {
+        meta.assigneeName = assigneeUser.name;
+      }
+
+      await activityLogger.logActivity({
+        entityType: 'CARD',
+        entityId: card.id,
+        action: 'UPDATE',
+        boardId: card.column.boardId,
+        columnId: card.columnId,
+        userId: currentUser.id,
+        meta,
+        priority: 'HIGH',
+        broadcastRealtime: true,
+        initiatorSocketId: req.get('x-socket-id')
+      });
+    } catch (error) {
+      console.error('Failed to log card update activity:', error);
+    }
+  }
 
   // Emit real-time event to all users in the board room
   const cardUpdatedEvent: CardUpdatedEvent = {
@@ -238,14 +373,23 @@ router.delete('/cards/:id', asyncHandler(async (req: Request, res: Response) => 
   const existingCard = await prisma.card.findUnique({
     where: { id },
     include: {
+      assignee: {
+        select: { id: true, name: true }
+      },
       column: {
-        select: { boardId: true }
+        select: { id: true, title: true, boardId: true }
       }
     }
   });
 
   if (!existingCard) {
     throw new AppError('Card não encontrado', 404);
+  }
+
+  // Authenticated user
+  const currentUser = res.locals.user;
+  if (!currentUser) {
+    throw new AppError('Usuário não autenticado', 401);
   }
 
   await prisma.card.delete({
@@ -261,6 +405,33 @@ router.delete('/cards/:id', asyncHandler(async (req: Request, res: Response) => 
       position: { decrement: 1 }
     }
   });
+
+  // Log activity
+  try {
+    await activityLogger.logActivity({
+      entityType: 'CARD',
+      entityId: id,
+      action: 'DELETE',
+      boardId: existingCard.column.boardId,
+      columnId: existingCard.columnId,
+      userId: currentUser.id,
+      meta: {
+        title: existingCard.title,
+        description: existingCard.description,
+        priority: existingCard.priority,
+        assigneeId: existingCard.assigneeId,
+        assigneeName: existingCard.assignee?.name || null,
+        columnId: existingCard.columnId,
+        columnTitle: existingCard.column.title,
+        position: existingCard.position
+      },
+      priority: 'HIGH',
+      broadcastRealtime: true,
+      initiatorSocketId: req.get('x-socket-id')
+    });
+  } catch (error) {
+    console.error('Failed to log card deletion activity:', error);
+  }
 
   // Emit real-time event to all users in the board room
   const cardDeletedEvent: CardDeletedEvent = {
@@ -293,8 +464,11 @@ router.post('/cards/:id/move', asyncHandler(async (req: Request, res: Response) 
     const existingCard = await tx.card.findUnique({
       where: { id },
       include: {
+        assignee: {
+          select: { id: true, name: true }
+        },
         column: {
-          select: { boardId: true }
+          select: { id: true, title: true, boardId: true }
         }
       }
     });
@@ -304,7 +478,8 @@ router.post('/cards/:id/move', asyncHandler(async (req: Request, res: Response) 
     }
 
     const targetColumn = await tx.column.findUnique({
-      where: { id: columnId }
+      where: { id: columnId },
+      select: { id: true, title: true, boardId: true }
     });
 
     if (!targetColumn) {
@@ -332,7 +507,14 @@ router.post('/cards/:id/move', asyncHandler(async (req: Request, res: Response) 
           }
         }
       });
-      return { card: cardWithRelations!, oldColumnId };
+      return { 
+        card: cardWithRelations!, 
+        oldColumnId, 
+        targetColumn,
+        existingCard,
+        wasMove: false,
+        oldPosition: existingCard.position
+      };
     }
 
     // Get current max position in target column to prevent position conflicts
@@ -415,11 +597,87 @@ router.post('/cards/:id/move', asyncHandler(async (req: Request, res: Response) 
       }
     });
 
-    return { card, oldColumnId };
+    return { 
+      card, 
+      oldColumnId, 
+      targetColumn, 
+      existingCard, 
+      wasMove: true, 
+      oldPosition 
+    };
   });
 
   const card = result.card;
   const oldColumnId = result.oldColumnId;
+  const targetColumn = result.targetColumn;
+  const existingCard = result.existingCard;
+  const wasMove = result.wasMove;
+  const oldPosition = result.oldPosition;
+
+  // Authenticated user
+  const currentUser = res.locals.user;
+  if (!currentUser) {
+    throw new AppError('Usuário não autenticado', 401);
+  }
+
+  // Log activity only if something actually changed
+  if (wasMove) {
+    if (oldColumnId === columnId) {
+      // Same column = REORDER
+      try {
+        await activityLogger.logActivity({
+          entityType: 'CARD',
+          entityId: card.id,
+          action: 'REORDER',
+          boardId: card.column.boardId,
+          columnId: card.columnId,
+          userId: currentUser.id,
+          meta: {
+            title: card.title,
+            columnId: card.columnId,
+            columnTitle: card.column.title,
+            oldPosition,
+            newPosition: card.position,
+            assigneeId: card.assigneeId,
+            assigneeName: card.assignee?.name || null
+          },
+          priority: 'LOW', // REORDER actions are low priority (rate limited)
+          broadcastRealtime: true,
+          initiatorSocketId: req.get('x-socket-id')
+        });
+      } catch (error) {
+        console.error('Failed to log card reorder activity:', error);
+      }
+    } else {
+      // Cross-column = MOVE
+      try {
+        await activityLogger.logActivity({
+          entityType: 'CARD',
+          entityId: card.id,
+          action: 'MOVE',
+          boardId: card.column.boardId,
+          columnId: card.columnId,
+          userId: currentUser.id,
+          meta: {
+            title: card.title,
+            fromColumnId: oldColumnId,
+            fromColumnTitle: existingCard.column.title,
+            toColumnId: columnId,
+            toColumnTitle: targetColumn.title,
+            oldPosition,
+            newPosition: card.position,
+            assigneeId: card.assigneeId,
+            assigneeName: card.assignee?.name || null
+          },
+          priority: 'HIGH',
+          broadcastRealtime: true,
+          initiatorSocketId: req.get('x-socket-id')
+        });
+      } catch (error) {
+        console.error('Failed to log card move activity:', error);
+      }
+    }
+  }
 
   // Emit real-time event to all users in the board room
   const cardMovedEvent: CardMovedEvent = {
