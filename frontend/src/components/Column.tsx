@@ -3,6 +3,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableCard } from './SortableCard'
 import { useApi } from '../useApi'
+import type { ApiResponse } from '../types/api'
 import { useTheme } from '../theme/ThemeProvider'
 
 interface CardData {
@@ -61,13 +62,13 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
   useEffect(() => {
     // Fetch users for assignment
     apiFetch('/api/users')
-      .then(response => response.json())
-      .then(data => {
+      .then((response: Response) => response.json())
+      .then((data: ApiResponse<User[]>) => {
         if (data.success) {
           setUsers(data.data)
         }
       })
-      .catch(err => console.error('Error loading users:', err))
+      .catch((err: unknown) => console.error('Error loading users:', err))
   }, [])
 
   const handleCreateCard = async (e: React.FormEvent) => {
