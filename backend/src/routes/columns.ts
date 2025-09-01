@@ -3,6 +3,7 @@ import { ColumnCreatedEvent, ColumnDeletedEvent, ColumnReorderedEvent, ColumnUpd
 import { prisma } from '../database';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { ActivityLogger } from '../services/activityLogger';
+import { toPriority } from '../utils/priority';
 import { CreateColumnRequest, ReorderColumnRequest, UpdateColumnRequest } from '../types/api';
 
 const router = Router();
@@ -244,7 +245,14 @@ router.put('/columns/:id', asyncHandler(async (req: Request, res: Response) => {
       id: column.id,
       title: column.title,
       position: column.position,
-      cards: column.cards
+      cards: column.cards.map(c => ({
+        id: c.id,
+        title: c.title,
+        description: c.description,
+        priority: toPriority(c.priority),
+        position: c.position,
+        assignee: c.assignee
+      }))
     }
   };
   {

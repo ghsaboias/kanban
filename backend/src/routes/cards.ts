@@ -5,6 +5,7 @@ import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { ActivityLogger } from '../services/activityLogger';
 import { CreateCardRequest, MoveCardRequest, UpdateCardRequest } from '../types/api';
 import { sanitizeDescription } from '../utils/sanitize';
+import { toPriority } from '../utils/priority';
 
 const router = Router();
 
@@ -117,7 +118,7 @@ router.post('/columns/:columnId/cards', asyncHandler(async (req: Request, res: R
       id: card.id,
       title: card.title,
       description: card.description,
-      priority: card.priority,
+      priority: toPriority(card.priority),
       position: card.position,
       assignee: card.assignee
     },
@@ -348,7 +349,7 @@ router.put('/cards/:id', asyncHandler(async (req: Request, res: Response) => {
       id: card.id,
       title: card.title,
       description: card.description,
-      priority: card.priority,
+      priority: toPriority(card.priority),
       position: card.position,
       assignee: card.assignee
     }
@@ -686,7 +687,7 @@ router.post('/cards/:id/move', asyncHandler(async (req: Request, res: Response) 
       id: card.id,
       title: card.title,
       description: card.description,
-      priority: card.priority,
+      priority: toPriority(card.priority),
       position: card.position,
       assignee: card.assignee
     },
