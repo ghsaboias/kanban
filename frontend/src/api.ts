@@ -1,4 +1,4 @@
-export const API_URL: string = (import.meta as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL || 'http://localhost:3001'
+export const API_URL: string = (import.meta as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL || ''
 
 export function apiFetch(path: string, init?: RequestInit) {
   const base = API_URL.replace(/\/$/, '')

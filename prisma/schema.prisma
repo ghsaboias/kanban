@@ -95,7 +95,7 @@ model Activity {
   user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   // Structured event details
-  meta Json
+  meta String
 
   // Indexes for efficient queries
   @@index([entityType, entityId, createdAt(sort: Desc)])
