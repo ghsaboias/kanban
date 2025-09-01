@@ -1,5 +1,7 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
+  Activity,
+  ActivityCreatedEvent,
   CardCreatedEvent,
   CardDeletedEvent,
   CardMovedEvent,
@@ -24,7 +26,8 @@ interface BoardData {
 
 export const useRealtimeBoard = (
   boardId: string,
-  _board: BoardData | null,
+  initialBoard: BoardData | null,
+  initialActivities: Activity[],
   setBoard: React.Dispatch<React.SetStateAction<BoardData | null>>
 ) => {
   const { isConnected, joinBoard, leaveBoard, on, off } = useSocketContext();
@@ -32,7 +35,12 @@ export const useRealtimeBoard = (
     userId: string;
     user: User;
   }>>([]);
+  const [activities, setActivities] = useState<Activity[]>(initialActivities);
   const mountedRef = useRef(true);
+
+  useEffect(() => {
+    setActivities(initialActivities);
+  }, [initialActivities]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -45,7 +53,9 @@ export const useRealtimeBoard = (
   useEffect(() => {
     if (isConnected && boardId) {
       joinBoard(boardId);
-      return () => leaveBoard(boardId);
+      return () => {
+        leaveBoard(boardId);
+      }
     } else if (!isConnected) {
       // Clear online users when disconnected to avoid showing stale data
       setOnlineUsers([]);
@@ -65,6 +75,16 @@ export const useRealtimeBoard = (
     if (!mountedRef.current) return;
     setOnlineUsers(prev => prev.filter(u => u.userId !== event.userId));
   }, []);
+
+  const handleActivityCreated = useCallback((event: ActivityCreatedEvent) => {
+    if (!mountedRef.current) return;
+    if (event.boardId === boardId) {
+      setActivities(prev => {
+        if (prev.some(a => a.id === event.activity.id)) return prev;
+        return [event.activity, ...prev];
+      });
+    }
+  }, [boardId]);
 
   // Card event handlers (memoized to prevent unnecessary re-registering)
   const handleCardCreated = useCallback((event: CardCreatedEvent) => {
@@ -215,7 +235,6 @@ export const useRealtimeBoard = (
   const handleBoardJoined = useCallback((event: { boardId: string; roster?: Array<{ userId: string; user: User }> }) => {
     if (!mountedRef.current) return;
     if (event.roster) {
-      console.log(`Board joined, restored ${event.roster.length} online users`);
       setOnlineUsers(event.roster);
     }
   }, []);
@@ -236,12 +255,13 @@ export const useRealtimeBoard = (
     on('column:updated', handleColumnUpdated);
     on('column:reordered', handleColumnReordered);
     on('column:deleted', handleColumnDeleted);
+    on('activity:created', handleActivityCreated);
 
     // Cleanup
     return () => {
       // Check if still mounted to avoid cleanup race conditions
       if (!mountedRef.current) return;
-      
+
       off('board:joined', handleBoardJoined);
       off('user:joined', handleUserJoined);
       off('user:left', handleUserLeft);
@@ -253,6 +273,7 @@ export const useRealtimeBoard = (
       off('column:updated', handleColumnUpdated);
       off('column:reordered', handleColumnReordered);
       off('column:deleted', handleColumnDeleted);
+      off('activity:created', handleActivityCreated);
     };
   }, [
     isConnected,
@@ -268,11 +289,13 @@ export const useRealtimeBoard = (
     handleColumnCreated,
     handleColumnUpdated,
     handleColumnReordered,
-    handleColumnDeleted
+    handleColumnDeleted,
+    handleActivityCreated
   ]);
 
   return {
     isConnected,
     onlineUsers,
+    activities,
   };
 };
