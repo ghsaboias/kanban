@@ -15,7 +15,7 @@ import type {
   UserJoinedEvent,
   UserLeftEvent
 } from '../../../shared/realtime';
-import { useSocketContext } from '../contexts/SocketContext';
+import { useSocketContext } from './useSocketContext';
 
 interface BoardData {
   id: string;

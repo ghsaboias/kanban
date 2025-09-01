@@ -2,7 +2,7 @@ import { Server, Socket } from 'socket.io';
 import { Server as HTTPServer } from 'http';
 import { verifyToken } from '@clerk/backend';
 import { prisma } from '../database';
-import { SocketEvents, UserJoinedEvent, UserLeftEvent, BoardJoinedEvent, ErrorEvent } from '../../../shared/realtime';
+import { UserJoinedEvent, UserLeftEvent, BoardJoinedEvent, ErrorEvent } from '../../../shared/realtime';
 
 export interface AuthenticatedSocket extends Socket {
   userId: string;
@@ -70,6 +70,7 @@ export const setupSocket = (httpServer: HTTPServer) => {
       
       next();
     } catch (error) {
+      console.error('Socket authentication failed:', error);
       next(new Error('Authentication failed'));
     }
   });

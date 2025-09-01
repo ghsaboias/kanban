@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../../generated/prisma';
+import { PrismaClient, Activity, User } from '../../../generated/prisma';
 
 export interface ActivityLogRequest {
   entityType: 'BOARD' | 'COLUMN' | 'CARD';
@@ -7,11 +7,15 @@ export interface ActivityLogRequest {
   boardId: string;
   columnId?: string;
   userId?: string;
-  meta: any;
+  meta: Record<string, unknown>;
   priority?: 'HIGH' | 'LOW';
   broadcastRealtime?: boolean;
   initiatorSocketId?: string;
 }
+
+type ActivityWithUser = Activity & {
+  user: User | null;
+};
 
 interface ActivityLoggerOptions {
   batchSize?: number;
@@ -180,7 +184,7 @@ export class ActivityLogger {
             boardId: request.boardId,
             columnId: request.columnId || null,
             userId: request.userId || null,
-            meta: request.meta
+            meta: JSON.stringify(request.meta)
           },
           include: {
             user: true
@@ -208,16 +212,16 @@ export class ActivityLogger {
     );
   }
 
-  private shouldSkipBroadcast(request: ActivityLogRequest): boolean {
+  private shouldSkipBroadcast(_request: ActivityLogRequest): boolean {
     // Skip broadcasting high-frequency events to avoid spam
     // Note: REORDER actions need to be broadcast for real-time collaboration
     return false; // Temporarily disabled to ensure all actions broadcast
   }
 
-  private broadcastActivity(activity: any, request: ActivityLogRequest): void {
+  private broadcastActivity(activity: ActivityWithUser, request: ActivityLogRequest): void {
     // Get the io instance dynamically to avoid initialization order issues
-    const io = (global as any).io;
-    if (!io) {
+    const io = global.io;
+    if (!io || typeof io.to !== 'function') {
       return;
     }
 
@@ -274,8 +278,8 @@ export interface CardCreateMeta {
 
 export interface CardUpdateMeta {
   changes: string[];
-  oldValues?: Record<string, any>;
-  newValues?: Record<string, any>;
+  oldValues?: Record<string, unknown>;
+  newValues?: Record<string, unknown>;
 }
 
 export interface CardMoveMeta {

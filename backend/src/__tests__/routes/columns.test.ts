@@ -1,6 +1,7 @@
-import request from 'supertest'
-import app from '../../app'
-import { testPrisma } from '../setup'
+import type { NextFunction, Request, Response } from 'express';
+import request from 'supertest';
+import app from '../../app';
+import { testPrisma } from '../setup';
 
 // Mock ActivityLogger to prevent foreign key constraint issues in route tests
 jest.mock('../../services/activityLogger', () => ({
@@ -14,9 +15,9 @@ jest.mock('../../services/activityLogger', () => ({
 
 // Mock authentication middleware (pass-through) and ensure user in locals
 jest.mock('../../auth/clerk', () => ({
-  withAuth: (req: any, res: any, next: any) => next(),
-  requireAuthMw: (req: any, res: any, next: any) => next(),
-  ensureUser: (req: any, res: any, next: any) => {
+  withAuth: (req: Request, res: Response, next: NextFunction) => next(),
+  requireAuthMw: (req: Request, res: Response, next: NextFunction) => next(),
+  ensureUser: (req: Request, res: Response, next: NextFunction) => {
     res.locals.user = {
       id: 'test-user-id',
       name: 'Test User',
@@ -28,16 +29,19 @@ jest.mock('../../auth/clerk', () => ({
 }))
 
 describe('Columns API', () => {
-  let board: any
+  let board: { id: string; title: string; }
 
   beforeEach(async () => {
     board = await testPrisma.board.create({ data: { title: 'Board X' } })
   })
 
   beforeAll(() => {
-    const fakeBroadcaster: any = { emit: jest.fn(), except: jest.fn(() => fakeBroadcaster) }
-    ;(global as any).io = { to: jest.fn(() => fakeBroadcaster) }
-  })
+    const fakeBroadcaster: { emit: jest.Mock; except: jest.Mock } = {
+      emit: jest.fn(),
+      except: jest.fn(() => fakeBroadcaster)
+    };
+    (global as unknown as { io: { to: jest.Mock } }).io = { to: jest.fn(() => fakeBroadcaster) };
+  });
 
   describe('POST /api/boards/:boardId/columns', () => {
     it('creates a column with auto-incremented position', async () => {
@@ -57,8 +61,8 @@ describe('Columns API', () => {
     })
 
     it('inserts at a given position and shifts others', async () => {
-      const c1 = await testPrisma.column.create({ data: { title: 'C1', position: 0, boardId: board.id } })
-      const c2 = await testPrisma.column.create({ data: { title: 'C2', position: 1, boardId: board.id } })
+      const _c1 = await testPrisma.column.create({ data: { title: 'C1', position: 0, boardId: board.id } })
+      const _c2 = await testPrisma.column.create({ data: { title: 'C2', position: 1, boardId: board.id } })
 
       const res = await request(app)
         .post(`/api/boards/${board.id}/columns`)
@@ -90,7 +94,7 @@ describe('Columns API', () => {
   describe('PUT /api/columns/:id', () => {
     it('updates title and reorders positions moving down', async () => {
       const c1 = await testPrisma.column.create({ data: { title: 'C1', position: 0, boardId: board.id } })
-      const c2 = await testPrisma.column.create({ data: { title: 'C2', position: 1, boardId: board.id } })
+      const _c2 = await testPrisma.column.create({ data: { title: 'C2', position: 1, boardId: board.id } })
 
       const res = await request(app)
         .put(`/api/columns/${c1.id}`)
@@ -125,7 +129,7 @@ describe('Columns API', () => {
 
     it('deletes empty column and shifts positions', async () => {
       const c1 = await testPrisma.column.create({ data: { title: 'C1', position: 0, boardId: board.id } })
-      const c2 = await testPrisma.column.create({ data: { title: 'C2', position: 1, boardId: board.id } })
+      const _c2 = await testPrisma.column.create({ data: { title: 'C2', position: 1, boardId: board.id } })
 
       await request(app).delete(`/api/columns/${c1.id}`).expect(200)
 

@@ -1,3 +1,4 @@
+import type { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
 import app from '../../app';
 import { testPrisma } from '../setup';
@@ -7,9 +8,9 @@ jest.unmock('../../services/activityLogger');
 
 // Mock authentication middleware
 jest.mock('../../auth/clerk', () => ({
-  withAuth: (req: any, res: any, next: any) => next(),
-  requireAuthMw: (req: any, res: any, next: any) => next(),
-  ensureUser: (req: any, res: any, next: any) => {
+  withAuth: (req: Request, res: Response, next: NextFunction) => next(),
+  requireAuthMw: (req: Request, res: Response, next: NextFunction) => next(),
+  ensureUser: (req: Request, res: Response, next: NextFunction) => {
     res.locals.user = {
       id: 'test-user-id',
       name: 'Test User',
@@ -21,7 +22,7 @@ jest.mock('../../auth/clerk', () => ({
 }));
 
 describe('Board Routes - Activity Logging', () => {
-  let testUser: any;
+  let testUser: { id: string; email: string; name: string; clerkId: string | null; };
 
   beforeEach(async () => {
     // Create a test user for authentication
@@ -44,7 +45,7 @@ describe('Board Routes - Activity Logging', () => {
 
       const response = await request(app)
         .post('/api/boards')
-                .send(boardData)
+        .send(boardData)
         .expect(201);
 
       expect(response.body.success).toBe(true);
@@ -62,7 +63,7 @@ describe('Board Routes - Activity Logging', () => {
       expect(activities).toHaveLength(1);
       expect(activities[0].userId).toBe(testUser.id);
       expect(activities[0].boardId).toBe(response.body.data.id);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         title: boardData.title,
         description: boardData.description
       });
@@ -76,7 +77,7 @@ describe('Board Routes - Activity Logging', () => {
 
       await request(app)
         .post('/api/boards')
-                .send(boardData)
+        .send(boardData)
         .expect(201);
 
       // Check that activity was logged immediately (HIGH priority)
@@ -112,7 +113,7 @@ describe('Board Routes - Activity Logging', () => {
 
       const response = await request(app)
         .put(`/api/boards/${board.id}`)
-                .send(updateData)
+        .send(updateData)
         .expect(200);
 
       expect(response.body.success).toBe(true);
@@ -129,7 +130,7 @@ describe('Board Routes - Activity Logging', () => {
       expect(activities).toHaveLength(1);
       expect(activities[0].userId).toBe(testUser.id);
       expect(activities[0].boardId).toBe(board.id);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         changes: ['title', 'description'],
         oldValues: {
           title: 'Original Title',
@@ -157,7 +158,7 @@ describe('Board Routes - Activity Logging', () => {
 
       await request(app)
         .put(`/api/boards/${board.id}`)
-                .send(updateData)
+        .send(updateData)
         .expect(200);
 
       const activities = await testPrisma.activity.findMany({
@@ -169,7 +170,7 @@ describe('Board Routes - Activity Logging', () => {
       });
 
       expect(activities).toHaveLength(1);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         changes: ['title'],
         oldValues: {
           title: 'Original Title'
@@ -195,7 +196,7 @@ describe('Board Routes - Activity Logging', () => {
 
       await request(app)
         .put(`/api/boards/${board.id}`)
-                .send(updateData)
+        .send(updateData)
         .expect(200);
 
       // Should not log any activity when nothing actually changed
@@ -222,7 +223,7 @@ describe('Board Routes - Activity Logging', () => {
 
       await request(app)
         .delete(`/api/boards/${board.id}`)
-                .expect(200);
+        .expect(200);
 
       // Check that activity was logged
       const activities = await testPrisma.activity.findMany({
@@ -236,7 +237,7 @@ describe('Board Routes - Activity Logging', () => {
       expect(activities).toHaveLength(1);
       expect(activities[0].userId).toBe(testUser.id);
       expect(activities[0].boardId).toBe(board.id);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         title: 'Board to Delete',
         description: 'This board will be deleted'
       });
@@ -268,7 +269,7 @@ describe('Board Routes - Activity Logging', () => {
 
       await request(app)
         .delete(`/api/boards/${board.id}`)
-                .expect(200);
+        .expect(200);
 
       // Should still log board deletion activity
       const activities = await testPrisma.activity.findMany({
@@ -280,7 +281,7 @@ describe('Board Routes - Activity Logging', () => {
       });
 
       expect(activities).toHaveLength(1);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         title: 'Board with Data',
         description: null,
         cascadeDeleted: {
@@ -300,7 +301,7 @@ describe('Board Routes - Activity Logging', () => {
 
       await request(app)
         .post('/api/boards')
-                .send(invalidBoardData)
+        .send(invalidBoardData)
         .expect(400);
 
       // Should not have logged any activity for failed creation
@@ -319,7 +320,7 @@ describe('Board Routes - Activity Logging', () => {
 
       await request(app)
         .put(`/api/boards/${nonExistentId}`)
-                .send({ title: 'Updated Title' })
+        .send({ title: 'Updated Title' })
         .expect(404);
 
       // Should not have logged any activity for failed update
@@ -338,7 +339,7 @@ describe('Board Routes - Activity Logging', () => {
 
       await request(app)
         .delete(`/api/boards/${nonExistentId}`)
-                .expect(404);
+        .expect(404);
 
       // Should not have logged any activity for failed deletion
       const activities = await testPrisma.activity.findMany({

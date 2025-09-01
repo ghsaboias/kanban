@@ -1,5 +1,8 @@
 import '@testing-library/jest-dom';
-import { vi, beforeAll, afterAll } from 'vitest';
+import { afterAll, beforeAll, vi } from 'vitest';
+
+// Set up environment variables for tests
+vi.stubEnv('VITE_API_URL', 'http://localhost:3001');
 
 // Suppress React act() warnings in tests - these are cosmetic and don't affect functionality
 const originalError = console.error;

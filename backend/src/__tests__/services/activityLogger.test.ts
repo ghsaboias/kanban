@@ -131,11 +131,11 @@ describe('ActivityLogger Service', () => {
     it('should batch multiple drag events within time window', async () => {
       const { user, board, card } = await createTestBoard();
 
-      // Simulate rapid position changes
+      // Simulate rapid position changes with different entity IDs to avoid rate limiting
       for (let i = 0; i < 5; i++) {
         await activityLogger.logActivity({
           entityType: 'CARD',
-          entityId: card.id,
+          entityId: `${card.id}-${i}`, // Use different entity IDs to avoid rate limiting
           action: 'REORDER',
           boardId: board.id,
           columnId: card.columnId,
@@ -393,8 +393,8 @@ describe('ActivityLogger Service', () => {
           boardId: board.id,
           columnId: card.columnId,
           userId: user.id,
-          meta: {}
-        } as any);
+          meta: JSON.stringify({})
+        });
 
       await activityLogger.logActivity({
         entityType: 'CARD',

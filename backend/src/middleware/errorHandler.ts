@@ -1,11 +1,11 @@
-import { Request, Response, NextFunction } from 'express';
-import { ApiResponse, ApiError } from '../types/api';
+import { NextFunction, Request, Response } from 'express';
+import { ApiResponse } from '../types/api';
 
 export class AppError extends Error {
   public status: number;
-  public details?: any;
+  public details?: unknown;
 
-  constructor(message: string, status: number = 500, details?: any) {
+  constructor(message: string, status: number = 500, details?: unknown) {
     super(message);
     this.status = status;
     this.details = details;
@@ -17,11 +17,11 @@ export const errorHandler = (
   error: Error | AppError,
   req: Request,
   res: Response<ApiResponse>,
-  next: NextFunction
+  _next: NextFunction
 ) => {
   let status = 500;
   let message = 'Erro interno do servidor';
-  let details: any = undefined;
+  let details: unknown = undefined;
 
   if (error instanceof AppError) {
     status = error.status;
@@ -44,11 +44,11 @@ export const errorHandler = (
   res.status(status).json({
     success: false,
     error: message,
-    ...(details && { details })
+    ...(details ? { details } : {})
   });
 };
 
-export const asyncHandler = (fn: Function) => (req: Request, res: Response, next: NextFunction) => {
+export const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<void> | void) => (req: Request, res: Response, next: NextFunction) => {
   Promise.resolve(fn(req, res, next)).catch(next);
 };
 

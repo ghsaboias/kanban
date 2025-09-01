@@ -1,3 +1,4 @@
+import type { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
 import app from '../../app';
 import { testPrisma } from '../setup';
@@ -7,9 +8,9 @@ jest.unmock('../../services/activityLogger');
 
 // Mock authentication middleware
 jest.mock('../../auth/clerk', () => ({
-  withAuth: (req: any, res: any, next: any) => next(),
-  requireAuthMw: (req: any, res: any, next: any) => next(),
-  ensureUser: (req: any, res: any, next: any) => {
+  withAuth: (req: Request, res: Response, next: NextFunction) => next(),
+  requireAuthMw: (req: Request, res: Response, next: NextFunction) => next(),
+  ensureUser: (req: Request, res: Response, next: NextFunction) => {
     res.locals.user = {
       id: 'test-user-id',
       name: 'Test User',
@@ -21,12 +22,15 @@ jest.mock('../../auth/clerk', () => ({
 }));
 
 describe('Columns Routes - Activity Logging', () => {
-  let testUser: any;
-  let testBoard: any;
+  let testUser: { id: string; email: string; name: string; clerkId: string | null; };
+  let testBoard: { id: string; title: string; description?: string | null; };
 
   beforeAll(() => {
-    const fakeBroadcaster: any = { emit: jest.fn(), except: jest.fn(() => fakeBroadcaster) };
-    (global as any).io = { to: jest.fn(() => fakeBroadcaster) };
+    const fakeBroadcaster: { emit: jest.Mock; except: jest.Mock } = {
+      emit: jest.fn(),
+      except: jest.fn(() => fakeBroadcaster)
+    };
+    (global as unknown as { io: { to: jest.Mock } }).io = { to: jest.fn(() => fakeBroadcaster) };
   });
 
   beforeEach(async () => {
@@ -81,7 +85,7 @@ describe('Columns Routes - Activity Logging', () => {
       expect(activities).toHaveLength(1);
       expect(activities[0].userId).toBe(testUser.id);
       expect(activities[0].boardId).toBe(testBoard.id);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         title: columnData.title,
         position: columnData.position
       });
@@ -110,7 +114,7 @@ describe('Columns Routes - Activity Logging', () => {
       });
 
       expect(activities).toHaveLength(1);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         title: columnData.title,
         position: 0
       });
@@ -141,7 +145,7 @@ describe('Columns Routes - Activity Logging', () => {
   });
 
   describe('PUT /api/columns/:id', () => {
-    let testColumn: any;
+    let testColumn: { id: string; title: string; position: number; boardId: string; };
 
     beforeEach(async () => {
       testColumn = await testPrisma.column.create({
@@ -178,7 +182,7 @@ describe('Columns Routes - Activity Logging', () => {
       expect(activities).toHaveLength(1);
       expect(activities[0].userId).toBe(testUser.id);
       expect(activities[0].boardId).toBe(testBoard.id);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         changes: ['title'],
         oldValues: {
           title: 'Original Column'
@@ -223,7 +227,7 @@ describe('Columns Routes - Activity Logging', () => {
       expect(activities).toHaveLength(1);
       expect(activities[0].userId).toBe(testUser.id);
       expect(activities[0].boardId).toBe(testBoard.id);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         oldPosition: 0,
         newPosition: 1
       });
@@ -258,7 +262,7 @@ describe('Columns Routes - Activity Logging', () => {
 
       // First should be UPDATE for title change
       expect(activities[0].action).toBe('UPDATE');
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         changes: ['title'],
         oldValues: {
           title: 'Original Column'
@@ -270,7 +274,7 @@ describe('Columns Routes - Activity Logging', () => {
 
       // Second should be REORDER for position change
       expect(activities[1].action).toBe('REORDER');
-      expect(activities[1].meta).toEqual({
+      expect(JSON.parse(activities[1].meta)).toEqual({
         oldPosition: 0,
         newPosition: 1
       });
@@ -326,7 +330,7 @@ describe('Columns Routes - Activity Logging', () => {
   });
 
   describe('DELETE /api/columns/:id', () => {
-    let testColumn: any;
+    let testColumn: { id: string; title: string; position: number; boardId: string; };
 
     beforeEach(async () => {
       testColumn = await testPrisma.column.create({
@@ -355,7 +359,7 @@ describe('Columns Routes - Activity Logging', () => {
       expect(activities).toHaveLength(1);
       expect(activities[0].userId).toBe(testUser.id);
       expect(activities[0].boardId).toBe(testBoard.id);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         title: 'Column to Delete',
         position: 0
       });
@@ -381,7 +385,7 @@ describe('Columns Routes - Activity Logging', () => {
   });
 
   describe('POST /api/columns/:id/reorder', () => {
-    let testColumn: any;
+    let testColumn: { id: string; title: string; position: number; boardId: string; };
 
     beforeEach(async () => {
       testColumn = await testPrisma.column.create({
@@ -435,7 +439,7 @@ describe('Columns Routes - Activity Logging', () => {
       expect(activities).toHaveLength(1);
       expect(activities[0].userId).toBe(testUser.id);
       expect(activities[0].boardId).toBe(testBoard.id);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         oldPosition: 0,
         newPosition: 2
       });

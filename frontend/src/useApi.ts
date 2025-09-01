@@ -1,7 +1,7 @@
 import { useAuth } from '@clerk/clerk-react';
 import { useCallback } from 'react';
 import { API_URL } from './api';
-import { useSocketContext } from './contexts/SocketContext';
+import { useSocketContext } from './hooks/useSocketContext';
 
 export function useApi() {
   const { getToken } = useAuth();

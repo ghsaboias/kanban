@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SocketProvider } from '../../contexts/SocketContext';
-import { useSocketContext } from '../../hooks/useSocketContext';
+import { useSocketContext } from '../../contexts/useSocketContext';
 
 // Mock useSocket hook
 const mockSocketValue: {
@@ -85,7 +85,7 @@ describe('SocketContext', () => {
 
   it('should throw error when useSocketContext is used outside provider', () => {
     // Capture console.error to avoid test noise
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
     expect(() => render(<TestComponent />)).toThrow('useSocketContext must be used within a SocketProvider');
 
@@ -100,7 +100,7 @@ describe('SocketContext', () => {
           <button onClick={() => socket.joinBoard('board-1')}>Join Board</button>
           <button onClick={() => socket.leaveBoard('board-1')}>Leave Board</button>
           <button onClick={() => socket.emit('test', { data: 'test' })}>Emit</button>
-          <button onClick={() => socket.on('test', () => {})}>Listen</button>
+          <button onClick={() => socket.on('test', () => { })}>Listen</button>
           <button onClick={() => socket.off('test')}>Stop Listen</button>
         </div>
       );
