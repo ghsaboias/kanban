@@ -38,17 +38,17 @@ describe('useApi', () => {
     } as any);
   });
 
-  it('should return a function that can make API calls', () => {
+  it('should return an object with an apiFetch function', () => {
     const { result } = renderHook(() => useApi());
     
-    expect(typeof result.current).toBe('function');
+    expect(typeof result.current).toBe('object');
     expect(typeof result.current.apiFetch).toBe('function');
   });
 
   it('should add authorization header when token is available', async () => {
     const { result } = renderHook(() => useApi());
     
-    await result.current('/test-path');
+    await result.current.apiFetch('/test-path');
     
     expect(mockGetToken).toHaveBeenCalled();
     expect(mockFetch).toHaveBeenCalledWith(
@@ -65,7 +65,7 @@ describe('useApi', () => {
   it('should handle paths with leading slash', async () => {
     const { result } = renderHook(() => useApi());
     
-    await result.current('/test-path');
+    await result.current.apiFetch('/test-path');
     
     expect(mockFetch).toHaveBeenCalledWith(
       'http://localhost:3001/api/test-path',
@@ -76,7 +76,7 @@ describe('useApi', () => {
   it('should handle paths without leading slash', async () => {
     const { result } = renderHook(() => useApi());
     
-    await result.current('test-path');
+    await result.current.apiFetch('test-path');
     
     expect(mockFetch).toHaveBeenCalledWith(
       'http://localhost:3001/api/test-path',
@@ -87,7 +87,7 @@ describe('useApi', () => {
   it('should add socket ID header when available', async () => {
     const { result } = renderHook(() => useApi());
     
-    await result.current('/test-path');
+    await result.current.apiFetch('/test-path');
     
     expect(mockFetch).toHaveBeenCalledWith(
       expect.any(String),
@@ -104,7 +104,7 @@ describe('useApi', () => {
   it('should preserve existing headers', async () => {
     const { result } = renderHook(() => useApi());
     
-    await result.current('/test-path', {
+    await result.current.apiFetch('/test-path', {
       headers: {
         'Custom-Header': 'custom-value',
       },
@@ -120,7 +120,7 @@ describe('useApi', () => {
     mockGetToken.mockResolvedValue(null);
     const { result } = renderHook(() => useApi());
     
-    await result.current('/test-path');
+    await result.current.apiFetch('/test-path');
     
     const call = mockFetch.mock.calls[0];
     const headers = call[1].headers;

@@ -24,7 +24,7 @@ export function BoardsList() {
   const [editingBoard, setEditingBoard] = useState<Board | null>(null)
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
 
-  const apiFetch = useApi()
+  const { apiFetch } = useApi()
 
   useEffect(() => {
     apiFetch('/api/boards')

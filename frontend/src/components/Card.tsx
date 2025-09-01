@@ -35,7 +35,7 @@ const priorityLabels = {
 }
 
 export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardProps) {
-  const apiFetch = useApi()
+  const { apiFetch } = useApi()
   // mark onCardUpdated as used for now (edit feature later)
   void onCardUpdated
   const [hovering, setHovering] = useState(false)

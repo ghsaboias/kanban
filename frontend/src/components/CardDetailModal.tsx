@@ -57,7 +57,7 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
   const modalRef = useRef<HTMLDivElement>(null)
   const titleInputRef = useRef<HTMLInputElement>(null)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
-  const apiFetch = useApi()
+  const { apiFetch } = useApi()
 
   useEffect(() => {
     if (isOpen) {
