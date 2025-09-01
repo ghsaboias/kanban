@@ -80,7 +80,7 @@ describe('Activity Model Validation', () => {
           userId: user.id,
           meta: {}
         }
-      } as any)).rejects.toThrow();
+      } as unknown)).rejects.toThrow();
     });
 
     it('should require entityId field', async () => {
@@ -95,7 +95,7 @@ describe('Activity Model Validation', () => {
           userId: user.id,
           meta: {}
         }
-      } as any)).rejects.toThrow();
+      } as unknown)).rejects.toThrow();
     });
 
     it('should require action field', async () => {
@@ -110,7 +110,7 @@ describe('Activity Model Validation', () => {
           userId: user.id,
           meta: {}
         }
-      } as any)).rejects.toThrow();
+      } as unknown)).rejects.toThrow();
     });
 
     it('should require boardId field', async () => {
@@ -125,7 +125,7 @@ describe('Activity Model Validation', () => {
           userId: user.id,
           meta: {}
         }
-      } as any)).rejects.toThrow();
+      } as unknown)).rejects.toThrow();
     });
   });
 
@@ -188,7 +188,7 @@ describe('Activity Model Validation', () => {
 
       await expect(testPrisma.activity.create({
         data: {
-          entityType: 'INVALID_TYPE' as any,
+          entityType: 'INVALID_TYPE' as unknown as 'BOARD' | 'COLUMN' | 'CARD',
           entityId: board.id,
           action: 'CREATE',
           boardId: board.id,
@@ -210,7 +210,7 @@ describe('Activity Model Validation', () => {
           data: {
             entityType: 'CARD',
             entityId: card.id,
-            action: action as any,
+            action: action as 'CREATE' | 'UPDATE' | 'DELETE' | 'MOVE' | 'REORDER' | 'ASSIGN' | 'UNASSIGN',
             boardId: board.id,
             userId: user.id,
             meta: { action }
@@ -231,7 +231,7 @@ describe('Activity Model Validation', () => {
         data: {
           entityType: 'CARD',
           entityId: card.id,
-          action: 'INVALID_ACTION' as any,
+          action: 'INVALID_ACTION' as unknown as 'CREATE' | 'UPDATE' | 'DELETE' | 'MOVE' | 'REORDER' | 'ASSIGN' | 'UNASSIGN',
           boardId: board.id,
           userId: user.id,
           meta: {}

@@ -19,7 +19,7 @@ export async function setupActivityTestDb() {
   try {
     execSync(`rm -f ${testDbPath}`);
   } catch (error) {
-    // File might not exist, ignore
+    console.debug('Failed to remove test database file:', error);
   }
   
   // Push schema to test database
@@ -41,7 +41,7 @@ export async function cleanupActivityTestDb() {
   try {
     execSync(`rm -f ${testDbPath}`);
   } catch (error) {
-    // File might not exist, ignore
+    console.debug('Failed to remove test database file:', error);
   }
 }
 

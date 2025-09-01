@@ -1,12 +1,20 @@
-module.exports = {
-  preset: 'ts-jest',
+export default {
+  preset: 'ts-jest/presets/default-esm',
+  extensionsToTreatAsEsm: ['.ts'],
   testEnvironment: 'node',
   roots: ['<rootDir>/src'],
   testMatch: ['**/__tests__/**/*.test.ts'],
   // Run tests sequentially to avoid cross-file DB cleanup races
   maxWorkers: 1,
+  globals: {
+    'ts-jest': {
+      useESM: true
+    }
+  },
   transform: {
-    '^.+\\.ts$': 'ts-jest',
+    '^.+\\.ts$': ['ts-jest', {
+      useESM: true
+    }],
   },
   coverageDirectory: 'coverage',
   coveragePathIgnorePatterns: [

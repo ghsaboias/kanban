@@ -1,6 +1,7 @@
 import request from 'supertest'
 import app from '../../app'
 import { testPrisma } from '../setup'
+import type { Request, Response, NextFunction } from 'express'
 
 // Mock ActivityLogger to prevent foreign key constraint issues in route tests
 jest.mock('../../services/activityLogger', () => ({
@@ -14,9 +15,9 @@ jest.mock('../../services/activityLogger', () => ({
 
 // Mock authentication middleware and ensure user
 jest.mock('../../auth/clerk', () => ({
-  withAuth: (req: any, res: any, next: any) => next(),
-  requireAuthMw: (req: any, res: any, next: any) => next(),
-  ensureUser: (req: any, res: any, next: any) => {
+  withAuth: (req: Request, res: Response, next: NextFunction) => next(),
+  requireAuthMw: (req: Request, res: Response, next: NextFunction) => next(),
+  ensureUser: (req: Request, res: Response, next: NextFunction) => {
     res.locals.user = {
       id: 'test-user-id',
       name: 'Test User',
@@ -28,10 +29,10 @@ jest.mock('../../auth/clerk', () => ({
 }))
 
 describe('Cards API', () => {
-  let board: any
-  let colA: any
-  let colB: any
-  let user: any
+  let board: { id: string; title: string; }
+  let colA: { id: string; title: string; position: number; boardId: string; }
+  let colB: { id: string; title: string; position: number; boardId: string; }
+  let user: { id: string; name: string; email: string; clerkId: string; }
 
   beforeEach(async () => {
     board = await testPrisma.board.create({ data: { title: 'B' } })
@@ -42,8 +43,8 @@ describe('Cards API', () => {
   })
 
   beforeAll(() => {
-    const fakeBroadcaster: any = { emit: jest.fn(), except: jest.fn(() => fakeBroadcaster) }
-    ;(global as any).io = { to: jest.fn(() => fakeBroadcaster) }
+    const fakeBroadcaster = { emit: jest.fn(), except: jest.fn(() => fakeBroadcaster) }
+    ;(global as unknown as { io: { to: jest.Mock } }).io = { to: jest.fn(() => fakeBroadcaster) }
   })
 
   describe('POST /api/columns/:columnId/cards', () => {

@@ -1,4 +1,5 @@
 import request from 'supertest';
+import type { Request, Response, NextFunction } from 'express';
 import app from '../../app';
 import { testPrisma } from '../setup';
 
@@ -7,9 +8,9 @@ jest.unmock('../../services/activityLogger');
 
 // Mock authentication middleware
 jest.mock('../../auth/clerk', () => ({
-  withAuth: (req: any, res: any, next: any) => next(),
-  requireAuthMw: (req: any, res: any, next: any) => next(),
-  ensureUser: (req: any, res: any, next: any) => {
+  withAuth: (req: Request, res: Response, next: NextFunction) => next(),
+  requireAuthMw: (req: Request, res: Response, next: NextFunction) => next(),
+  ensureUser: (req: Request, res: Response, next: NextFunction) => {
     res.locals.user = {
       id: 'test-user-id',
       name: 'Test User',
@@ -21,7 +22,7 @@ jest.mock('../../auth/clerk', () => ({
 }));
 
 describe('Board Routes - Activity Logging', () => {
-  let testUser: any;
+  let testUser: { id: string; email: string; name: string; clerkId: string; };
 
   beforeEach(async () => {
     // Create a test user for authentication

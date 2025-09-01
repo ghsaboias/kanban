@@ -2,11 +2,13 @@
   "name": "kanban-backend",
   "version": "1.0.0",
   "description": "Kanban board backend API",
+  "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "lint": "eslint src --ext .ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
@@ -22,16 +24,20 @@
     "socket.io": "^4.8.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.34.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/jest": "^30.0.0",
     "@types/node": "^20.10.0",
     "@types/sanitize-html": "^2.16.0",
     "@types/supertest": "^6.0.3",
+    "eslint": "^9.34.0",
+    "globals": "^16.3.0",
     "jest": "^29.7.0",
     "supertest": "^7.1.4",
     "ts-jest": "^29.4.1",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.3.0"
+    "typescript": "^5.3.0",
+    "typescript-eslint": "^8.41.0"
   }
 }
