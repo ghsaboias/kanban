@@ -181,7 +181,7 @@ export class ActivityLogger {
             boardId: request.boardId,
             columnId: request.columnId || null,
             userId: request.userId || null,
-            meta: request.meta as Prisma.InputJsonValue
+            meta: JSON.stringify(request.meta)
           },
           include: {
             user: true

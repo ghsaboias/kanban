@@ -1,11 +1,11 @@
-import express from 'express';
 import cors from 'cors';
-import boardsRouter from './routes/boards';
-import columnsRouter from './routes/columns';
-import cardsRouter from './routes/cards';
-import usersRouter from './routes/users';
+import express from 'express';
+import { ensureUser, requireAuthMw, withAuth } from './auth/clerk';
 import { errorHandler, notFound } from './middleware/errorHandler';
-import { withAuth, requireAuthMw, ensureUser } from './auth/clerk';
+import boardsRouter from './routes/boards';
+import cardsRouter from './routes/cards';
+import columnsRouter from './routes/columns';
+import usersRouter from './routes/users';
 
 const app = express();
 
@@ -20,6 +20,10 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(withAuth);
 
 // Routes
+app.get('/', (_req, res) => {
+  res.json({ status: 'ok', message: 'Kanban API is running', timestamp: new Date().toISOString() });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Kanban API is running' });
 });
