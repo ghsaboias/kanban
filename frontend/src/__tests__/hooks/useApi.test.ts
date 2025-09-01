@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useApi } from '../../useApi';
 
 // Mock Clerk
@@ -26,9 +26,9 @@ describe('useApi', () => {
   beforeEach(async () => {
     mockFetch = vi.fn();
     global.fetch = mockFetch;
-    
+
     mockGetToken = vi.fn().mockResolvedValue('mock-token');
-    
+
     // Mock useAuth properly
     const { useAuth } = await import('@clerk/clerk-react');
     vi.mocked(useAuth).mockReturnValue({
@@ -37,7 +37,7 @@ describe('useApi', () => {
       isSignedIn: true,
       userId: 'test-user-id',
       sessionId: 'test-session-id',
-      sessionClaims: {},
+      sessionClaims: {} as never,
       actor: null,
       orgId: null,
       orgRole: null,
@@ -49,16 +49,16 @@ describe('useApi', () => {
 
   it('should return an object with an apiFetch function', () => {
     const { result } = renderHook(() => useApi());
-    
+
     expect(typeof result.current).toBe('object');
     expect(typeof result.current.apiFetch).toBe('function');
   });
 
   it('should add authorization header when token is available', async () => {
     const { result } = renderHook(() => useApi());
-    
+
     await result.current.apiFetch('/test-path');
-    
+
     expect(mockGetToken).toHaveBeenCalled();
     expect(mockFetch).toHaveBeenCalledWith(
       'http://localhost:3001/api/test-path',
@@ -73,9 +73,9 @@ describe('useApi', () => {
 
   it('should handle paths with leading slash', async () => {
     const { result } = renderHook(() => useApi());
-    
+
     await result.current.apiFetch('/test-path');
-    
+
     expect(mockFetch).toHaveBeenCalledWith(
       'http://localhost:3001/api/test-path',
       expect.any(Object)
@@ -84,9 +84,9 @@ describe('useApi', () => {
 
   it('should handle paths without leading slash', async () => {
     const { result } = renderHook(() => useApi());
-    
+
     await result.current.apiFetch('test-path');
-    
+
     expect(mockFetch).toHaveBeenCalledWith(
       'http://localhost:3001/api/test-path',
       expect.any(Object)
@@ -95,9 +95,9 @@ describe('useApi', () => {
 
   it('should add socket ID header when available', async () => {
     const { result } = renderHook(() => useApi());
-    
+
     await result.current.apiFetch('/test-path');
-    
+
     expect(mockFetch).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
@@ -112,13 +112,13 @@ describe('useApi', () => {
 
   it('should preserve existing headers', async () => {
     const { result } = renderHook(() => useApi());
-    
+
     await result.current.apiFetch('/test-path', {
       headers: {
         'Custom-Header': 'custom-value',
       },
     });
-    
+
     const call = mockFetch.mock.calls[0];
     const headers = call[1].headers;
     expect(headers.get('Custom-Header')).toBe('custom-value');
@@ -128,9 +128,9 @@ describe('useApi', () => {
   it('should handle missing token gracefully', async () => {
     mockGetToken.mockResolvedValue(null);
     const { result } = renderHook(() => useApi());
-    
+
     await result.current.apiFetch('/test-path');
-    
+
     const call = mockFetch.mock.calls[0];
     const headers = call[1].headers;
     expect(headers.has('Authorization')).toBe(false);

@@ -1,5 +1,5 @@
-import { renderHook, act } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { act, renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSocket } from '../../hooks/useSocket';
 
 // Mock socket.io-client
@@ -38,10 +38,21 @@ describe('useSocket', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     mockGetToken = vi.fn().mockResolvedValue('mock-token');
-    
+
     const { useAuth } = await import('@clerk/clerk-react');
     vi.mocked(useAuth).mockReturnValue({
       getToken: mockGetToken,
+      isLoaded: true,
+      isSignedIn: true,
+      userId: 'test-user-id',
+      sessionId: 'test-session-id',
+      sessionClaims: {} as never,
+      actor: null,
+      orgId: null,
+      orgRole: null,
+      orgSlug: null,
+      has: vi.fn(),
+      signOut: vi.fn(),
     } as ReturnType<typeof useAuth>);
 
     // Reset mock socket state
@@ -66,13 +77,13 @@ describe('useSocket', () => {
 
   it('should initialize socket and set up event listeners', async () => {
     const { io } = await import('socket.io-client');
-    
+
     renderHook(() => useSocket());
 
     expect(io).toHaveBeenCalledWith('http://localhost:3001', {
       autoConnect: false,
     });
-    
+
     expect(mockSocket.on).toHaveBeenCalledWith('connect', expect.any(Function));
     expect(mockSocket.on).toHaveBeenCalledWith('disconnect', expect.any(Function));
     expect(mockSocket.on).toHaveBeenCalledWith('connect_error', expect.any(Function));

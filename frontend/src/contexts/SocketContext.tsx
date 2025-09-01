@@ -1,6 +1,7 @@
 import React, { type ReactNode } from 'react';
 import { useSocket } from '../hooks/useSocket';
-import { SocketContext, SocketContextType } from './SocketContextType';
+import type { SocketContextType } from './SocketContextType';
+import { SocketContext } from './SocketContextType';
 
 interface SocketProviderProps {
   children: ReactNode;
@@ -15,4 +16,6 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     </SocketContext.Provider>
   );
 };
+
+export { useSocketContext } from '../hooks/useSocketContext';
 
