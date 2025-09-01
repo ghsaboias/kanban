@@ -7,9 +7,9 @@ export const requireAuthMw = requireAuth()
 
 // Debug middleware for development - can be enabled when needed
 export const debugAuthMw = (req: Request, res: Response, next: NextFunction) => {
-  console.log(`[AUTH DEBUG] ${req.method} ${req.path}`)
+  
   const auth = getAuth(req)
-  console.log(`[AUTH DEBUG] User: ${auth.userId || 'anonymous'}`)
+  
   next()
 }
 

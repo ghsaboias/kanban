@@ -1,4 +1,4 @@
-import { PrismaClient, Activity, User } from '../../../generated/prisma';
+import { Activity, PrismaClient, User } from '../../../generated/prisma';
 
 export interface ActivityLogRequest {
   entityType: 'BOARD' | 'COLUMN' | 'CARD';
