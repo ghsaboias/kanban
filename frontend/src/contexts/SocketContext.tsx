@@ -7,7 +7,7 @@ interface SocketContextType {
   error: string | null;
   joinBoard: (boardId: string) => void;
   leaveBoard: (boardId: string) => void;
-  on: (event: string, callback: (...args: any[]) => void) => void;
+  on: (event: string, callback: (...args: any[]) => void) => (() => void) | void;
   off: (event: string, callback?: (...args: any[]) => void) => void;
   emit: (event: string, data?: any) => void;
 }

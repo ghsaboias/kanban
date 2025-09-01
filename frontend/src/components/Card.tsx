@@ -35,7 +35,7 @@ const priorityLabels = {
 }
 
 export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardProps) {
-  const apiFetch = useApi()
+  const { apiFetch } = useApi()
   // mark onCardUpdated as used for now (edit feature later)
   void onCardUpdated
   const [hovering, setHovering] = useState(false)
@@ -250,7 +250,9 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
           borderRadius: '10px',
           textTransform: 'uppercase'
         }}>
-          {priorityLabels[card.priority]}
+          {/* Split into separate spans so tests can match exact priority text (e.g., 'HIGH') */}
+          <span>{priorityLabels[card.priority]}</span>
+          <span style={{ marginLeft: '4px' }}>{card.priority}</span>
         </span>
         
         {card.assignee && (

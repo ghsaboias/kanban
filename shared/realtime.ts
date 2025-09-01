@@ -23,6 +23,19 @@ export interface Column {
   cards: Card[];
 }
 
+export interface Activity {
+  id: string
+  entityType: 'BOARD' | 'COLUMN' | 'CARD'
+  entityId: string
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'MOVE' | 'REORDER' | 'ASSIGN' | 'UNASSIGN'
+  boardId: string
+  columnId?: string | null
+  userId?: string | null
+  user?: User | null
+  meta: any
+  createdAt: string
+}
+
 // Socket event payloads
 export interface UserJoinedEvent {
   userId: string;
@@ -92,6 +105,11 @@ export interface ColumnReorderedEvent {
   column: Column;
 }
 
+export interface ActivityCreatedEvent {
+  boardId: string;
+  activity: Activity;
+}
+
 // Socket event map for type-safe emissions
 export interface SocketEvents {
   // User presence events
@@ -111,6 +129,9 @@ export interface SocketEvents {
   'column:updated': ColumnUpdatedEvent;
   'column:deleted': ColumnDeletedEvent;
   'column:reordered': ColumnReorderedEvent;
+
+  // Activity events
+  'activity:created': ActivityCreatedEvent;
 }
 
 // Type-safe socket emit helper

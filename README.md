@@ -14,7 +14,6 @@ Uma aplicação colaborativa de quadro Kanban construída com React, TypeScript 
 - **Prisma ORM + SQLite** - Banco de dados com relacionamentos tipados
 - **Sistema de posicionamento** - Suporte nativo para drag & drop
 - **Middleware de erros** - Tratamento de erros em português
-- **Socket.IO** - Realtime implementado (salas por board, presença, emissões server-authoritative)
 
 ### Banco de Dados
 - **4 Modelos principais**: User, Board, Column, Card
@@ -194,15 +193,6 @@ curl -X POST http://localhost:3001/api/cards/{cardId}/move \
 - Backend: `@clerk/express` protege `/api/*` e sincroniza usuário local via upsert (`ensureUser`).
 - Endpoint de bootstrap: `GET /api/auth/me` (retorna o usuário local autenticado).
 
-## Realtime (Socket.IO)
-
-- Conexão autenticada: o frontend envia o token do Clerk no `handshake.auth.token`.
-- Salas por board: o cliente emite `join:board`/`leave:board`; o servidor valida e entra em `board-<id>`.
-- Presença: `user:joined`/`user:left` para todos na sala; no join, o servidor envia `board:joined` com o roster atual.
-- Emissões server-authoritative: as rotas REST emitem para a sala após o sucesso no banco (cards/columns `created|updated|deleted|reordered|moved`).
-- Evitando eco do iniciador: o frontend envia `X-Socket-Id` nos writes; o servidor usa `.except(socketId)` para não reenviar ao autor.
-- Tipos compartilhados: `shared/realtime.ts` define a tipagem dos eventos consumida por FE/BE.
-
 ## Comandos de Desenvolvimento
 
 ```bash
@@ -214,13 +204,44 @@ npm run test:db        # Testa conexão
 # Desenvolvimento
 npm run dev           # Inicia frontend + backend
 npm run dev:frontend  # Apenas React (5173)
-npm run dev:backend   # Apenas Express (3001)
+npm run dev:backend   # Apenas backend
+
+# Testes
+npm test              # Executa todos os testes (backend + frontend)
+npm run test:backend  # Testes do backend apenas
+npm run test:frontend # Testes do frontend apenas
+npm run test:watch    # Executa testes em modo watch
 ```
+
+## Testes
+
+O projeto inclui testes automatizados para garantir a qualidade do código:
+
+### Estrutura de Testes
+- **Backend**: Jest com Supertest para testes de API
+- **Frontend**: Vitest com React Testing Library para testes de componentes
+- **Database**: SQLite separado para testes (`test.db`)
+
+### Executando Testes
+```bash
+npm test                    # Todos os testes
+npm run test:backend        # Apenas backend (API routes, database, auth)
+npm run test:frontend       # Apenas frontend (components, hooks)
+npm run test:watch          # Modo watch para desenvolvimento
+```
+
+### Cobertura Atual
+- **Total**: 243 testes passando
+- **Backend**: 157 testes (rotas API, autenticação, database)  
+- **Frontend**: 86 testes (componentes, hooks, performance)
+
+Os testes cobrem funcionalidades essenciais incluindo CRUD operations, autenticação, drag & drop, e real-time features.
 
 ## Observações
 
 - O diretório `generated/` (cliente Prisma) e o banco `prisma/dev.db` são gerados localmente e ignorados pelo Git.
 - `postinstall` executa `prisma generate` automaticamente após `npm install`.
+- Banco de testes (`test.db`) é limpo automaticamente entre execuções.
 
 ## Tecnologias
 

@@ -1,10 +1,14 @@
-import { Router, Request, Response } from 'express';
+import { Request, Response, Router } from 'express';
+import { ColumnCreatedEvent, ColumnDeletedEvent, ColumnReorderedEvent, ColumnUpdatedEvent } from '../../../shared/realtime';
 import { prisma } from '../database';
-import { asyncHandler, AppError } from '../middleware/errorHandler';
-import { CreateColumnRequest, UpdateColumnRequest, ReorderColumnRequest } from '../types/api';
-import { ColumnCreatedEvent, ColumnUpdatedEvent, ColumnDeletedEvent, ColumnReorderedEvent } from '../../../shared/realtime';
+import { AppError, asyncHandler } from '../middleware/errorHandler';
+import { ActivityLogger } from '../services/activityLogger';
+import { CreateColumnRequest, ReorderColumnRequest, UpdateColumnRequest } from '../types/api';
 
 const router = Router();
+
+// Activity logger instance
+const activityLogger = new ActivityLogger(prisma);
 
 router.post('/boards/:boardId/columns', asyncHandler(async (req: Request, res: Response) => {
   const boardId = req.params.boardId;
@@ -53,6 +57,32 @@ router.post('/boards/:boardId/columns', asyncHandler(async (req: Request, res: R
       }
     }
   });
+
+  // Authenticated user
+  const currentUser = res.locals.user;
+
+  // Log activity
+  if (currentUser) {
+    try {
+      await activityLogger.logActivity({
+        entityType: 'COLUMN',
+        entityId: column.id,
+        action: 'CREATE',
+        boardId: column.boardId,
+        userId: currentUser.id,
+        meta: {
+          title: column.title,
+          position: column.position
+        },
+        priority: 'HIGH',
+        broadcastRealtime: true,
+        initiatorSocketId: req.get('x-socket-id')
+      });
+    } catch (error) {
+      console.error('Failed to log column creation activity:', error);
+      // Don't fail the request if activity logging fails
+    }
+  }
 
   // Emit real-time event to all users in the board room
   const columnCreatedEvent: ColumnCreatedEvent = {
@@ -124,6 +154,20 @@ router.put('/columns/:id', asyncHandler(async (req: Request, res: Response) => {
     }
   }
 
+  // Track changes for activity logging
+  const changes: string[] = [];
+  const oldValues: any = {};
+  const newValues: any = {};
+
+  if (title && title !== existingColumn.title) {
+    changes.push('title');
+    oldValues.title = existingColumn.title;
+    newValues.title = title;
+  }
+
+  // Handle position changes separately (for reorder detection)
+  const isPositionChange = position !== undefined && position !== existingColumn.position;
+
   const column = await prisma.column.update({
     where: { id },
     data: {
@@ -141,6 +185,57 @@ router.put('/columns/:id', asyncHandler(async (req: Request, res: Response) => {
       }
     }
   });
+
+  // Authenticated user
+  const currentUser = res.locals.user;
+
+  // Log activity based on what changed
+  if (currentUser) {
+    if (changes.length > 0) {
+      // Field changes = UPDATE
+      try {
+        await activityLogger.logActivity({
+          entityType: 'COLUMN',
+          entityId: column.id,
+          action: 'UPDATE',
+          boardId: column.boardId,
+          userId: currentUser.id,
+          meta: {
+            changes,
+            oldValues,
+            newValues
+          },
+          priority: 'HIGH',
+          broadcastRealtime: true,
+          initiatorSocketId: req.get('x-socket-id')
+        });
+      } catch (error) {
+        console.error('Failed to log column update activity:', error);
+      }
+    }
+
+    if (isPositionChange) {
+      // Position change = REORDER (can happen together with UPDATE)
+      try {
+        await activityLogger.logActivity({
+          entityType: 'COLUMN',
+          entityId: column.id,
+          action: 'REORDER',
+          boardId: column.boardId,
+          userId: currentUser.id,
+          meta: {
+            oldPosition: existingColumn.position,
+            newPosition: position
+          },
+          priority: 'LOW', // REORDER actions are low priority (rate limited)
+          broadcastRealtime: true,
+          initiatorSocketId: req.get('x-socket-id')
+        });
+      } catch (error) {
+        console.error('Failed to log column reorder activity:', error);
+      }
+    }
+  }
 
   // Emit real-time event to all users in the board room
   const columnUpdatedEvent: ColumnUpdatedEvent = {
@@ -199,6 +294,31 @@ router.delete('/columns/:id', asyncHandler(async (req: Request, res: Response) =
       position: { decrement: 1 }
     }
   });
+
+  // Authenticated user
+  const currentUser = res.locals.user;
+
+  // Log activity
+  if (currentUser) {
+    try {
+      await activityLogger.logActivity({
+        entityType: 'COLUMN',
+        entityId: id,
+        action: 'DELETE',
+        boardId: existingColumn.boardId,
+        userId: currentUser.id,
+        meta: {
+          title: existingColumn.title,
+          position: existingColumn.position
+        },
+        priority: 'HIGH',
+        broadcastRealtime: true,
+        initiatorSocketId: req.get('x-socket-id')
+      });
+    } catch (error) {
+      console.error('Failed to log column deletion activity:', error);
+    }
+  }
 
   // Emit real-time event to all users in the board room
   const columnDeletedEvent: ColumnDeletedEvent = {
@@ -283,6 +403,31 @@ router.post('/columns/:id/reorder', asyncHandler(async (req: Request, res: Respo
       }
     }
   });
+
+  // Authenticated user
+  const currentUser = res.locals.user;
+
+  // Log activity
+  if (currentUser) {
+    try {
+      await activityLogger.logActivity({
+        entityType: 'COLUMN',
+        entityId: id,
+        action: 'REORDER',
+        boardId: column.boardId,
+        userId: currentUser.id,
+        meta: {
+          oldPosition,
+          newPosition
+        },
+        priority: 'LOW', // REORDER actions are low priority (rate limited)
+        broadcastRealtime: true,
+        initiatorSocketId: req.get('x-socket-id')
+      });
+    } catch (error) {
+      console.error('Failed to log column reorder activity:', error);
+    }
+  }
 
   // Emit real-time event to all users in the board room
   const columnReorderedEvent: ColumnReorderedEvent = {
