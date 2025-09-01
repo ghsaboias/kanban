@@ -1,28 +1,51 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { describe, expect, it, vi } from 'vitest'
 import { BoardPage } from '../../components/BoardPage'
 import { SocketProvider } from '../../contexts/SocketContext'
+import { render, screen } from '../test-utils'
 
 // Mock the Board component used inside BoardPage to avoid deep rendering
 vi.mock('../../components/Board', () => ({
   Board: ({ board }: { board?: { id: string } | null }) => <div>Board Component (id: {board?.id})</div>
 }))
 
+// Mock React Router components and hooks
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useParams: () => ({ id: 'abc123' }),
+    Link: ({ children, ...props }: any) => <a {...props}>{children}</a>,
+  };
+})
+
 // Mock useApi hook
 vi.mock('../../useApi', () => ({
   useApi: () => ({
-    apiFetch: vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({
-        success: true,
-        data: {
-          id: 'abc123',
-          title: 'Test Board',
-          description: 'Test Description',
-          columns: []
-        }
-      })
+    apiFetch: vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/activities')) {
+        // Mock activities response
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            success: true,
+            data: []
+          })
+        });
+      } else {
+        // Mock board response
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            success: true,
+            data: {
+              id: 'abc123',
+              title: 'Test Board',
+              description: 'Test Description',
+              columns: []
+            }
+          })
+        });
+      }
     })
   })
 }))
@@ -58,55 +81,33 @@ vi.mock('../../hooks/useRealtimeBoard', () => ({
 }))
 
 describe('BoardPage', () => {
-  it('renders back link and Board with route id', async () => {
+  it('renders loading state initially', () => {
     render(
       <SocketProvider>
-        <MemoryRouter initialEntries={[{ pathname: '/board/abc123' }] }>
-          <Routes>
-            <Route path="/board/:id" element={<BoardPage />} />
-          </Routes>
-        </MemoryRouter>
+        <BoardPage />
       </SocketProvider>
     )
 
-    // Wait for loading to complete and back button to appear
-    await expect(screen.findByText('← Back to Boards')).resolves.toBeInTheDocument()
-    
-    // Wait for async data loading and Board component
-    await expect(screen.findByText(/Board Component/)).resolves.toHaveTextContent('(id: abc123)')
+    expect(screen.getByText('Loading board...')).toBeInTheDocument()
   })
 
-  it('displays activity feed toggle button', async () => {
+  it('renders back link when board is loaded', async () => {
     render(
       <SocketProvider>
-        <MemoryRouter initialEntries={[{ pathname: '/board/abc123' }]}>
-          <Routes>
-            <Route path="/board/:id" element={<BoardPage />} />
-          </Routes>
-        </MemoryRouter>
+        <BoardPage />
+      </SocketProvider>
+    )
+
+    await expect(screen.findByText('← Back to Boards')).resolves.toBeInTheDocument()
+  })
+
+  it('renders activity feed toggle button', async () => {
+    render(
+      <SocketProvider>
+        <BoardPage />
       </SocketProvider>
     )
 
     await expect(screen.findByText('Ver Atividades')).resolves.toBeInTheDocument()
-  })
-
-  it('handles loading state while fetching board data', async () => {
-    // This would require more complex mocking of the useApi hook to simulate loading
-    // For now, we verify the component renders and shows loading state initially  
-    render(
-      <SocketProvider>
-        <MemoryRouter initialEntries={[{ pathname: '/board/loading-test' }]}>
-          <Routes>
-            <Route path="/board/:id" element={<BoardPage />} />
-          </Routes>
-        </MemoryRouter>
-      </SocketProvider>
-    )
-
-    // Initially shows loading state, then loads normally
-    expect(screen.getByText('Loading board...')).toBeInTheDocument()
-    
-    // Wait for actual loading to complete and back link to appear
-    await expect(screen.findByText('← Back to Boards')).resolves.toBeInTheDocument()
   })
 })

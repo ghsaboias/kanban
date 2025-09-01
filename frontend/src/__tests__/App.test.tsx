@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import App from '../App';
+import { render, screen } from './test-utils';
 
 // Mock Clerk components
 vi.mock('@clerk/clerk-react', () => ({
@@ -16,7 +16,7 @@ vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
-    BrowserRouter: ({ children }: { children: React.ReactNode }) => <div data-testid="router">{children}</div>,
+    BrowserRouter: ({ children }: { children: React.ReactNode }) => <div data-testid="mock-router">{children}</div>,
     Routes: ({ children }: { children: React.ReactNode }) => <div data-testid="routes">{children}</div>,
     Route: ({ element }: { element: React.ReactNode }) => <div data-testid="route">{element}</div>,
   };
@@ -39,29 +39,29 @@ vi.mock('../components/BoardPage', () => ({
 describe('App', () => {
   it('should render the app header', () => {
     render(<App />);
-    
+
     expect(screen.getByText('Kanban')).toBeInTheDocument();
   });
 
   it('should render authentication components', () => {
     render(<App />);
-    
+
     expect(screen.getAllByTestId('signed-in')).toHaveLength(2); // Header and main content
     expect(screen.getAllByTestId('signed-out')).toHaveLength(2); // Header and main content
   });
 
   it('should render sign in/up buttons in signed out state', () => {
     render(<App />);
-    
+
     expect(screen.getByTestId('sign-in-button')).toBeInTheDocument();
     expect(screen.getByTestId('sign-up-button')).toBeInTheDocument();
   });
 
   it('should render user button and routes in signed in state', () => {
     render(<App />);
-    
+
     expect(screen.getByTestId('user-button')).toBeInTheDocument();
-    
+
     // Check that socket provider wraps the routes
     expect(screen.getByTestId('socket-provider')).toBeInTheDocument();
     expect(screen.getByTestId('routes')).toBeInTheDocument();
@@ -69,14 +69,14 @@ describe('App', () => {
 
   it('should render router and routes structure', () => {
     render(<App />);
-    
-    expect(screen.getByTestId('router')).toBeInTheDocument();
+
+    expect(screen.getByTestId('mock-router')).toBeInTheDocument();
     expect(screen.getByTestId('routes')).toBeInTheDocument();
   });
 
   it('should have proper styling structure', () => {
     render(<App />);
-    
+
     // Check that header has proper structure
     const header = screen.getByRole('banner');
     expect(header).toBeInTheDocument();
@@ -89,7 +89,7 @@ describe('App', () => {
 
   it('should show please sign in message when signed out', () => {
     render(<App />);
-    
+
     expect(screen.getByText('Please sign in to continue.')).toBeInTheDocument();
   });
 });
