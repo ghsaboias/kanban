@@ -1,7 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Board } from '../../components/Board';
+import { fireEvent, render, screen, waitFor } from '../test-utils';
 
 // Mock the useApi hook
 const mockApiFetch = vi.fn();
@@ -19,7 +18,7 @@ vi.mock('@dnd-kit/core', () => ({
   useSensors: vi.fn(() => []),
   PointerSensor: vi.fn(),
   closestCenter: vi.fn(),
-  useDroppable: () => ({ setNodeRef: () => {} } as const),
+  useDroppable: () => ({ setNodeRef: () => { } } as const),
 }));
 
 vi.mock('@dnd-kit/sortable', () => ({
@@ -29,7 +28,7 @@ vi.mock('@dnd-kit/sortable', () => ({
   useSortable: () => ({
     attributes: {},
     listeners: {},
-    setNodeRef: () => {},
+    setNodeRef: () => { },
     transform: null,
     transition: null,
   }),
@@ -108,16 +107,14 @@ const renderBoard = (board = mockBoard) => {
   const mockSetBoard = vi.fn();
   const isConnected = true;
   const onlineUsers: Array<{ userId: string; user: { id: string; name: string; email: string } }> = [];
-  
+
   return render(
-    <BrowserRouter>
-      <Board 
-        board={board} 
-        setBoard={mockSetBoard} 
-        isConnected={isConnected} 
-        onlineUsers={onlineUsers} 
-      />
-    </BrowserRouter>
+    <Board
+      board={board}
+      setBoard={mockSetBoard}
+      isConnected={isConnected}
+      onlineUsers={onlineUsers}
+    />
   );
 };
 
@@ -297,7 +294,7 @@ describe('Board Component', () => {
   });
 
   it('should handle board data updates', async () => {
-    renderBoard();
+    const { rerender } = renderBoard();
 
     await waitFor(() => {
       expect(screen.getByText('Test Board')).toBeInTheDocument();
@@ -307,20 +304,18 @@ describe('Board Component', () => {
       ...mockBoard,
       title: 'Updated Board Title',
     };
-    
+
     const mockSetBoard = vi.fn();
     const isConnected = true;
     const onlineUsers: Array<{ userId: string; user: { id: string; name: string; email: string } }> = [];
-    
+
     rerender(
-      <BrowserRouter>
-        <Board 
-          board={updatedBoard} 
-          setBoard={mockSetBoard} 
-          isConnected={isConnected} 
-          onlineUsers={onlineUsers} 
-        />
-      </BrowserRouter>
+      <Board
+        board={updatedBoard}
+        setBoard={mockSetBoard}
+        isConnected={isConnected}
+        onlineUsers={onlineUsers}
+      />
     );
 
     await waitFor(() => {

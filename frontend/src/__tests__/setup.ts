@@ -1,7 +1,4 @@
 import '@testing-library/jest-dom';
-<<<<<<< HEAD
-import { vi } from 'vitest';
-=======
 import { afterAll, beforeAll, vi } from 'vitest';
 
 // Set up environment variables for tests
@@ -30,9 +27,6 @@ afterAll(() => {
 });
 
 // Mock fetch for API calls
->>>>>>> master
-
-// Mock fetch for API calls
 global.fetch = vi.fn();
 
 // Mock Socket.IO client
@@ -48,7 +42,7 @@ vi.mock('socket.io-client', () => ({
   })),
 }));
 
-// Mock Clerk
+// Mock Clerk (including provider)
 vi.mock('@clerk/clerk-react', () => ({
   ClerkProvider: ({ children }: { children: React.ReactNode }) => children,
   useAuth: () => ({
