@@ -8,6 +8,7 @@ global.fetch = mockFetch;
 describe('API Client', () => {
   const baseUrl = 'http://localhost:3001';
 
+
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset fetch mock to default successful response
