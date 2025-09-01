@@ -66,6 +66,11 @@ describe('Cards Routes - Activity Logging', () => {
     });
   });
 
+  afterEach(async () => {
+    // Wait for any pending activity logging to complete before cleanup
+    await new Promise(resolve => setTimeout(resolve, 300));
+  });
+
   describe('POST /api/columns/:columnId/cards', () => {
     it('should log card creation activity with all fields', async () => {
       const cardData = {
@@ -545,6 +550,9 @@ describe('Cards Routes - Activity Logging', () => {
         .send(moveData)
         .expect(200);
 
+      // Wait for LOW priority activity batch processing to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
+
       // Check that activity was logged as REORDER since it's within same column
       const activities = await testPrisma.activity.findMany({
         where: {
@@ -666,6 +674,9 @@ describe('Cards Routes - Activity Logging', () => {
       }
 
       await Promise.all(promises);
+
+      // Wait for LOW priority activity batch processing to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       // Due to rate limiting, may have fewer activities than operations
       const activities = await testPrisma.activity.findMany({

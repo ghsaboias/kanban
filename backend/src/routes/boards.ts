@@ -1,13 +1,13 @@
-import { Router, Request, Response } from 'express';
+import { Request, Response, Router } from 'express';
 import { prisma } from '../database';
-import { asyncHandler, AppError } from '../middleware/errorHandler';
-import { CreateBoardRequest, UpdateBoardRequest, ApiResponse } from '../types/api';
+import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { ActivityLogger } from '../services/activityLogger';
+import { CreateBoardRequest, UpdateBoardRequest } from '../types/api';
 
 const router = Router();
 
 // Initialize activity logger
-const activityLogger = new ActivityLogger(prisma, global.io);
+const activityLogger = new ActivityLogger(prisma);
 
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
   const boards = await prisma.board.findMany({
@@ -222,6 +222,72 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
   res.json({
     success: true,
     message: 'Quadro excluído com sucesso'
+  });
+}));
+
+// GET /api/boards/:id/activities - Get activities for a specific board with pagination
+router.get('/:id/activities', asyncHandler(async (req: Request, res: Response) => {
+  const boardId = req.params.id;
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = Math.min(parseInt(req.query.limit as string) || 20, 50); // Max 50 activities per request
+  const offset = (page - 1) * limit;
+
+  // Verify board exists
+  const board = await prisma.board.findUnique({
+    where: { id: boardId },
+    select: { id: true, title: true }
+  });
+
+  if (!board) {
+    throw new AppError('Quadro não encontrado', 404);
+  }
+
+  // Get activities with user information, ordered by creation date (newest first)
+  const activities = await prisma.activity.findMany({
+    where: { boardId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true
+        }
+      }
+    },
+    orderBy: {
+      createdAt: 'desc'
+    },
+    take: limit,
+    skip: offset
+  });
+
+  // Get total count for pagination metadata
+  const totalCount = await prisma.activity.count({
+    where: { boardId }
+  });
+
+  const hasMore = totalCount > offset + activities.length;
+  const totalPages = Math.ceil(totalCount / limit);
+
+  res.json({
+    success: true,
+    data: {
+      activities,
+      board: {
+        id: board.id,
+        title: board.title
+      },
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages,
+        hasMore,
+        hasPrev: page > 1,
+        nextPage: hasMore ? page + 1 : null,
+        prevPage: page > 1 ? page - 1 : null
+      }
+    }
   });
 }));
 

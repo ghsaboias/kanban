@@ -1,15 +1,15 @@
-import { Router, Request, Response } from 'express';
+import { Request, Response, Router } from 'express';
+import { CardCreatedEvent, CardDeletedEvent, CardMovedEvent, CardUpdatedEvent } from '../../../shared/realtime';
 import { prisma } from '../database';
-import { asyncHandler, AppError } from '../middleware/errorHandler';
-import { CreateCardRequest, UpdateCardRequest, MoveCardRequest } from '../types/api';
-import { sanitizeDescription } from '../utils/sanitize';
-import { CardCreatedEvent, CardUpdatedEvent, CardDeletedEvent, CardMovedEvent } from '../../../shared/realtime';
+import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { ActivityLogger } from '../services/activityLogger';
+import { CreateCardRequest, MoveCardRequest, UpdateCardRequest } from '../types/api';
+import { sanitizeDescription } from '../utils/sanitize';
 
 const router = Router();
 
 // Activity logger instance
-const activityLogger = new ActivityLogger(prisma, global.io);
+const activityLogger = new ActivityLogger(prisma);
 
 router.post('/columns/:columnId/cards', asyncHandler(async (req: Request, res: Response) => {
   const columnId = req.params.columnId;
@@ -291,22 +291,22 @@ router.put('/cards/:id', asyncHandler(async (req: Request, res: Response) => {
     // Pure position change = REORDER
     try {
       await activityLogger.logActivity({
-      entityType: 'CARD',
-      entityId: card.id,
-      action: 'REORDER',
-      boardId: card.column.boardId,
-      columnId: card.columnId,
-      userId: currentUser.id,
-      meta: {
-        oldPosition: existingCard.position,
-        newPosition: position,
+        entityType: 'CARD',
+        entityId: card.id,
+        action: 'REORDER',
+        boardId: card.column.boardId,
         columnId: card.columnId,
-        columnTitle: card.column.title
-      },
-      priority: 'LOW', // REORDER actions are low priority (rate limited)
-      broadcastRealtime: true,
-      initiatorSocketId: req.get('x-socket-id')
-    });
+        userId: currentUser.id,
+        meta: {
+          oldPosition: existingCard.position,
+          newPosition: position,
+          columnId: card.columnId,
+          columnTitle: card.column.title
+        },
+        priority: 'LOW', // REORDER actions are low priority (rate limited)
+        broadcastRealtime: true,
+        initiatorSocketId: req.get('x-socket-id')
+      });
     } catch (error) {
       console.error('Failed to log card reorder activity:', error);
     }
@@ -507,9 +507,9 @@ router.post('/cards/:id/move', asyncHandler(async (req: Request, res: Response) 
           }
         }
       });
-      return { 
-        card: cardWithRelations!, 
-        oldColumnId, 
+      return {
+        card: cardWithRelations!,
+        oldColumnId,
         targetColumn,
         existingCard,
         wasMove: false,
@@ -597,13 +597,13 @@ router.post('/cards/:id/move', asyncHandler(async (req: Request, res: Response) 
       }
     });
 
-    return { 
-      card, 
-      oldColumnId, 
-      targetColumn, 
-      existingCard, 
-      wasMove: true, 
-      oldPosition 
+    return {
+      card,
+      oldColumnId,
+      targetColumn,
+      existingCard,
+      wasMove: true,
+      oldPosition
     };
   });
 
