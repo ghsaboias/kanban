@@ -1,13 +1,13 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
-import { DndContext, closestCenter, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
-import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
+import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
+import { DndContext, DragOverlay, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from '@dnd-kit/sortable'
-import { Card as CardView } from './Card'
-import { SortableColumn } from './SortableColumn'
-import { CardDetailModal } from './CardDetailModal'
-import { useApi } from '../useApi'
-import type { ApiResponse } from '../types/api'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { User } from '../../../shared/realtime'
+import type { ApiResponse } from '../types/api'
+import { useApi } from '../useApi'
+import { Card as CardView } from './Card'
+import { CardDetailModal } from './CardDetailModal'
+import { SortableColumn } from './SortableColumn'
 
 interface Card {
   id: string
@@ -255,7 +255,7 @@ export function Board({ board, setBoard, isConnected, onlineUsers }: BoardProps)
         ...prev,
         columns: prev.columns.map(col => ({
           ...col,
-          cards: col.cards.map(card => 
+          cards: col.cards.map(card =>
             card.id === updatedCard.id ? updatedCard : card
           )
         }))
@@ -292,11 +292,11 @@ export function Board({ board, setBoard, isConnected, onlineUsers }: BoardProps)
             <h1 style={{ color: '#000', margin: '0 0 8px 0' }}>{board.title}</h1>
             {board.description && <p style={{ color: '#333', margin: 0 }}>{board.description}</p>}
           </div>
-          
+
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px' }}>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
               gap: '6px',
               color: isConnected ? '#28a745' : '#dc3545'
             }}>
@@ -308,7 +308,7 @@ export function Board({ board, setBoard, isConnected, onlineUsers }: BoardProps)
               }} />
               {isConnected ? 'Connected' : 'Disconnected'}
             </div>
-            
+
             {onlineUsers.length > 0 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#666' }}>
                 <span>👥</span>
@@ -356,30 +356,30 @@ export function Board({ board, setBoard, isConnected, onlineUsers }: BoardProps)
           </div>
         </div>
       </div>
-  
-      <DndContext 
+
+      <DndContext
         sensors={sensors}
-        onDragStart={handleDragStart} 
-        onDragEnd={handleDragEnd} 
-        onDragCancel={handleDragCancel} 
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
         collisionDetection={closestCenter}
       >
-        <div style={{ 
-          display: 'flex', 
-          gap: '20px', 
+        <div style={{
+          display: 'flex',
+          gap: '20px',
           overflowX: 'auto',
           minHeight: '400px',
           paddingBottom: '20px'
         }}>
-          <SortableContext 
+          <SortableContext
             items={board.columns.map(c => `column-${c.id}`)}
             strategy={horizontalListSortingStrategy}
           >
             {board.columns
               .sort((a, b) => a.position - b.position)
               .map(column => (
-                <SortableColumn 
-                  key={column.id} 
+                <SortableColumn
+                  key={column.id}
                   column={column}
                   onCardCreated={(newCard) => {
                     setBoard(prev => prev ? { ...prev, columns: prev.columns.map(c => c.id === column.id ? { ...c, cards: [...c.cards, newCard] } : c) } : null)
@@ -410,7 +410,7 @@ export function Board({ board, setBoard, isConnected, onlineUsers }: BoardProps)
                     value={columnTitle}
                     onChange={(e) => setColumnTitle(e.target.value)}
                     placeholder="Enter column title"
-                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '14px', color: '#213547', backgroundColor: '#f8f9fa', marginBottom: '12px' }}
+                    style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '14px', color: '#213547', backgroundColor: '#f8f9fa', marginBottom: '12px' }}
                     autoFocus
                     required
                   />
