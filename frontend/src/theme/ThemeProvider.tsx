@@ -9,6 +9,8 @@ type ThemeContextValue = {
   available: Record<string, Theme>
   persist: boolean
   setPersist: (p: boolean) => void
+  // Optional runtime transform (e.g., UI profiles overriding radius/shadow)
+  setTransform?: (fn: ((t: Theme) => Theme) | null) => void
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
@@ -24,13 +26,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       return false
     }
   })
-  const [theme, setThemeState] = useState<Theme>(() => {
+  // Base theme stored here; UI layers can transform this via setTransform
+  const [baseTheme, setThemeState] = useState<Theme>(() => {
     try {
       const raw = localStorage.getItem(LS_KEY)
       if (raw) return JSON.parse(raw)
     } catch {}
     return lightTheme
   })
+  const [transform, setTransform] = useState<((t: Theme) => Theme) | null>(null)
+  const theme = useMemo<Theme>(() => transform ? transform(baseTheme) : baseTheme, [baseTheme, transform])
 
   const setTheme = (t: Theme) => {
     setThemeState(t)
@@ -60,6 +65,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     available: THEMES,
     persist,
     setPersist,
+    setTransform,
   }), [theme, persist])
 
   return (
@@ -72,4 +78,3 @@ export function useTheme() {
   if (!ctx) throw new Error('useTheme must be used within ThemeProvider')
   return ctx
 }
-

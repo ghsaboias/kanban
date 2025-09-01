@@ -5,6 +5,7 @@ import { SocketProvider } from './contexts/SocketContext'
 import './App.css'
 import { useTheme } from './theme/ThemeProvider'
 import { ThemeSwitcher } from './components/ThemeSwitcher'
+import { UISwitcher } from './components/UISwitcher'
 import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/clerk-react'
 
 function App() {
@@ -49,6 +50,7 @@ function App() {
           </SocketProvider>
         </SignedIn>
         <ThemeSwitcher />
+        <UISwitcher />
       </div>
     </Router>
   )
