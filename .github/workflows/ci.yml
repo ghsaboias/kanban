@@ -37,10 +37,16 @@ jobs:
       - name: Run TypeScript Check
         run: npm run typecheck
 
-      - name: Run Tests
+      - name: Run Tests (Pinned Prisma CLI)
         env:
-          DATABASE_URL: "file:../prisma/test.db"
-        run: npm test
+          DATABASE_URL: "file:./prisma/test.db"
+        run: |
+          # Prepare DB with Prisma v6 regardless of workspace deps
+          npx prisma@6.15.0 db push --schema prisma/schema.prisma --force-reset
+          # Run backend tests directly (bypass its built-in db push using v5)
+          npm exec -w backend jest
+          # Run frontend tests as usual
+          npm run test:frontend
 
   # Optional: Auto-format and commit (uncomment to enable)
   # format:
