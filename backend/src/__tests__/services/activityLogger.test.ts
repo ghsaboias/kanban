@@ -393,7 +393,7 @@ describe('ActivityLogger Service', () => {
           boardId: board.id,
           columnId: card.columnId,
           userId: user.id,
-          meta: {}
+          meta: JSON.stringify({})
         });
 
       await activityLogger.logActivity({

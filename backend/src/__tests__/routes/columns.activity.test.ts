@@ -85,7 +85,7 @@ describe('Columns Routes - Activity Logging', () => {
       expect(activities).toHaveLength(1);
       expect(activities[0].userId).toBe(testUser.id);
       expect(activities[0].boardId).toBe(testBoard.id);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         title: columnData.title,
         position: columnData.position
       });
@@ -114,7 +114,7 @@ describe('Columns Routes - Activity Logging', () => {
       });
 
       expect(activities).toHaveLength(1);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         title: columnData.title,
         position: 0
       });
@@ -182,7 +182,7 @@ describe('Columns Routes - Activity Logging', () => {
       expect(activities).toHaveLength(1);
       expect(activities[0].userId).toBe(testUser.id);
       expect(activities[0].boardId).toBe(testBoard.id);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         changes: ['title'],
         oldValues: {
           title: 'Original Column'
@@ -227,7 +227,7 @@ describe('Columns Routes - Activity Logging', () => {
       expect(activities).toHaveLength(1);
       expect(activities[0].userId).toBe(testUser.id);
       expect(activities[0].boardId).toBe(testBoard.id);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         oldPosition: 0,
         newPosition: 1
       });
@@ -262,7 +262,7 @@ describe('Columns Routes - Activity Logging', () => {
 
       // First should be UPDATE for title change
       expect(activities[0].action).toBe('UPDATE');
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         changes: ['title'],
         oldValues: {
           title: 'Original Column'
@@ -274,7 +274,7 @@ describe('Columns Routes - Activity Logging', () => {
 
       // Second should be REORDER for position change
       expect(activities[1].action).toBe('REORDER');
-      expect(activities[1].meta).toEqual({
+      expect(JSON.parse(activities[1].meta)).toEqual({
         oldPosition: 0,
         newPosition: 1
       });
@@ -359,7 +359,7 @@ describe('Columns Routes - Activity Logging', () => {
       expect(activities).toHaveLength(1);
       expect(activities[0].userId).toBe(testUser.id);
       expect(activities[0].boardId).toBe(testBoard.id);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         title: 'Column to Delete',
         position: 0
       });
@@ -439,7 +439,7 @@ describe('Columns Routes - Activity Logging', () => {
       expect(activities).toHaveLength(1);
       expect(activities[0].userId).toBe(testUser.id);
       expect(activities[0].boardId).toBe(testBoard.id);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         oldPosition: 0,
         newPosition: 2
       });

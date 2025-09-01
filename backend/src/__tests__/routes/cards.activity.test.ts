@@ -108,7 +108,7 @@ describe('Cards Routes - Activity Logging', () => {
       expect(activities).toHaveLength(1);
       expect(activities[0].userId).toBe(testUser.id);
       expect(activities[0].boardId).toBe(testBoard.id);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         title: cardData.title,
         description: cardData.description,
         priority: cardData.priority,
@@ -140,7 +140,7 @@ describe('Cards Routes - Activity Logging', () => {
       });
 
       expect(activities).toHaveLength(1);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         title: cardData.title,
         description: null,
         priority: 'MEDIUM',
@@ -244,7 +244,7 @@ describe('Cards Routes - Activity Logging', () => {
       expect(activities).toHaveLength(1);
       expect(activities[0].userId).toBe(testUser.id);
       expect(activities[0].boardId).toBe(testBoard.id);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         changes: ['title', 'description', 'priority', 'assigneeId'],
         oldValues: {
           title: 'Original Card',
@@ -282,7 +282,7 @@ describe('Cards Routes - Activity Logging', () => {
       });
 
       expect(activities).toHaveLength(1);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         changes: ['title'],
         oldValues: {
           title: 'Original Card'
@@ -315,7 +315,7 @@ describe('Cards Routes - Activity Logging', () => {
       });
 
       expect(activities).toHaveLength(1);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         oldPosition: 0,
         newPosition: 1,
         columnId: testColumn.id,
@@ -348,15 +348,15 @@ describe('Cards Routes - Activity Logging', () => {
       expect(activities).toHaveLength(2);
 
       // First assignment
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         changes: ['assigneeId'],
         oldValues: { assigneeId: null },
         newValues: { assigneeId: testAssignee.id },
         assigneeName: testAssignee.name
       });
 
-      // Unassignment  
-      expect(activities[1].meta).toEqual({
+      // Unassignment
+      expect(JSON.parse(activities[1].meta)).toEqual({
         changes: ['assigneeId'],
         oldValues: { assigneeId: testAssignee.id },
         newValues: { assigneeId: null }
@@ -441,7 +441,7 @@ describe('Cards Routes - Activity Logging', () => {
       expect(activities).toHaveLength(1);
       expect(activities[0].userId).toBe(testUser.id);
       expect(activities[0].boardId).toBe(testBoard.id);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         title: 'Card to Delete',
         description: '<p>This card will be deleted</p>',
         priority: 'LOW',
@@ -523,7 +523,7 @@ describe('Cards Routes - Activity Logging', () => {
       expect(activities).toHaveLength(1);
       expect(activities[0].userId).toBe(testUser.id);
       expect(activities[0].boardId).toBe(testBoard.id);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         title: testCard.title,
         fromColumnId: testColumn.id,
         fromColumnTitle: testColumn.title,
@@ -570,7 +570,7 @@ describe('Cards Routes - Activity Logging', () => {
       });
 
       expect(activities).toHaveLength(1);
-      expect(activities[0].meta).toEqual({
+      expect(JSON.parse(activities[0].meta)).toEqual({
         title: testCard.title,
         columnId: testColumn.id,
         columnTitle: testColumn.title,
