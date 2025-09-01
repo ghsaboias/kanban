@@ -10,7 +10,7 @@ jobs:
   test:
     name: Lint, TypeCheck & Test
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
         node-version: [18.x, 20.x]
@@ -23,7 +23,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -37,26 +37,18 @@ jobs:
       - name: Run TypeScript Check
         run: npm run typecheck
 
-      - name: Run Tests (Pinned Prisma CLI)
+      - name: Run Tests
         env:
           DATABASE_URL: "file:${{ github.workspace }}/prisma/test.db"
-        run: |
-          # Prepare DB with Prisma v6 regardless of workspace deps
-          npx prisma@6.15.0 db push --schema prisma/schema.prisma --force-reset
-          # Run backend tests from backend directory so dotenv paths resolve
-          cd backend
-          export DATABASE_URL="file:${GITHUB_WORKSPACE}/prisma/test.db"
-          npx jest
-          # Run frontend tests as usual
-          cd ..
-          VITE_API_URL=http://localhost:3001 npm run test:frontend
+          VITE_API_URL: "http://localhost:3001"
+        run: npm test
 
   # Optional: Auto-format and commit (uncomment to enable)
   # format:
   #   name: Auto-format Code
   #   runs-on: ubuntu-latest
   #   if: github.event_name == 'pull_request'
-  #   
+  #
   #   steps:
   #     - name: Checkout code
   #       uses: actions/checkout@v4
