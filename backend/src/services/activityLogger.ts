@@ -1,4 +1,3 @@
-import type { Prisma } from '../../../generated/prisma';
 import { PrismaClient } from '../../../generated/prisma';
 
 export interface ActivityLogRequest {
@@ -215,9 +214,9 @@ export class ActivityLogger {
     return false; // Temporarily disabled to ensure all actions broadcast
   }
 
-  private broadcastActivity(activity: any, request: ActivityLogRequest): void {
+  private broadcastActivity(activity: unknown, request: ActivityLogRequest): void {
     // Get the io instance dynamically to avoid initialization order issues
-    const io = (global as { io?: any }).io;
+    const io = (global as { io?: unknown }).io;
     if (!io) {
       return;
     }
