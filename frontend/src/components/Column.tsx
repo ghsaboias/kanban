@@ -67,7 +67,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
         }
       })
       .catch((err: unknown) => console.error('Error loading users:', err))
-  }, [])
+  }, [apiFetch])
 
   const handleCreateCard = async (e: React.FormEvent) => {
     e.preventDefault()

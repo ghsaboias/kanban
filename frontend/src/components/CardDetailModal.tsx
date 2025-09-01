@@ -94,7 +94,7 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
         }
       })
       .catch((err: unknown) => console.error('Error loading users:', err))
-  }, [])
+  }, [apiFetch])
 
   useEffect(() => {
     if (isOpen) {
