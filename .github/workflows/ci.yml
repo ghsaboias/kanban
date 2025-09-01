@@ -49,7 +49,7 @@ jobs:
           npx jest
           # Run frontend tests as usual
           cd ..
-          npm run test:frontend
+          VITE_API_URL=http://localhost:3001 npm run test:frontend
 
   # Optional: Auto-format and commit (uncomment to enable)
   # format:
