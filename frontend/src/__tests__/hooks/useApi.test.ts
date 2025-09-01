@@ -20,8 +20,8 @@ vi.mock('../../api', () => ({
 }));
 
 describe('useApi', () => {
-  let mockFetch: any;
-  let mockGetToken: any;
+  let mockFetch: ReturnType<typeof vi.fn>;
+  let mockGetToken: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
     mockFetch = vi.fn();
@@ -35,7 +35,16 @@ describe('useApi', () => {
       getToken: mockGetToken,
       isLoaded: true,
       isSignedIn: true,
-    } as any);
+      userId: 'test-user-id',
+      sessionId: 'test-session-id',
+      sessionClaims: {},
+      actor: null,
+      orgId: null,
+      orgRole: null,
+      orgSlug: null,
+      has: vi.fn(),
+      signOut: vi.fn(),
+    } as ReturnType<typeof useAuth>);
   });
 
   it('should return an object with an apiFetch function', () => {

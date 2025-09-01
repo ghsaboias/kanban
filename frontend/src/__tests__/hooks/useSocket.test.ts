@@ -33,7 +33,7 @@ vi.mock('import.meta', () => ({
 }));
 
 describe('useSocket', () => {
-  let mockGetToken: any;
+  let mockGetToken: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -42,7 +42,7 @@ describe('useSocket', () => {
     const { useAuth } = await import('@clerk/clerk-react');
     vi.mocked(useAuth).mockReturnValue({
       getToken: mockGetToken,
-    } as any);
+    } as ReturnType<typeof useAuth>);
 
     // Reset mock socket state
     mockSocket.connect.mockClear();
@@ -85,7 +85,7 @@ describe('useSocket', () => {
     // Simulate connect event
     const connectCall = mockSocket.on.mock.calls.find(call => call[0] === 'connect');
     expect(connectCall).toBeTruthy();
-    const connectHandler = connectCall![1] as Function;
+    const connectHandler = connectCall![1] as () => void;
     act(() => {
       connectHandler();
     });
@@ -101,7 +101,7 @@ describe('useSocket', () => {
     // First connect
     const connectCall = mockSocket.on.mock.calls.find(call => call[0] === 'connect');
     expect(connectCall).toBeTruthy();
-    const connectHandler = connectCall![1] as Function;
+    const connectHandler = connectCall![1] as () => void;
     act(() => {
       connectHandler();
     });
@@ -109,7 +109,7 @@ describe('useSocket', () => {
     // Then disconnect
     const disconnectCall = mockSocket.on.mock.calls.find(call => call[0] === 'disconnect');
     expect(disconnectCall).toBeTruthy();
-    const disconnectHandler = disconnectCall![1] as Function;
+    const disconnectHandler = disconnectCall![1] as () => void;
     act(() => {
       disconnectHandler();
     });
@@ -123,7 +123,7 @@ describe('useSocket', () => {
 
     const errorCall = mockSocket.on.mock.calls.find(call => call[0] === 'connect_error');
     expect(errorCall).toBeTruthy();
-    const errorHandler = errorCall![1] as Function;
+    const errorHandler = errorCall![1] as (error: { message: string }) => void;
     act(() => {
       errorHandler({ message: 'Connection failed' });
     });
@@ -138,7 +138,7 @@ describe('useSocket', () => {
     // First connect
     const connectCall = mockSocket.on.mock.calls.find(call => call[0] === 'connect');
     expect(connectCall).toBeTruthy();
-    const connectHandler = connectCall![1] as Function;
+    const connectHandler = connectCall![1] as () => void;
     act(() => {
       connectHandler();
     });
@@ -156,7 +156,7 @@ describe('useSocket', () => {
     // First connect
     const connectCall = mockSocket.on.mock.calls.find(call => call[0] === 'connect');
     expect(connectCall).toBeTruthy();
-    const connectHandler = connectCall![1] as Function;
+    const connectHandler = connectCall![1] as () => void;
     act(() => {
       connectHandler();
     });
@@ -174,7 +174,7 @@ describe('useSocket', () => {
     // First connect
     const connectCall = mockSocket.on.mock.calls.find(call => call[0] === 'connect');
     expect(connectCall).toBeTruthy();
-    const connectHandler = connectCall![1] as Function;
+    const connectHandler = connectCall![1] as () => void;
     act(() => {
       connectHandler();
     });

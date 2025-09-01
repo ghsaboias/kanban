@@ -1,4 +1,4 @@
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean
   data: T
   error?: string
@@ -19,7 +19,7 @@ export interface Activity {
   columnId?: string | null
   userId?: string | null
   user?: User | null
-  meta: any
+  meta: Record<string, unknown>
   createdAt: string
 }
 

@@ -65,7 +65,7 @@ export function RichTextEditor({ value, onChange, readOnly }: RichTextEditorProp
     ...btnBase,
     backgroundColor: active ? '#111827' : btnBase.backgroundColor,
     color: active ? '#ffffff' : btnBase.color,
-    borderColor: active ? '#111827' : (btnBase as any).borderColor
+    borderColor: active ? '#111827' : '#cbd5e1'
   })
 
   if (!editor) return null

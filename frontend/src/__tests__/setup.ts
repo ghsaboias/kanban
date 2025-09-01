@@ -4,7 +4,7 @@ import { vi, beforeAll, afterAll } from 'vitest';
 // Suppress React act() warnings in tests - these are cosmetic and don't affect functionality
 const originalError = console.error;
 beforeAll(() => {
-  console.error = (...args: any[]) => {
+  console.error = (...args: unknown[]) => {
     // Suppress act() warnings and React update warnings
     if (
       typeof args[0] === 'string' && (
