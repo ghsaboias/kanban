@@ -7,7 +7,7 @@ export interface ActivityLogRequest {
   boardId: string;
   columnId?: string;
   userId?: string;
-  meta: any;
+  meta: Record<string, unknown>;
   priority?: 'HIGH' | 'LOW';
   broadcastRealtime?: boolean;
   initiatorSocketId?: string;
@@ -208,15 +208,15 @@ export class ActivityLogger {
     );
   }
 
-  private shouldSkipBroadcast(request: ActivityLogRequest): boolean {
+  private shouldSkipBroadcast(_request: ActivityLogRequest): boolean {
     // Skip broadcasting high-frequency events to avoid spam
     // Note: REORDER actions need to be broadcast for real-time collaboration
     return false; // Temporarily disabled to ensure all actions broadcast
   }
 
-  private broadcastActivity(activity: any, request: ActivityLogRequest): void {
+  private broadcastActivity(activity: unknown, request: ActivityLogRequest): void {
     // Get the io instance dynamically to avoid initialization order issues
-    const io = (global as any).io;
+    const io = (global as { io?: unknown }).io;
     if (!io) {
       return;
     }
@@ -274,8 +274,8 @@ export interface CardCreateMeta {
 
 export interface CardUpdateMeta {
   changes: string[];
-  oldValues?: Record<string, any>;
-  newValues?: Record<string, any>;
+  oldValues?: Record<string, unknown>;
+  newValues?: Record<string, unknown>;
 }
 
 export interface CardMoveMeta {

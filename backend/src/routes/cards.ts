@@ -236,8 +236,8 @@ router.put('/cards/:id', asyncHandler(async (req: Request, res: Response) => {
 
   // Track changes for activity logging
   const changes: string[] = [];
-  const oldValues: any = {};
-  const newValues: any = {};
+  const oldValues: Record<string, unknown> = {};
+  const newValues: Record<string, unknown> = {};
 
   if (title && title !== existingCard.title) {
     changes.push('title');
@@ -266,7 +266,7 @@ router.put('/cards/:id', asyncHandler(async (req: Request, res: Response) => {
   // Handle position changes separately (for reorder detection)
   const isPositionChange = position !== undefined && position !== existingCard.position;
 
-  const updateData: any = {};
+  const updateData: Record<string, unknown> = {};
   if (title) updateData.title = title;
   if (description !== undefined) updateData.description = sanitizeDescription(description);
   if (priority) updateData.priority = priority;
@@ -313,7 +313,7 @@ router.put('/cards/:id', asyncHandler(async (req: Request, res: Response) => {
   } else if (changes.length > 0) {
     // Field changes = UPDATE
     try {
-      const meta: any = {
+      const meta: Record<string, unknown> = {
         changes,
         oldValues,
         newValues

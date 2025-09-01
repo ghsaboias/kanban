@@ -116,8 +116,8 @@ router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
 
   // Detect changes for activity logging
   const changes: string[] = [];
-  const oldValues: any = {};
-  const newValues: any = {};
+  const oldValues: Record<string, unknown> = {};
+  const newValues: Record<string, unknown> = {};
 
   if (title && title !== existingBoard.title) {
     changes.push('title');

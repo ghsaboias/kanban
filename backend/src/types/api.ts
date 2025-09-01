@@ -49,7 +49,7 @@ export interface CreateUserRequest {
   email: string;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -59,5 +59,5 @@ export interface ApiResponse<T = any> {
 export interface ApiError {
   status: number;
   message: string;
-  details?: any;
+  details?: unknown;
 }
