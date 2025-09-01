@@ -268,7 +268,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
             disabled={deleteLoading}
             style={{
               backgroundColor: deleteLoading ? theme.muted : theme.card,
-              color: deleteLoading ? theme.accentText : '#dc3545',
+              color: deleteLoading ? theme.accentText : (theme.danger || '#dc3545'),
               border: deleteLoading ? `1px solid ${theme.muted}` : `1px solid ${theme.border}`,
               width: '24px',
               height: '24px',
@@ -286,8 +286,8 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
             title={deleteLoading ? 'Deleting…' : 'Delete column'}
             onMouseEnter={(e) => {
               if (!deleteLoading) {
-                e.currentTarget.style.backgroundColor = '#dc3545'
-                e.currentTarget.style.borderColor = '#dc3545'
+                e.currentTarget.style.backgroundColor = (theme.danger || '#dc3545')
+                e.currentTarget.style.borderColor = (theme.danger || '#dc3545')
                 e.currentTarget.style.color = 'white'
               }
             }}
@@ -295,7 +295,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
               if (!deleteLoading) {
                 e.currentTarget.style.backgroundColor = theme.card
                 e.currentTarget.style.borderColor = theme.border
-                e.currentTarget.style.color = '#dc3545'
+                e.currentTarget.style.color = (theme.danger || '#dc3545')
               }
             }}
           >

@@ -311,7 +311,7 @@ export function BoardsList() {
                   }}
                   disabled={deleteLoading === board.id}
                   style={{
-                    backgroundColor: deleteLoading === board.id ? theme.muted : '#dc3545',
+                    backgroundColor: deleteLoading === board.id ? theme.muted : (theme.danger || '#dc3545'),
                     color: theme.accentText,
                     border: `1px solid ${theme.border}`,
                     borderRadius: '4px',

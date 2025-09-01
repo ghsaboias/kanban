@@ -72,7 +72,7 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
         borderRadius: '6px',
         padding: '12px',
         cursor: 'pointer',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        boxShadow: theme.shadow?.sm || '0 1px 3px rgba(0,0,0,0.1)',
         transition: 'box-shadow 0.2s',
         position: 'relative'
       }}
@@ -83,7 +83,7 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
       }}
       onMouseLeave={(e) => {
         setHovering(false)
-        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'
+        e.currentTarget.style.boxShadow = theme.shadow?.sm || '0 1px 3px rgba(0,0,0,0.1)'
       }}
     >
       <button
@@ -99,7 +99,7 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
           top: '4px',
           right: '4px',
           backgroundColor: theme.card,
-          color: '#dc3545',
+          color: theme.danger || '#dc3545',
           border: `1px solid ${theme.border}`,
           width: '20px',
           height: '20px',
@@ -117,14 +117,14 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
           transition: 'opacity 150ms ease'
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = '#dc3545'
-          e.currentTarget.style.borderColor = '#dc3545'
+          e.currentTarget.style.backgroundColor = (theme.danger || '#dc3545')
+          e.currentTarget.style.borderColor = (theme.danger || '#dc3545')
           e.currentTarget.style.color = 'white'
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.backgroundColor = theme.card
           e.currentTarget.style.borderColor = theme.border
-          e.currentTarget.style.color = '#dc3545'
+          e.currentTarget.style.color = (theme.danger || '#dc3545')
         }}
       >
         <svg

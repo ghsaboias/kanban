@@ -325,13 +325,13 @@ export function Board({ boardId }: BoardProps) {
                   display: 'flex', 
                   alignItems: 'center', 
                   gap: '6px',
-                  color: isConnected ? '#28a745' : '#dc3545'
+                  color: isConnected ? (theme.success || '#28a745') : (theme.danger || '#dc3545')
                 }}>
                   <div style={{
                     width: '8px',
                     height: '8px',
                     borderRadius: '50%',
-                    backgroundColor: isConnected ? '#28a745' : '#dc3545'
+                    backgroundColor: isConnected ? (theme.success || '#28a745') : (theme.danger || '#dc3545')
                   }} />
                   {isConnected ? 'Connected' : 'Disconnected'}
                 </div>
