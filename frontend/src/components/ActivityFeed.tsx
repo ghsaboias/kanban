@@ -33,7 +33,8 @@ function ActivityItem({ activity }: ActivityItemProps) {
   };
 
   const getActionText = () => {
-    const { entityType, action, meta, user } = activity;
+    const { entityType, action, user } = activity;
+    const meta = typeof activity.meta === 'string' ? JSON.parse(activity.meta) : activity.meta;
     const userName = user?.name || 'Alguém';
 
     switch (entityType) {
