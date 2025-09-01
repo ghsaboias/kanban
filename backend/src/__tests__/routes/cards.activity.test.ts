@@ -2,6 +2,9 @@ import request from 'supertest';
 import app from '../../app';
 import { testPrisma } from '../setup';
 
+// Restore real ActivityLogger for activity logging tests
+jest.unmock('../../services/activityLogger');
+
 // Mock authentication middleware
 jest.mock('../../auth/clerk', () => ({
   withAuth: (req: any, res: any, next: any) => next(),

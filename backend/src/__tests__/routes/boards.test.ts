@@ -2,6 +2,16 @@ import request from 'supertest';
 import app from '../../app';
 import { testPrisma } from '../setup';
 
+// Mock ActivityLogger to prevent foreign key constraint issues in route tests
+jest.mock('../../services/activityLogger', () => ({
+  ActivityLogger: jest.fn(() => ({
+    logActivity: jest.fn().mockResolvedValue(undefined),
+    flush: jest.fn().mockResolvedValue(undefined),
+    stop: jest.fn().mockResolvedValue(undefined),
+    getQueueSize: jest.fn().mockReturnValue(0)
+  }))
+}));
+
 // Mock authentication middleware
 jest.mock('../../auth/clerk', () => ({
   withAuth: (req: any, res: any, next: any) => next(),

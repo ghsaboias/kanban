@@ -16,6 +16,9 @@ const mockIo = {
   to: mockTo
 };
 
+// Set up global.io mock
+(global as unknown as { io: typeof mockIo }).io = mockIo;
+
 // Helper function to create test data
 async function createTestBoard() {
   const user = await testPrisma.user.create({
@@ -209,7 +212,7 @@ describe('ActivityLogger Service', () => {
       expect(mockTo).toHaveBeenCalledWith(`board-${board.id}`);
     });
 
-    it('should exclude initiator from real-time broadcast', async () => {
+    it('should broadcast to all clients including initiator', async () => {
       const { user, board, card } = await createTestBoard();
       const socketId = 'socket-123';
 
@@ -227,10 +230,12 @@ describe('ActivityLogger Service', () => {
       });
 
       expect(mockTo).toHaveBeenCalledWith(`board-${board.id}`);
-      expect(mockExcept).toHaveBeenCalledWith(socketId);
+      expect(mockEmit).toHaveBeenCalledWith('activity:created', expect.any(Object));
+      // Should not exclude initiator - mockExcept should not be called
+      expect(mockExcept).not.toHaveBeenCalled();
     });
 
-    it('should not broadcast high-frequency events', async () => {
+    it('should broadcast all events including high-frequency ones', async () => {
       const { user, board, card } = await createTestBoard();
 
       await activityLogger.logActivity({
@@ -242,11 +247,12 @@ describe('ActivityLogger Service', () => {
         userId: user.id,
         meta: { position: 5 },
         priority: 'LOW',
-        broadcastRealtime: true // Should be ignored for REORDER actions
+        broadcastRealtime: true // All events are broadcast now
       });
 
       await activityLogger.flush();
-      expect(mockTo).not.toHaveBeenCalled();
+      expect(mockTo).toHaveBeenCalledWith(`board-${board.id}`);
+      expect(mockEmit).toHaveBeenCalledWith('activity:created', expect.any(Object));
     });
   });
 
