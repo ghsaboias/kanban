@@ -1,5 +1,5 @@
+import type { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
-import type { Request, Response, NextFunction } from 'express';
 import app from '../../app';
 import { testPrisma } from '../setup';
 
@@ -22,11 +22,14 @@ jest.mock('../../auth/clerk', () => ({
 }));
 
 describe('Columns Routes - Activity Logging', () => {
-  let testUser: { id: string; email: string; name: string; clerkId: string; };
+  let testUser: { id: string; email: string; name: string; clerkId: string | null; };
   let testBoard: { id: string; title: string; description?: string | null; };
 
   beforeAll(() => {
-    const fakeBroadcaster = { emit: jest.fn(), except: jest.fn(() => fakeBroadcaster) };
+    const fakeBroadcaster: { emit: jest.Mock; except: jest.Mock } = {
+      emit: jest.fn(),
+      except: jest.fn(() => fakeBroadcaster)
+    };
     (global as unknown as { io: { to: jest.Mock } }).io = { to: jest.fn(() => fakeBroadcaster) };
   });
 
@@ -142,7 +145,7 @@ describe('Columns Routes - Activity Logging', () => {
   });
 
   describe('PUT /api/columns/:id', () => {
-    let testColumn: unknown;
+    let testColumn: { id: string; title: string; position: number; boardId: string; };
 
     beforeEach(async () => {
       testColumn = await testPrisma.column.create({
@@ -327,7 +330,7 @@ describe('Columns Routes - Activity Logging', () => {
   });
 
   describe('DELETE /api/columns/:id', () => {
-    let testColumn: unknown;
+    let testColumn: { id: string; title: string; position: number; boardId: string; };
 
     beforeEach(async () => {
       testColumn = await testPrisma.column.create({
@@ -382,7 +385,7 @@ describe('Columns Routes - Activity Logging', () => {
   });
 
   describe('POST /api/columns/:id/reorder', () => {
-    let testColumn: unknown;
+    let testColumn: { id: string; title: string; position: number; boardId: string; };
 
     beforeEach(async () => {
       testColumn = await testPrisma.column.create({

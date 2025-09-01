@@ -1,3 +1,4 @@
+import type { Prisma } from '../../../generated/prisma';
 import { PrismaClient } from '../../../generated/prisma';
 
 export interface ActivityLogRequest {
@@ -180,7 +181,7 @@ export class ActivityLogger {
             boardId: request.boardId,
             columnId: request.columnId || null,
             userId: request.userId || null,
-            meta: request.meta
+            meta: request.meta as Prisma.InputJsonValue
           },
           include: {
             user: true
@@ -214,9 +215,9 @@ export class ActivityLogger {
     return false; // Temporarily disabled to ensure all actions broadcast
   }
 
-  private broadcastActivity(activity: unknown, request: ActivityLogRequest): void {
+  private broadcastActivity(activity: any, request: ActivityLogRequest): void {
     // Get the io instance dynamically to avoid initialization order issues
-    const io = (global as { io?: unknown }).io;
+    const io = (global as { io?: any }).io;
     if (!io) {
       return;
     }

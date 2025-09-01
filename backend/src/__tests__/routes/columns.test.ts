@@ -1,7 +1,7 @@
-import request from 'supertest'
-import app from '../../app'
-import { testPrisma } from '../setup'
-import type { Request, Response, NextFunction } from 'express'
+import type { NextFunction, Request, Response } from 'express';
+import request from 'supertest';
+import app from '../../app';
+import { testPrisma } from '../setup';
 
 // Mock ActivityLogger to prevent foreign key constraint issues in route tests
 jest.mock('../../services/activityLogger', () => ({
@@ -36,9 +36,12 @@ describe('Columns API', () => {
   })
 
   beforeAll(() => {
-    const fakeBroadcaster = { emit: jest.fn(), except: jest.fn(() => fakeBroadcaster) }
-    ;(global as unknown as { io: { to: jest.Mock } }).io = { to: jest.fn(() => fakeBroadcaster) }
-  })
+    const fakeBroadcaster: { emit: jest.Mock; except: jest.Mock } = {
+      emit: jest.fn(),
+      except: jest.fn(() => fakeBroadcaster)
+    };
+    (global as unknown as { io: { to: jest.Mock } }).io = { to: jest.fn(() => fakeBroadcaster) };
+  });
 
   describe('POST /api/boards/:boardId/columns', () => {
     it('creates a column with auto-incremented position', async () => {

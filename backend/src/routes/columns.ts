@@ -338,7 +338,7 @@ router.delete('/columns/:id', asyncHandler(async (req: Request, res: Response) =
   });
 }));
 
-router.post('/columns/:id/reorder', asyncHandler(async (req: Request, res: Response) => {
+router.post('/columns/:id/reorder', asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = req.params.id;
   const { position }: ReorderColumnRequest = req.body;
 
@@ -359,11 +359,12 @@ router.post('/columns/:id/reorder', asyncHandler(async (req: Request, res: Respo
   const newPosition = position;
 
   if (oldPosition === newPosition) {
-    return res.json({
+    res.json({
       success: true,
       data: existingColumn,
       message: 'Nenhuma alteração necessária'
     });
+    return;
   }
 
   if (newPosition < oldPosition) {

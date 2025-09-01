@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { ApiResponse } from '../types/api';
 
 export class AppError extends Error {
@@ -44,7 +44,7 @@ export const errorHandler = (
   res.status(status).json({
     success: false,
     error: message,
-    ...(details && { details })
+    ...(details ? { details } : {})
   });
 };
 

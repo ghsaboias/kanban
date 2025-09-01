@@ -1,5 +1,5 @@
+import type { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
-import type { Request, Response, NextFunction } from 'express';
 import app from '../../app';
 import { testPrisma } from '../setup';
 
@@ -22,13 +22,16 @@ jest.mock('../../auth/clerk', () => ({
 }));
 
 describe('Cards Routes - Activity Logging', () => {
-  let testUser: { id: string; email: string; name: string; clerkId: string; };
+  let testUser: { id: string; email: string; name: string; clerkId: string | null; };
   let testBoard: { id: string; title: string; description?: string | null; };
   let testColumn: { id: string; title: string; position: number; boardId: string; };
-  let testAssignee: { id: string; email: string; name: string; clerkId: string; };
+  let testAssignee: { id: string; email: string; name: string; clerkId: string | null; };
 
   beforeAll(() => {
-    const fakeBroadcaster = { emit: jest.fn(), except: jest.fn(() => fakeBroadcaster) };
+    const fakeBroadcaster: { emit: jest.Mock; except: jest.Mock } = {
+      emit: jest.fn(),
+      except: jest.fn(() => fakeBroadcaster)
+    };
     (global as unknown as { io: { to: jest.Mock } }).io = { to: jest.fn(() => fakeBroadcaster) };
   });
 
@@ -199,7 +202,7 @@ describe('Cards Routes - Activity Logging', () => {
   });
 
   describe('PUT /api/cards/:id', () => {
-    let testCard: unknown;
+    let testCard: { id: string; title: string; description?: string | null; priority: string; position: number; columnId: string; createdById: string; assigneeId?: string | null; };
 
     beforeEach(async () => {
       testCard = await testPrisma.card.create({
@@ -343,7 +346,7 @@ describe('Cards Routes - Activity Logging', () => {
       });
 
       expect(activities).toHaveLength(2);
-      
+
       // First assignment
       expect(activities[0].meta).toEqual({
         changes: ['assigneeId'],
@@ -405,7 +408,7 @@ describe('Cards Routes - Activity Logging', () => {
   });
 
   describe('DELETE /api/cards/:id', () => {
-    let testCard: unknown;
+    let testCard: { id: string; title: string; description?: string | null; priority: string; position: number; columnId: string; createdById: string; assigneeId?: string | null; };
 
     beforeEach(async () => {
       testCard = await testPrisma.card.create({
@@ -470,8 +473,8 @@ describe('Cards Routes - Activity Logging', () => {
   });
 
   describe('POST /api/cards/:id/move', () => {
-    let testCard: unknown;
-    let targetColumn: unknown;
+    let testCard: { id: string; title: string; description?: string | null; priority: string; position: number; columnId: string; createdById: string; assigneeId?: string | null; };
+    let targetColumn: { id: string; title: string; position: number; boardId: string; };
 
     beforeEach(async () => {
       testCard = await testPrisma.card.create({
@@ -668,7 +671,7 @@ describe('Cards Routes - Activity Logging', () => {
       });
 
       // Multiple rapid reorder operations
-      const promises = [];
+      const promises: Promise<unknown>[] = [];
       for (let i = 1; i <= 5; i++) {
         promises.push(
           request(app)

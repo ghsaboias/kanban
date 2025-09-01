@@ -1,5 +1,5 @@
+import type { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
-import type { Request, Response, NextFunction } from 'express';
 import app from '../../app';
 import { testPrisma } from '../setup';
 
@@ -22,7 +22,7 @@ jest.mock('../../auth/clerk', () => ({
 }));
 
 describe('Board Routes - Activity Logging', () => {
-  let testUser: { id: string; email: string; name: string; clerkId: string; };
+  let testUser: { id: string; email: string; name: string; clerkId: string | null; };
 
   beforeEach(async () => {
     // Create a test user for authentication
@@ -45,7 +45,7 @@ describe('Board Routes - Activity Logging', () => {
 
       const response = await request(app)
         .post('/api/boards')
-                .send(boardData)
+        .send(boardData)
         .expect(201);
 
       expect(response.body.success).toBe(true);
@@ -77,7 +77,7 @@ describe('Board Routes - Activity Logging', () => {
 
       await request(app)
         .post('/api/boards')
-                .send(boardData)
+        .send(boardData)
         .expect(201);
 
       // Check that activity was logged immediately (HIGH priority)
@@ -113,7 +113,7 @@ describe('Board Routes - Activity Logging', () => {
 
       const response = await request(app)
         .put(`/api/boards/${board.id}`)
-                .send(updateData)
+        .send(updateData)
         .expect(200);
 
       expect(response.body.success).toBe(true);
@@ -158,7 +158,7 @@ describe('Board Routes - Activity Logging', () => {
 
       await request(app)
         .put(`/api/boards/${board.id}`)
-                .send(updateData)
+        .send(updateData)
         .expect(200);
 
       const activities = await testPrisma.activity.findMany({
@@ -196,7 +196,7 @@ describe('Board Routes - Activity Logging', () => {
 
       await request(app)
         .put(`/api/boards/${board.id}`)
-                .send(updateData)
+        .send(updateData)
         .expect(200);
 
       // Should not log any activity when nothing actually changed
@@ -223,7 +223,7 @@ describe('Board Routes - Activity Logging', () => {
 
       await request(app)
         .delete(`/api/boards/${board.id}`)
-                .expect(200);
+        .expect(200);
 
       // Check that activity was logged
       const activities = await testPrisma.activity.findMany({
@@ -269,7 +269,7 @@ describe('Board Routes - Activity Logging', () => {
 
       await request(app)
         .delete(`/api/boards/${board.id}`)
-                .expect(200);
+        .expect(200);
 
       // Should still log board deletion activity
       const activities = await testPrisma.activity.findMany({
@@ -301,7 +301,7 @@ describe('Board Routes - Activity Logging', () => {
 
       await request(app)
         .post('/api/boards')
-                .send(invalidBoardData)
+        .send(invalidBoardData)
         .expect(400);
 
       // Should not have logged any activity for failed creation
@@ -320,7 +320,7 @@ describe('Board Routes - Activity Logging', () => {
 
       await request(app)
         .put(`/api/boards/${nonExistentId}`)
-                .send({ title: 'Updated Title' })
+        .send({ title: 'Updated Title' })
         .expect(404);
 
       // Should not have logged any activity for failed update
@@ -339,7 +339,7 @@ describe('Board Routes - Activity Logging', () => {
 
       await request(app)
         .delete(`/api/boards/${nonExistentId}`)
-                .expect(404);
+        .expect(404);
 
       // Should not have logged any activity for failed deletion
       const activities = await testPrisma.activity.findMany({

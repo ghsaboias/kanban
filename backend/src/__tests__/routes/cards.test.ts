@@ -1,7 +1,7 @@
-import request from 'supertest'
-import app from '../../app'
-import { testPrisma } from '../setup'
-import type { Request, Response, NextFunction } from 'express'
+import type { NextFunction, Request, Response } from 'express';
+import request from 'supertest';
+import app from '../../app';
+import { testPrisma } from '../setup';
 
 // Mock ActivityLogger to prevent foreign key constraint issues in route tests
 jest.mock('../../services/activityLogger', () => ({
@@ -32,7 +32,7 @@ describe('Cards API', () => {
   let board: { id: string; title: string; }
   let colA: { id: string; title: string; position: number; boardId: string; }
   let colB: { id: string; title: string; position: number; boardId: string; }
-  let user: { id: string; name: string; email: string; clerkId: string; }
+  let user: { id: string; name: string; email: string; clerkId: string | null; }
 
   beforeEach(async () => {
     board = await testPrisma.board.create({ data: { title: 'B' } })
@@ -43,9 +43,12 @@ describe('Cards API', () => {
   })
 
   beforeAll(() => {
-    const fakeBroadcaster = { emit: jest.fn(), except: jest.fn(() => fakeBroadcaster) }
-    ;(global as unknown as { io: { to: jest.Mock } }).io = { to: jest.fn(() => fakeBroadcaster) }
-  })
+    const fakeBroadcaster: { emit: jest.Mock; except: jest.Mock } = {
+      emit: jest.fn(),
+      except: jest.fn(() => fakeBroadcaster)
+    };
+    (global as unknown as { io: { to: jest.Mock } }).io = { to: jest.fn(() => fakeBroadcaster) };
+  });
 
   describe('POST /api/columns/:columnId/cards', () => {
     it('creates a card in a column', async () => {

@@ -1,5 +1,5 @@
+import type { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
-import type { Request, Response, NextFunction } from 'express';
 import app from '../../app';
 import { testPrisma } from '../setup';
 
@@ -29,7 +29,7 @@ jest.mock('../../auth/clerk', () => ({
 }));
 
 describe('Boards API', () => {
-  let testUser: { id: string; name: string; email: string; clerkId: string; };
+  let testUser: { id: string; name: string; email: string; clerkId: string | null; };
 
   beforeEach(async () => {
     // Create a test user with the same ID used by the mock so FK constraints work
@@ -79,10 +79,10 @@ describe('Boards API', () => {
 
       expect(response.body.success).toBe(true);
       expect(response.body.data).toHaveLength(2);
-      
+
       const boardWithColumns = response.body.data.find((b: { id: string; _count: { columns: number } }) => b.id === board1.id);
       expect(boardWithColumns._count.columns).toBe(2);
-      
+
       const boardWithoutColumns = response.body.data.find((b: { id: string; _count: { columns: number } }) => b.id === board2.id);
       expect(boardWithoutColumns._count.columns).toBe(0);
     });

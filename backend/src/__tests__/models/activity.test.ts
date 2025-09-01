@@ -80,7 +80,7 @@ describe('Activity Model Validation', () => {
           userId: user.id,
           meta: {}
         }
-      } as unknown)).rejects.toThrow();
+      } as never)).rejects.toThrow();
     });
 
     it('should require entityId field', async () => {
@@ -95,7 +95,7 @@ describe('Activity Model Validation', () => {
           userId: user.id,
           meta: {}
         }
-      } as unknown)).rejects.toThrow();
+      } as never)).rejects.toThrow();
     });
 
     it('should require action field', async () => {
@@ -110,7 +110,7 @@ describe('Activity Model Validation', () => {
           userId: user.id,
           meta: {}
         }
-      } as unknown)).rejects.toThrow();
+      } as never)).rejects.toThrow();
     });
 
     it('should require boardId field', async () => {
@@ -125,7 +125,7 @@ describe('Activity Model Validation', () => {
           userId: user.id,
           meta: {}
         }
-      } as unknown)).rejects.toThrow();
+      } as never)).rejects.toThrow();
     });
   });
 
@@ -204,7 +204,7 @@ describe('Activity Model Validation', () => {
       const { user, board, card } = await createTestBoard();
 
       const validActions = ['CREATE', 'UPDATE', 'DELETE', 'MOVE', 'REORDER', 'ASSIGN', 'UNASSIGN'];
-      
+
       for (const action of validActions) {
         const activity = await testPrisma.activity.create({
           data: {
@@ -218,7 +218,7 @@ describe('Activity Model Validation', () => {
         });
 
         expect(activity.action).toBe(action);
-        
+
         // Clean up for next iteration
         await testPrisma.activity.delete({ where: { id: activity.id } });
       }
