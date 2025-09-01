@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SocketProvider, useSocketContext } from '../../contexts/SocketContext';
+import { SocketProvider } from '../../contexts/SocketContext';
+import { useSocketContext } from '../../hooks/useSocketContext';
 
 // Mock useSocket hook
 const mockSocketValue: {
