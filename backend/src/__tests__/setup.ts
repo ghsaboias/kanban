@@ -25,3 +25,4 @@ beforeEach(async () => {
   await testPrisma.board.deleteMany();
   await testPrisma.user.deleteMany();
 });
+
