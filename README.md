@@ -5,17 +5,20 @@ Uma aplicação colaborativa de quadro Kanban construída com React, TypeScript 
 ## Stack Técnico
 
 ### Frontend
+
 - **Vite + React + TypeScript** - Desenvolvimento rápido e segurança de tipos
 - Interface responsiva para criação dinâmica de colunas e cards
 - **Drag & Drop com dnd-kit** (colunas já reordenáveis e persistidas)
 
 ### Backend
+
 - **Express + TypeScript** - Servidor de API REST completo
 - **Prisma ORM + SQLite** - Banco de dados com relacionamentos tipados
 - **Sistema de posicionamento** - Suporte nativo para drag & drop
 - **Middleware de erros** - Tratamento de erros em português
 
 ### Banco de Dados
+
 - **4 Modelos principais**: User, Board, Column, Card
 - **Relacionamentos completos**: Usuários podem ser atribuídos a cards
 - **Sistema de posições**: Ordenação automática para drag & drop
@@ -24,23 +27,27 @@ Uma aplicação colaborativa de quadro Kanban construída com React, TypeScript 
 ## Como Começar
 
 ### Pré-requisitos
+
 - Node.js 18+
 - npm ou yarn
 
 ### Instalação
 
 1. Clone o repositório:
+
 ```bash
 git clone https://github.com/ghsaboias/kanban
 cd kanban
 ```
 
 2. Instale as dependências:
+
 ```bash
 npm install
 ```
 
 3. Configure as variáveis de ambiente (Autenticação):
+
 ```bash
 # frontend/.env.local
 VITE_CLERK_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
@@ -52,6 +59,7 @@ CORS_ORIGIN=http://localhost:5173
 ```
 
 4. Configure o banco de dados:
+
 ```bash
 # Gera o cliente Prisma
 npm run db:generate
@@ -64,11 +72,13 @@ npm run test:db
 ```
 
 5. Inicie os servidores de desenvolvimento:
+
 ```bash
 npm run dev
 ```
 
 Isso irá iniciar:
+
 - Frontend: http://localhost:5173
 - Backend: http://localhost:3001
 
@@ -80,7 +90,7 @@ Para executar frontend e backend separadamente:
 # Apenas frontend
 npm run dev:frontend
 
-# Apenas backend  
+# Apenas backend
 npm run dev:backend
 ```
 
@@ -102,9 +112,11 @@ kanban/
 ```
 
 ## API REST Completa
+
 Todas as rotas exigem autenticação (Clerk). Adicione o header `Authorization: Bearer <token>`.
 
 ### Boards (Quadros)
+
 ```bash
 GET    /api/boards          # Lista todos os boards
 POST   /api/boards          # Cria novo board
@@ -114,6 +126,7 @@ DELETE /api/boards/:id      # Remove board
 ```
 
 ### Columns (Colunas)
+
 ```bash
 POST   /api/boards/:id/columns    # Cria coluna no board
 PUT    /api/columns/:id           # Atualiza coluna
@@ -122,6 +135,7 @@ POST   /api/columns/:id/reorder   # Reordena colunas
 ```
 
 ### Cards (Tarefas)
+
 ```bash
 POST   /api/columns/:id/cards     # Cria card na coluna (createdById é derivado do usuário autenticado)
 GET    /api/cards/:id             # Obtém detalhes do card
@@ -131,6 +145,7 @@ POST   /api/cards/:id/move        # Move card entre colunas
 ```
 
 ### Users (Usuários)
+
 ```bash
 GET    /api/users          # Lista usuários
 POST   /api/users          # Cria usuário
@@ -140,6 +155,7 @@ DELETE /api/users/:id      # Remove usuário
 ```
 
 ### Health Check
+
 ```bash
 GET    /api/health         # Status do servidor
 ```
@@ -147,6 +163,7 @@ GET    /api/health         # Status do servidor
 ## Exemplos de Uso da API
 
 ### Criar um usuário
+
 ```bash
 curl -X POST http://localhost:3001/api/users \
   -H "Content-Type: application/json" \
@@ -154,6 +171,7 @@ curl -X POST http://localhost:3001/api/users \
 ```
 
 ### Criar um board (com auth)
+
 ```bash
 curl -X POST http://localhost:3001/api/boards \
   -H "Authorization: Bearer <token>" \
@@ -162,6 +180,7 @@ curl -X POST http://localhost:3001/api/boards \
 ```
 
 ### Criar uma coluna
+
 ```bash
 curl -X POST http://localhost:3001/api/boards/{boardId}/columns \
   -H "Content-Type: application/json" \
@@ -169,6 +188,7 @@ curl -X POST http://localhost:3001/api/boards/{boardId}/columns \
 ```
 
 ### Criar um card (com auth)
+
 ```bash
 curl -X POST http://localhost:3001/api/columns/{columnId}/cards \
   -H "Authorization: Bearer <token>" \
@@ -181,6 +201,7 @@ curl -X POST http://localhost:3001/api/columns/{columnId}/cards \
 ```
 
 ### Mover card entre colunas
+
 ```bash
 curl -X POST http://localhost:3001/api/cards/{cardId}/move \
   -H "Content-Type: application/json" \
@@ -218,11 +239,13 @@ npm run test:watch    # Executa testes em modo watch
 O projeto inclui testes automatizados para garantir a qualidade do código:
 
 ### Estrutura de Testes
+
 - **Backend**: Jest com Supertest para testes de API
 - **Frontend**: Vitest com React Testing Library para testes de componentes
 - **Database**: SQLite separado para testes (`test.db`)
 
 ### Executando Testes
+
 ```bash
 npm test                    # Todos os testes
 npm run test:backend        # Apenas backend (API routes, database, auth)
@@ -231,8 +254,9 @@ npm run test:watch          # Modo watch para desenvolvimento
 ```
 
 ### Cobertura Atual
+
 - **Total**: 243 testes passando
-- **Backend**: 157 testes (rotas API, autenticação, database)  
+- **Backend**: 157 testes (rotas API, autenticação, database)
 - **Frontend**: 86 testes (componentes, hooks, performance)
 
 Os testes cobrem funcionalidades essenciais incluindo CRUD operations, autenticação, drag & drop, e real-time features.
@@ -249,29 +273,49 @@ Os testes cobrem funcionalidades essenciais incluindo CRUD operations, autentica
 **Frontend:** Vite + React + TypeScript  
 **Banco:** 4 modelos (User, Board, Column, Card) com relacionamentos
 
-## Drag & Drop (dnd-kit)
+## Drag & Drop (dnd-kit) e Gerenciamento de Estado Entre Colunas
 
 - **Biblioteca**: `@dnd-kit/core` + `@dnd-kit/sortable` (ergonomia moderna, suporte mouse/touch/teclado, ótima para listas ordenáveis e múltiplos contêineres).
 - **Escopo atual**: Reordenação de colunas e reordenação/movimentação de cards com persistência.
+- **Gerenciamento de Estado Entre Colunas**:
+  - Cada coluna mantém seu próprio array de cards ordenado por posição
+  - Quando um card é movido para outra coluna, sua posição é recalculada automaticamente
+  - O estado é gerenciado de forma otimista: a UI atualiza imediatamente, depois sincroniza com o servidor
+  - Em caso de falha na API, o estado anterior é restaurado para manter a consistência da UI
 - **Como funciona**:
   - `DndContext` e `SortableContext` em `Board.tsx` (colunas: horizontal; cards: vertical em cada coluna).
   - Colunas: `SortableColumn` (`Sortable`) com ids `column-<id>`.
   - Cards: `SortableCard` (`Sortable`) com ids `card-<id>` e coluna droppable `column-<id>` para suportar drop em colunas vazias.
   - Sensor: `PointerSensor` com `activationConstraint: { distance: 8 }` para evitar que cliques sejam consumidos pelo início do drag (um clique sempre abre o modal do card).
   - Em `onDragEnd`, distinguimos colunas vs cards pelos prefixos, aplicamos atualização otimista e normalizamos `position` (0..N-1).
-  - Persistência via API: 
+  - Persistência via API:
     - Colunas: `POST /api/columns/:id/reorder { position }`.
     - Cards (mesma coluna): `PUT /api/cards/:id { position }`.
     - Cards (entre colunas): `POST /api/cards/:id/move { columnId, position }`.
   - Falha na API → rollback do estado anterior e mensagem no console (UI permanece consistente).
 
 ### Endpoints usados na persistência
+
 - Reordenar coluna: `POST /api/columns/:id/reorder` com `{ position }`.
 - Reordenar card: `PUT /api/cards/:id` com `{ position }`.
 - Mover card: `POST /api/cards/:id/move` com `{ columnId, position }`.
 
 ### Decisão técnica
+
 - Preferimos dnd-kit a alternativas (React DnD, @hello-pangea/dnd) por flexibilidade, acessibilidade e suporte nativo a múltiplos sensores. O PRD incentiva uso de bibliotecas prontas.
+
+## Próximos Passos para Melhorar a Aplicação
+
+Se houvesse mais tempo para desenvolvimento, as próximas prioridades seriam:
+
+- **Notificações em Tempo Real**: Sistema de notificações para mencionar usuários em comentários e updates
+- **Comentários nos Cards**: Sistema de comentários thread para discussões por tarefa
+- **Templates de Quadro**: Templates pré-configurados para diferentes tipos de projetos
+- **Relatórios e Analytics**: Dashboard com métricas de produtividade e tempo de ciclo
+- **Integração com Ferramentas Externas**: Conexão com ferramentas como Slack, Jira, ou Google Calendar
+- **Modo Offline**: Funcionalidade offline com sincronização quando reconectado
+- **Mobile App**: Aplicativo móvel nativo ou PWA para acesso em dispositivos móveis
+- **Custom Fields**: Campos personalizáveis nos cards além do título, descrição e prioridade
 
 ## Detalhes do Card (Modal)
 
@@ -286,21 +330,25 @@ Os testes cobrem funcionalidades essenciais incluindo CRUD operations, autentica
 ## Justificativa das Tecnologias
 
 ### Contexto: Ferramenta Interna para Mercado Financeiro
+
 As escolhas técnicas priorizaram **agilidade de desenvolvimento** e **confiabilidade** para uma solução sob medida, seguindo o princípio "não reinvente a roda" mencionado nos requisitos.
 
 ### Frontend
+
 - **React + Vite + TypeScript**: Desenvolvimento rápido com HMR instantâneo e prevenção de erros em tempo de compilação
 - **dnd-kit**: Drag & drop com melhor performance que React DnD para reorganização fluida de tarefas
 - **TipTap**: Editor rich text baseado em ProseMirror, com controle específico sobre elementos HTML permitidos
 - **Socket.IO Client**: Comunicação real-time confiável com reconexão automática
 
-### Backend 
+### Backend
+
 - **Express + TypeScript**: Framework direto que acelera iteração com validação de tipos
 - **Prisma + SQLite**: ORM com queries type-safe. SQLite elimina setup de banco externo para ferramenta interna
 - **Socket.IO**: WebSocket com rooms isolados por board, evitando vazamento de dados entre projetos
 - **Clerk**: Autenticação gerenciada externamente, removendo responsabilidade de implementar/manter segurança de senhas
 
 ### Segurança Implementada
+
 - **HTML Sanitization**: `sanitize-html` com lista específica de tags permitidas (p, strong, em, ul, li, img), bloqueando `javascript:` e `<script>` automaticamente
 - **Authentication Middleware**: Todas rotas `/api/*` exigem token válido do Clerk; usuários são sincronizados via upsert race-safe
 - **Link Protection**: Links externos forçam `target="_blank" rel="noopener noreferrer"` para prevenir window.opener exploits
@@ -311,6 +359,7 @@ As escolhas técnicas priorizaram **agilidade de desenvolvimento** e **confiabil
 ### Estratégia Implementada
 
 **Workflow Automatizado:**
+
 - Validação automática em Pull Requests para `master`
 - Testes executam em ambiente isolado GitHub Actions
 - Merge bloqueado se qualquer verificação falhar
@@ -318,12 +367,14 @@ As escolhas técnicas priorizaram **agilidade de desenvolvimento** e **confiabil
 **Etapas da Pipeline:**
 
 1. **Instalação de Dependências**
+
    ```yaml
    - Instala dependências do monorepo (backend + frontend)
    - Cache inteligente para acelerar builds subsequentes
    ```
 
 2. **Verificações de Qualidade** (Paralelas)
+
    ```yaml
    - Lint: npm run lint (ESLint frontend + backend)
    - TypeCheck: npm run typecheck (TypeScript compilation)
@@ -338,6 +389,7 @@ As escolhas técnicas priorizaram **agilidade de desenvolvimento** e **confiabil
    ```
 
 **Comandos Disponíveis:**
+
 ```bash
 npm run lint      # ESLint: 0 erros, 113 warnings (apenas any types)
 npm run typecheck # TypeScript: compilação limpa
@@ -345,6 +397,7 @@ npm test          # 243 testes: 157 backend + 86 frontend
 ```
 
 **Benefícios:**
+
 - **Prevenção de bugs**: Código quebrado não chega ao master
 - **Consistência**: Estilo e qualidade padronizados
 - **Confiabilidade**: 243 testes garantem funcionalidade
