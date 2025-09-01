@@ -33,15 +33,11 @@ export const useSocket = () => {
 
         // Refresh token prior to connecting
         const refreshAuth = async () => {
-          try {
-            const fresh = await getToken({ skipCache: true });
-            if (!fresh) {
-              throw new Error('Authentication token not available');
-            }
-            socket.auth = { token: fresh } as any;
-          } catch (e: any) {
-            throw e;
+          const fresh = await getToken({ skipCache: true });
+          if (!fresh) {
+            throw new Error('Authentication token not available');
           }
+          socket.auth = { token: fresh };
         };
 
         socket.on('connect', () => {
@@ -58,7 +54,7 @@ export const useSocket = () => {
         });
 
         // If the server rejects the auth (expired/invalid), refresh token and retry once
-        socket.on('connect_error', async (err: any) => {
+        socket.on('connect_error', async (err: { message?: string }) => {
           console.error('❌ Socket: Connection error:', err?.message);
           setError(err?.message || 'Connection error');
           setIsConnected(false);
@@ -76,7 +72,7 @@ export const useSocket = () => {
         socket.io.on('reconnect_attempt', async () => {
           try {
             await refreshAuth();
-          } catch (e) {
+          } catch {
             // Ignore; server will fail auth and trigger connect_error
           }
         });
@@ -116,14 +112,14 @@ export const useSocket = () => {
     }
   }, [isConnected]);
 
-  const on = useCallback((event: string, callback: (...args: any[]) => void) => {
+  const on = useCallback((event: string, callback: (...args: unknown[]) => void) => {
     if (!socketRef.current) {
       console.log('useSocket: Cannot add listener - socket not available for event:', event);
       return () => {};
     }
 
     console.log('useSocket: Adding listener for event:', event);
-    const wrappedCallback = (...args: any[]) => {
+    const wrappedCallback = (...args: unknown[]) => {
       console.log('🔌 useSocket: Received event:', event, 'with args:', args.length > 0 ? JSON.stringify(args[0]).substring(0, 200) + '...' : 'no args');
       try {
         callback(...args);
@@ -142,14 +138,14 @@ export const useSocket = () => {
     };
   }, []);
 
-  const off = useCallback((event: string, callback?: (...args: any[]) => void) => {
+  const off = useCallback((event: string, callback?: (...args: unknown[]) => void) => {
     if (socketRef.current) {
       console.log('useSocket: Removing listener for event:', event);
       socketRef.current.off(event, callback);
     }
   }, []);
 
-  const emit = useCallback((event: string, data?: any) => {
+  const emit = useCallback((event: string, data?: unknown) => {
     if (socketRef.current && isConnected) {
       console.log('useSocket: Emitting event:', event, 'with data:', data);
       socketRef.current.emit(event, data);

@@ -43,7 +43,7 @@ export function BoardsList() {
       .finally(() => {
         setLoading(false)
       })
-  }, [])
+  }, [apiFetch])
 
   const handleCreateBoard = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -70,7 +70,7 @@ export function BoardsList() {
       } else {
         setError('Failed to create board')
       }
-    } catch (err) {
+    } catch {
       setError('Error creating board')
     } finally {
       setCreateLoading(false)
@@ -104,7 +104,7 @@ export function BoardsList() {
       } else {
         setError('Failed to update board')
       }
-    } catch (err) {
+    } catch {
       setError('Error updating board')
     } finally {
       setCreateLoading(false)
@@ -128,7 +128,7 @@ export function BoardsList() {
       } else {
         setError('Failed to delete board')
       }
-    } catch (err) {
+    } catch {
       setError('Error deleting board')
     } finally {
       setDeleteLoading(null)

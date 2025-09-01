@@ -140,7 +140,7 @@ export function Board({ board, setBoard, isConnected, onlineUsers }: BoardProps)
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ position: newIndex })
         })
-      } catch (err) {
+      } catch {
         setBoard({ ...board, columns: prevColumns })
       }
       return
