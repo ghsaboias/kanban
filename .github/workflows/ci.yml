@@ -38,6 +38,8 @@ jobs:
         run: npm run typecheck
 
       - name: Run Tests
+        env:
+          DATABASE_URL: "file:../prisma/test.db"
         run: npm test
 
   # Optional: Auto-format and commit (uncomment to enable)
