@@ -151,6 +151,26 @@ backend/src/
 
 - `GET /api/auth/me` — Returns the authenticated local user (created/upserted via Clerk).
 
+### **Testing Infrastructure**
+
+**Test Database:**
+- **Location**: `prisma/test.db` (separate from development database)
+- **Environment**: Uses `.env.test` configuration
+- **Auto-cleanup**: Database cleaned between each test execution
+- **Schema**: Identical to development database
+
+**Test Coverage:**
+- All CRUD operations tested across all models
+- Authentication middleware verification
+- Database connection and error handling
+- Position management for drag & drop operations
+
+**Running Database Tests:**
+```bash
+npm run test:db       # Test database connection
+npm run test:backend  # Run all backend tests (includes database tests)
+```
+
 ### **Example Usage**
 
 ```typescript

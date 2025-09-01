@@ -204,15 +204,44 @@ npm run test:db        # Testa conexão
 # Desenvolvimento
 npm run dev           # Inicia frontend + backend
 npm run dev:frontend  # Apenas React (5173)
+npm run dev:backend   # Apenas backend
 
-# Apenas backend  
-npm run dev:backend
+# Testes
+npm test              # Executa todos os testes (backend + frontend)
+npm run test:backend  # Testes do backend apenas
+npm run test:frontend # Testes do frontend apenas
+npm run test:watch    # Executa testes em modo watch
 ```
+
+## Testes
+
+O projeto inclui testes automatizados para garantir a qualidade do código:
+
+### Estrutura de Testes
+- **Backend**: Jest com Supertest para testes de API
+- **Frontend**: Vitest com React Testing Library para testes de componentes
+- **Database**: SQLite separado para testes (`test.db`)
+
+### Executando Testes
+```bash
+npm test                    # Todos os testes
+npm run test:backend        # Apenas backend (API routes, database, auth)
+npm run test:frontend       # Apenas frontend (components, hooks)
+npm run test:watch          # Modo watch para desenvolvimento
+```
+
+### Cobertura Atual
+- **Total**: 243 testes passando
+- **Backend**: 157 testes (rotas API, autenticação, database)  
+- **Frontend**: 86 testes (componentes, hooks, performance)
+
+Os testes cobrem funcionalidades essenciais incluindo CRUD operations, autenticação, drag & drop, e real-time features.
 
 ## Observações
 
 - O diretório `generated/` (cliente Prisma) e o banco `prisma/dev.db` são gerados localmente e ignorados pelo Git.
 - `postinstall` executa `prisma generate` automaticamente após `npm install`.
+- Banco de testes (`test.db`) é limpo automaticamente entre execuções.
 
 ## Tecnologias
 

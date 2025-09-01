@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Shared event types in `shared/realtime.ts` (cards/columns/presence)
   - Server-authoritative emits from REST handlers (create/update/delete/reorder/move)
   - Initiator exclusion via `X-Socket-Id` header to avoid client echo
+- Comprehensive test suite
+  - Backend: Jest with Supertest for API testing (157 tests)
+  - Frontend: Vitest with React Testing Library for component testing (86 tests)
+  - Database: Separate test database with automatic cleanup
+  - Performance tests for large datasets and concurrent operations
 
 ### Changed
 - Frontend API calls include `X-Socket-Id` when available
