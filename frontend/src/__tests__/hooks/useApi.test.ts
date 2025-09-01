@@ -7,11 +7,11 @@ vi.mock('@clerk/clerk-react', () => ({
   useAuth: vi.fn(),
 }));
 
-// Mock the socket context
-vi.mock('../../contexts/SocketContext', () => ({
-  useSocketContext: () => ({
+// Mock the socket context hook
+vi.mock('../../hooks/useSocketContext', () => ({
+  useSocketContext: vi.fn(() => ({
     socketId: 'test-socket-id',
-  }),
+  })),
 }));
 
 // Mock the API_URL
