@@ -1,5 +1,36 @@
 import '@testing-library/jest-dom';
+<<<<<<< HEAD
 import { vi } from 'vitest';
+=======
+import { afterAll, beforeAll, vi } from 'vitest';
+
+// Set up environment variables for tests
+vi.stubEnv('VITE_API_URL', 'http://localhost:3001');
+
+// Suppress React act() warnings in tests - these are cosmetic and don't affect functionality
+const originalError = console.error;
+beforeAll(() => {
+  console.error = (...args: unknown[]) => {
+    // Suppress act() warnings and React update warnings
+    if (
+      typeof args[0] === 'string' && (
+        args[0].includes('Warning: An update to') ||
+        args[0].includes('act(') ||
+        args[0].includes('not wrapped in act')
+      )
+    ) {
+      return; // Suppress these warnings
+    }
+    originalError.call(console, ...args); // Keep other errors
+  };
+});
+
+afterAll(() => {
+  console.error = originalError; // Restore original console.error
+});
+
+// Mock fetch for API calls
+>>>>>>> master
 
 // Mock fetch for API calls
 global.fetch = vi.fn();

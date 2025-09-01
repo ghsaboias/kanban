@@ -22,6 +22,7 @@ model User {
   // Relations
   assignedCards Card[] @relation("CardAssignee")
   createdCards  Card[] @relation("CardCreator")
+  activities    Activity[]
 
   @@map("users")
 }
@@ -59,7 +60,7 @@ model Card {
   id          String    @id @default(cuid())
   title       String
   description String?
-  priority    Priority  @default(MEDIUM)
+  priority    String    @default("MEDIUM")
   position    Int
   columnId    String
   assigneeId  String?
@@ -76,8 +77,29 @@ model Card {
   @@map("cards")
 }
 
-enum Priority {
-  LOW
-  MEDIUM
-  HIGH
+model Activity {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // Entity identification
+  entityType String
+  entityId   String
+  action     String
+
+  // Denormalized for performance
+  boardId  String
+  columnId String?
+
+  // Actor (nullable for system activities)
+  userId String?
+  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Structured event details
+  meta String
+
+  // Indexes for efficient queries
+  @@index([entityType, entityId, createdAt(sort: Desc)])
+  @@index([boardId, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("activities")
 }

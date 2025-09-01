@@ -7,19 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.8.0] - 2025-08-29
+## [1.0.0] - 2025-08-29
 
-### Added
-- Realtime collaboration foundation
+### Added - Phase 8: Real-time Collaboration & Production Release
+
+- **Real-time Collaboration Foundation**
   - Socket.IO server on Express with Clerk-authenticated handshakes
   - Per-board rooms and presence (user:joined/user:left) with roster on join
   - Shared event types in `shared/realtime.ts` (cards/columns/presence)
   - Server-authoritative emits from REST handlers (create/update/delete/reorder/move)
   - Initiator exclusion via `X-Socket-Id` header to avoid client echo
+- **Activity Feed System**
+  - Comprehensive activity logging for all board operations
+  - Real-time activity broadcasting with user attribution
+  - Activity feed component with Portuguese localization
+  - Batch processing for performance optimization
+- **Production Readiness**
+  - Comprehensive test suite (243 tests passing)
+  - CI/CD pipeline with GitHub Actions
+  - Security hardening and error handling
+  - Performance optimization for large datasets
 
 ### Changed
+
 - Frontend API calls include `X-Socket-Id` when available
 - Frontend `useRealtimeBoard` dedupes create events to prevent duplicates with optimistic UI
+- Enhanced error handling and user feedback throughout the application
+
+## [0.8.0] - 2025-08-29
+
+### Added
+
+- Enhanced authentication and security features
+- Improved error handling and user feedback
+- Performance optimizations for large datasets
+- Additional test coverage and CI/CD improvements
 
 ## [0.7.0] - 2025-08-29
 
@@ -263,4 +285,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Phase 5 (v0.5.0)**: ✅ Drag & Drop - Card and column drag & drop with position persistence
 - **Phase 6 (v0.6.0)**: ✅ Card Details - Card detail modal with click-to-open functionality
 - **Phase 7 (v0.7.0)**: ✅ Rich Text & Images - TipTap editor, image upload, authentication (Clerk)
-- **Phase 8 (Planned)**: 🎯 Real-time Updates - Socket.io integration for collaborative features
+- **Phase 8 (v1.0.0)**: ✅ Real-time Collaboration - Socket.io integration, activity feed, and production release

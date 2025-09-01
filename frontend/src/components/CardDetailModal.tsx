@@ -54,7 +54,7 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
   const modalRef = useRef<HTMLDivElement>(null)
   const titleInputRef = useRef<HTMLInputElement>(null)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
-  const apiFetch = useApi()
+  const { apiFetch } = useApi()
 
   useEffect(() => {
     if (isOpen) {
@@ -91,7 +91,11 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
         }
       })
       .catch((err: unknown) => console.error('Error loading users:', err))
+<<<<<<< HEAD
   }, [])
+=======
+  }, [apiFetch])
+>>>>>>> master
 
   useEffect(() => {
     if (isOpen) {

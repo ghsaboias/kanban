@@ -1,12 +1,23 @@
+import type { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
 import app from '../../app';
 import { testPrisma } from '../setup';
 
+// Mock ActivityLogger to prevent foreign key constraint issues in route tests
+jest.mock('../../services/activityLogger', () => ({
+  ActivityLogger: jest.fn(() => ({
+    logActivity: jest.fn().mockResolvedValue(undefined),
+    flush: jest.fn().mockResolvedValue(undefined),
+    stop: jest.fn().mockResolvedValue(undefined),
+    getQueueSize: jest.fn().mockReturnValue(0)
+  }))
+}));
+
 // Mock authentication middleware
 jest.mock('../../auth/clerk', () => ({
-  withAuth: (req: any, res: any, next: any) => next(),
-  requireAuthMw: (req: any, res: any, next: any) => next(),
-  ensureUser: (req: any, res: any, next: any) => {
+  withAuth: (req: Request, res: Response, next: NextFunction) => next(),
+  requireAuthMw: (req: Request, res: Response, next: NextFunction) => next(),
+  ensureUser: (req: Request, res: Response, next: NextFunction) => {
     res.locals.user = {
       id: 'test-user-id',
       name: 'Test User',
@@ -18,12 +29,13 @@ jest.mock('../../auth/clerk', () => ({
 }));
 
 describe('Boards API', () => {
-  let testUser: any;
+  let testUser: { id: string; name: string; email: string; clerkId: string | null; };
 
   beforeEach(async () => {
-    // Create a test user for all tests
+    // Create a test user with the same ID used by the mock so FK constraints work
     testUser = await testPrisma.user.create({
       data: {
+        id: 'test-user-id',
         name: 'Test User',
         email: 'test@example.com',
         clerkId: 'test-clerk-id',
@@ -67,11 +79,11 @@ describe('Boards API', () => {
 
       expect(response.body.success).toBe(true);
       expect(response.body.data).toHaveLength(2);
-      
-      const boardWithColumns = response.body.data.find((b: any) => b.id === board1.id);
+
+      const boardWithColumns = response.body.data.find((b: { id: string; _count: { columns: number } }) => b.id === board1.id);
       expect(boardWithColumns._count.columns).toBe(2);
-      
-      const boardWithoutColumns = response.body.data.find((b: any) => b.id === board2.id);
+
+      const boardWithoutColumns = response.body.data.find((b: { id: string; _count: { columns: number } }) => b.id === board2.id);
       expect(boardWithoutColumns._count.columns).toBe(0);
     });
 

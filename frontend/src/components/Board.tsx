@@ -1,15 +1,14 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { DndContext, closestCenter, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
-import type { DragStartEvent } from '@dnd-kit/core'
-import { Card as CardView } from './Card'
-import type { DragEndEvent } from '@dnd-kit/core'
+import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from '@dnd-kit/sortable'
+import { Card as CardView } from './Card'
 import { SortableColumn } from './SortableColumn'
 import { CardDetailModal } from './CardDetailModal'
-import { RealtimeBoardWrapper } from './RealtimeBoardWrapper'
 import { useApi } from '../useApi'
 import type { ApiResponse } from '../types/api'
 import { useTheme } from '../theme/ThemeProvider'
+import type { User } from '../../../shared/realtime'
 
 interface Card {
   id: string
@@ -31,7 +30,7 @@ interface ColumnData {
   cards: Card[]
 }
 
-interface BoardData {
+export interface BoardData {
   id: string
   title: string
   description: string | null
@@ -39,22 +38,21 @@ interface BoardData {
 }
 
 interface BoardProps {
-  boardId: string
+  board: BoardData
+  setBoard: React.Dispatch<React.SetStateAction<BoardData | null>>
+  isConnected: boolean
+  onlineUsers: Array<{ userId: string; user: User }>
 }
 
-export function Board({ boardId }: BoardProps) {
+export function Board({ board, setBoard, isConnected, onlineUsers }: BoardProps) {
   const { apiFetch } = useApi()
   const { theme } = useTheme()
-  const [board, setBoard] = useState<BoardData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [showCreateColumn, setShowCreateColumn] = useState(false)
   const [createLoading, setCreateLoading] = useState(false)
   const [columnTitle, setColumnTitle] = useState('')
   const [activeCard, setActiveCard] = useState<Card | null>(null)
   const [selectedCard, setSelectedCard] = useState<Card | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-
 
   // Configure sensors with activation constraints to allow click events
   const sensors = useSensors(
@@ -65,32 +63,13 @@ export function Board({ boardId }: BoardProps) {
     })
   )
 
-  useEffect(() => {
-    apiFetch(`/api/boards/${boardId}`)
-      .then((response: Response) => response.json())
-      .then((data: ApiResponse<BoardData>) => {
-        if (data.success) {
-          setBoard(data.data)
-        } else {
-          setError('Failed to load board')
-        }
-      })
-      .catch((err: unknown) => {
-        const msg = err instanceof Error ? err.message : String(err)
-        setError('Error connecting to API: ' + msg)
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-  }, [boardId])
-
   const handleCreateColumn = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!columnTitle.trim()) return
 
     setCreateLoading(true)
     try {
-      const response = await apiFetch(`/api/boards/${boardId}/columns`, {
+      const response = await apiFetch(`/api/boards/${board.id}/columns`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -112,12 +91,12 @@ export function Board({ boardId }: BoardProps) {
         } : null)
         setColumnTitle('')
         setShowCreateColumn(false)
-        
       } else {
-        setError('Failed to create column')
+        // You might want to show an error to the user here
+        console.error('Failed to create column', result.error)
       }
     } catch (err) {
-      setError('Error creating column')
+      console.error('Error creating column', err)
     } finally {
       setCreateLoading(false)
     }
@@ -126,7 +105,6 @@ export function Board({ boardId }: BoardProps) {
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const { active } = event
     const activeId = String(active.id)
-    if (!board) return
     if (activeId.startsWith('card-')) {
       const cardId = activeId.replace('card-', '')
       for (const col of board.columns) {
@@ -137,14 +115,13 @@ export function Board({ boardId }: BoardProps) {
         }
       }
     } else {
-      // Clear activeCard when dragging anything else (like columns)
       setActiveCard(null)
     }
   }, [board])
 
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event
-    if (!board || !over) return
+    if (!over) return
 
     const activeId = String(active.id)
     const overId = String(over.id)
@@ -157,7 +134,7 @@ export function Board({ boardId }: BoardProps) {
 
       const prevColumns = board.columns
       const reordered = arrayMove(prevColumns, oldIndex, newIndex).map((c, idx) => ({ ...c, position: idx }))
-      setBoard(prev => prev ? { ...prev, columns: reordered } : prev)
+      setBoard({ ...board, columns: reordered })
 
       try {
         await apiFetch(`/api/columns/${prevColumns[oldIndex].id}/reorder`, {
@@ -165,10 +142,8 @@ export function Board({ boardId }: BoardProps) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ position: newIndex })
         })
-        
-      } catch (err) {
-        // rollback on error
-        setBoard(prev => prev ? { ...prev, columns: prevColumns } : prev)
+      } catch {
+        setBoard({ ...board, columns: prevColumns })
       }
       return
     }
@@ -176,14 +151,12 @@ export function Board({ boardId }: BoardProps) {
     // Card DnD (reorder or move)
     if (activeId.startsWith('card-')) {
       const cardId = activeId.replace('card-', '')
-      // find source column and index
       const sourceColIndex = board.columns.findIndex(col => col.cards.some(c => c.id === cardId))
       if (sourceColIndex === -1) return
       const sourceCol = board.columns[sourceColIndex]
       const fromIndex = sourceCol.cards.findIndex(c => c.id === cardId)
       if (fromIndex === -1) return
 
-      // determine target column and index
       let targetColIndex = sourceColIndex
       let targetIndex = fromIndex
 
@@ -196,8 +169,7 @@ export function Board({ boardId }: BoardProps) {
       } else if (overId.startsWith('column-')) {
         targetColIndex = board.columns.findIndex(col => `column-${col.id}` === overId)
         if (targetColIndex === -1) return
-        const overCol = board.columns[targetColIndex]
-        targetIndex = overCol.cards.length
+        targetIndex = board.columns[targetColIndex].cards.length
       } else {
         return
       }
@@ -206,34 +178,30 @@ export function Board({ boardId }: BoardProps) {
 
       const prevBoard = board
 
-      // optimistic update
       const nextColumns = board.columns.map(c => ({ ...c, cards: [...c.cards] }))
 
       if (sourceColIndex === targetColIndex) {
         const col = nextColumns[sourceColIndex]
         col.cards = arrayMove(col.cards, fromIndex, targetIndex).map((card, idx) => ({ ...card, position: idx }))
-        setBoard(prev => prev ? { ...prev, columns: nextColumns } : prev)
+        setBoard({ ...board, columns: nextColumns })
         try {
           await apiFetch(`/api/cards/${cardId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ position: targetIndex })
           })
-          
         } catch (err) {
           console.error('Card reorder failed, reverting to previous state:', err)
           setBoard(prevBoard)
-          // Note: Server-authoritative broadcasts will ensure all clients get the correct state
         }
       } else {
         const fromCol = nextColumns[sourceColIndex]
         const toCol = nextColumns[targetColIndex]
         const [moved] = fromCol.cards.splice(fromIndex, 1)
         toCol.cards.splice(targetIndex, 0, moved)
-        // reindex positions
         fromCol.cards = fromCol.cards.map((card, idx) => ({ ...card, position: idx }))
         toCol.cards = toCol.cards.map((card, idx) => ({ ...card, position: idx }))
-        setBoard(prev => prev ? { ...prev, columns: nextColumns } : prev)
+        setBoard({ ...board, columns: nextColumns })
         try {
           await apiFetch(`/api/cards/${cardId}/move`, {
             method: 'POST',
@@ -243,12 +211,11 @@ export function Board({ boardId }: BoardProps) {
         } catch (err) {
           console.error('Card move failed, reverting to previous state:', err)
           setBoard(prevBoard)
-          // Note: Server-authoritative broadcasts will ensure all clients get the correct state
         }
       }
     }
     setActiveCard(null)
-  }, [board])
+  }, [board, setBoard, apiFetch])
 
   const handleDragCancel = useCallback(() => {
     setActiveCard(null)
@@ -266,14 +233,12 @@ export function Board({ boardId }: BoardProps) {
   }, [])
 
   useEffect(() => {
-    // Delay unmount to allow close transition to play
     if (!isModalOpen && selectedCard) {
       closeTimerRef.current = window.setTimeout(() => {
         setSelectedCard(null)
         closeTimerRef.current = null
       }, 200)
     } else if (isModalOpen && closeTimerRef.current) {
-      // If re-opened before the timer fires, cancel cleanup
       clearTimeout(closeTimerRef.current)
       closeTimerRef.current = null
     }
@@ -298,15 +263,32 @@ export function Board({ boardId }: BoardProps) {
         }))
       }
     })
-  }, [])
+  }, [setBoard])
 
-  if (loading) return <div>Loading board...</div>
-  if (error) return <div>Error: {error}</div>
-  if (!board) return <div>Board not found</div>
+  // Keep modal card data in sync with board state from websockets
+  useEffect(() => {
+    if (selectedCard && board) {
+      let foundCard: Card | null = null
+      for (const column of board.columns) {
+        const card = column.cards.find(c => c.id === selectedCard.id)
+        if (card) {
+          foundCard = card
+          break
+        }
+      }
+
+      if (foundCard && JSON.stringify(foundCard) !== JSON.stringify(selectedCard)) {
+        setSelectedCard(foundCard)
+      } else if (!foundCard) {
+        // Card was deleted by another user, close the modal
+        handleModalClose()
+      }
+    }
+  }, [board, selectedCard, handleModalClose])
 
   return (
+<<<<<<< HEAD
     <RealtimeBoardWrapper
-      boardId={boardId}
       board={board}
       setBoard={setBoard}
     >
@@ -382,8 +364,7 @@ export function Board({ boardId }: BoardProps) {
                 )}
               </div>
             </div>
-          </div>
-      
+  
       <DndContext 
         sensors={sensors}
         onDragStart={handleDragStart} 
@@ -409,70 +390,26 @@ export function Board({ boardId }: BoardProps) {
                   key={column.id} 
                   column={column}
                   onCardCreated={(newCard) => {
-                    setBoard(prev => prev ? {
-                      ...prev,
-                      columns: prev.columns.map(col => 
-                        col.id === column.id 
-                          ? { ...col, cards: [...col.cards, newCard] }
-                          : col
-                      )
-                    } : null)
+                    setBoard(prev => prev ? { ...prev, columns: prev.columns.map(c => c.id === column.id ? { ...c, cards: [...c.cards, newCard] } : c) } : null)
                   }}
                   onColumnUpdated={(updatedColumn) => {
-                    setBoard(prev => prev ? {
-                      ...prev,
-                      columns: prev.columns.map(col => 
-                        col.id === updatedColumn.id 
-                          ? updatedColumn
-                          : col
-                      )
-                    } : null)
+                    setBoard(prev => prev ? { ...prev, columns: prev.columns.map(c => c.id === updatedColumn.id ? updatedColumn : c) } : null)
                   }}
                   onColumnDeleted={(columnId) => {
-                    setBoard(prev => prev ? {
-                      ...prev,
-                      columns: prev.columns.filter(col => col.id !== columnId)
-                    } : null)
+                    setBoard(prev => prev ? { ...prev, columns: prev.columns.filter(c => c.id !== columnId) } : null)
                   }}
                   onCardUpdated={(updatedCard) => {
-                    setBoard(prev => prev ? {
-                      ...prev,
-                      columns: prev.columns.map(col => 
-                        col.id === column.id 
-                          ? {
-                              ...col,
-                              cards: col.cards.map(card => 
-                                card.id === updatedCard.id ? updatedCard : card
-                              )
-                            }
-                          : col
-                      )
-                    } : null)
+                    setBoard(prev => prev ? { ...prev, columns: prev.columns.map(c => c.id === column.id ? { ...c, cards: c.cards.map(card => card.id === updatedCard.id ? updatedCard : card) } : c) } : null)
                   }}
                   onCardDeleted={(cardId) => {
-                    setBoard(prev => prev ? {
-                      ...prev,
-                      columns: prev.columns.map(col => 
-                        col.id === column.id 
-                          ? {
-                              ...col,
-                              cards: col.cards.filter(card => card.id !== cardId)
-                            }
-                          : col
-                      )
-                    } : null)
+                    setBoard(prev => prev ? { ...prev, columns: prev.columns.map(c => c.id === column.id ? { ...c, cards: c.cards.filter(card => card.id !== cardId) } : c) } : null)
                   }}
                   onCardClick={handleCardClick}
                 />
               ))}
           </SortableContext>
 
-          {/* Add Column Button */}
-          <div style={{ 
-            minWidth: '300px',
-            display: 'flex',
-            alignItems: 'flex-start'
-          }}>
+          <div style={{ minWidth: '300px', display: 'flex', alignItems: 'flex-start' }}>
             {showCreateColumn ? (
               <div style={{
                 backgroundColor: theme.surfaceAlt,
@@ -573,17 +510,14 @@ export function Board({ boardId }: BoardProps) {
         </DragOverlay>
       </DndContext>
 
-          {/* Card Detail Modal */}
-          {selectedCard && (
-            <CardDetailModal
-              card={selectedCard}
-              isOpen={isModalOpen}
-              onClose={handleModalClose}
-              onCardUpdated={handleCardUpdated}
-            />
-          )}
-        </div>
+      {selectedCard && (
+        <CardDetailModal
+          card={selectedCard}
+          isOpen={isModalOpen}
+          onClose={handleModalClose}
+          onCardUpdated={handleCardUpdated}
+        />
       )}
-    </RealtimeBoardWrapper>
+    </div>
   )
 }

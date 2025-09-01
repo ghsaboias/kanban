@@ -5,6 +5,14 @@ import { prisma } from '../database'
 export const withAuth = clerkMiddleware()
 export const requireAuthMw = requireAuth()
 
+// Debug middleware for development - can be enabled when needed
+export const debugAuthMw = (req: Request, res: Response, next: NextFunction) => {
+  
+  const _auth = getAuth(req)
+  
+  next()
+}
+
 type AuthedRequest = Request
 
 export async function ensureUser(req: AuthedRequest, res: Response, next: NextFunction) {

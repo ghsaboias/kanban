@@ -13,17 +13,17 @@ vi.mock('../../useApi', () => ({
 
 // Mock drag and drop library
 vi.mock('@dnd-kit/core', () => ({
-  DndContext: ({ children }: any) => <div data-testid="dnd-context">{children}</div>,
-  DragOverlay: ({ children }: any) => <div data-testid="drag-overlay">{children}</div>,
+  DndContext: ({ children }: { children: React.ReactNode }) => <div data-testid="dnd-context">{children}</div>,
+  DragOverlay: ({ children }: { children?: React.ReactNode }) => <div data-testid="drag-overlay">{children}</div>,
   useSensor: vi.fn(),
   useSensors: vi.fn(() => []),
   PointerSensor: vi.fn(),
   closestCenter: vi.fn(),
-  useDroppable: () => ({ setNodeRef: () => {} }),
+  useDroppable: () => ({ setNodeRef: () => {} } as const),
 }));
 
 vi.mock('@dnd-kit/sortable', () => ({
-  SortableContext: ({ children }: any) => <div data-testid="sortable-context">{children}</div>,
+  SortableContext: ({ children }: { children: React.ReactNode }) => <div data-testid="sortable-context">{children}</div>,
   horizontalListSortingStrategy: 'horizontal',
   verticalListSortingStrategy: 'vertical',
   useSortable: () => ({
@@ -68,7 +68,7 @@ const mockBoard = {
           id: 'card-1',
           title: 'Test Card 1',
           description: 'Test Description 1',
-          priority: 'HIGH',
+          priority: 'HIGH' as const,
           position: 0,
           columnId: 'column-1',
           createdAt: '2023-01-01T00:00:00Z',
@@ -83,7 +83,7 @@ const mockBoard = {
           id: 'card-2',
           title: 'Test Card 2',
           description: null,
-          priority: 'MEDIUM',
+          priority: 'MEDIUM' as const,
           position: 1,
           columnId: 'column-1',
           createdAt: '2023-01-01T00:00:00Z',
@@ -104,10 +104,19 @@ const mockBoard = {
   ],
 };
 
-const renderBoard = (boardId: string = 'board-1') => {
+const renderBoard = (board = mockBoard) => {
+  const mockSetBoard = vi.fn();
+  const isConnected = true;
+  const onlineUsers: Array<{ userId: string; user: { id: string; name: string; email: string } }> = [];
+  
   return render(
     <BrowserRouter>
-      <Board boardId={boardId} />
+      <Board 
+        board={board} 
+        setBoard={mockSetBoard} 
+        isConnected={isConnected} 
+        onlineUsers={onlineUsers} 
+      />
     </BrowserRouter>
   );
 };
@@ -121,20 +130,10 @@ describe('Board Component', () => {
     });
   });
 
-  it('should render loading state initially', () => {
-    mockApiFetch.mockImplementation(() => new Promise(() => {})); // Never resolves
-    
-    renderBoard();
-    
-    expect(screen.getByText('Loading board...')).toBeInTheDocument();
-  });
+  // Loading state test removed - Board component always receives valid data from parent
 
   it('should fetch and render board data', async () => {
     renderBoard();
-
-    await waitFor(() => {
-      expect(mockApiFetch).toHaveBeenCalledWith('/api/boards/board-1');
-    });
 
     await waitFor(() => {
       expect(screen.getByText('Test Board')).toBeInTheDocument();
@@ -146,24 +145,12 @@ describe('Board Component', () => {
     expect(screen.getByText('Test Card 2')).toBeInTheDocument();
   });
 
-  it('should render error state when API call fails', async () => {
-    mockApiFetch.mockRejectedValue(new Error('API Error'));
-
-    renderBoard();
-
-    await waitFor(() => {
-      expect(screen.getByText(/Error connecting to API/)).toBeInTheDocument();
-    });
-  });
+  // Error state test removed - Error handling is managed by parent component (BoardPage)
 
   it('should render empty board message when no columns exist', async () => {
     const emptyBoard = { ...mockBoard, columns: [] };
-    mockApiFetch.mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ success: true, data: emptyBoard }),
-    });
 
-    renderBoard();
+    renderBoard(emptyBoard);
 
     await waitFor(() => {
       expect(screen.getByText('Test Board')).toBeInTheDocument();
@@ -215,9 +202,10 @@ describe('Board Component', () => {
       expect(screen.getByText('Test Board')).toBeInTheDocument();
     });
 
-    // This test is tricky because the count is inside the SortableColumn component
-    // We will assume for now that if the columns and cards render, the count is there.
-    // A better test would be to have a data-testid on the count element.
+    // TODO: Add data-testid to SortableColumn count element for better testing
+    // For now, verify columns and cards render (count is displayed internally)
+    expect(screen.getByText('To Do')).toBeInTheDocument();
+    expect(screen.getByText('Test Card 1')).toBeInTheDocument();
   });
 
   it('should show priority indicators on cards', async () => {
@@ -227,8 +215,7 @@ describe('Board Component', () => {
       expect(screen.getByText('Test Card 1')).toBeInTheDocument();
     });
 
-    // This test is also tricky without specific selectors.
-    // We'll check for the text.
+    // TODO: Add data-testid for priority indicators for more reliable testing
     expect(screen.getAllByText('HIGH').length).toBeGreaterThan(0);
     expect(screen.getAllByText('MEDIUM').length).toBeGreaterThan(0);
   });
@@ -254,12 +241,12 @@ describe('Board Component', () => {
   it('should handle add column action', async () => {
     renderBoard();
 
-    // Ensure initial board load completes with the default mock
+    // Ensure initial board load completes
     await waitFor(() => {
       expect(screen.getByText('Test Board')).toBeInTheDocument();
     });
 
-    // Mock the next fetch (POST create column)
+    // Mock the POST create column response
     mockApiFetch.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({ success: true, data: { id: 'new-column', title: 'New Column', position: 2 } }),
@@ -284,52 +271,19 @@ describe('Board Component', () => {
   });
 
   it('should handle add card action', async () => {
-    // This test requires a more complex setup of SortableColumn's props.
-    // For now, we'll just check that the button exists.
     renderBoard();
     await waitFor(() => {
       expect(screen.getByText('To Do')).toBeInTheDocument();
     });
-    // We can't easily test the click without mocking the SortableColumn implementation
+    // TODO: Improve SortableColumn mocking to test card addition functionality
+    // This test is currently limited due to complex component interaction
   });
 
-  it('should display board navigation', async () => {
-    renderBoard();
+  // Navigation test removed - Navigation handled by parent component (BoardPage)
 
-    await waitFor(() => {
-      expect(screen.getByText('Test Board')).toBeInTheDocument();
-    });
+  // 404 error test removed - Error handling moved to BoardPage tests
 
-    // The back navigation is not in the Board component itself.
-    // This test should be moved to a higher-level component test.
-  });
-
-  it('should handle 404 error for non-existent board', async () => {
-    mockApiFetch.mockResolvedValue({
-      ok: false,
-      status: 404,
-      json: () => Promise.resolve({ success: false, error: 'Board not found' }),
-    });
-
-    renderBoard('non-existent-board');
-
-    await waitFor(() => {
-      expect(screen.getByText(/Failed to load board/)).toBeInTheDocument();
-    });
-  });
-
-  it('should refresh board data on socket events', async () => {
-    renderBoard();
-
-    await waitFor(() => {
-      expect(mockApiFetch).toHaveBeenCalledWith('/api/boards/board-1');
-    });
-
-    expect(mockApiFetch).toHaveBeenCalledTimes(1);
-
-    // This requires mocking the RealtimeBoardWrapper and its socket events.
-    // This is out of scope for this component's unit test.
-  });
+  // Socket refresh test removed - Real-time updates managed by parent component
 
   it('should render empty column correctly', async () => {
     renderBoard();
@@ -353,12 +307,24 @@ describe('Board Component', () => {
       ...mockBoard,
       title: 'Updated Board Title',
     };
-    mockApiFetch.mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ success: true, data: updatedBoard }),
-    });
+    
+    const mockSetBoard = vi.fn();
+    const isConnected = true;
+    const onlineUsers: Array<{ userId: string; user: { id: string; name: string; email: string } }> = [];
+    
+    rerender(
+      <BrowserRouter>
+        <Board 
+          board={updatedBoard} 
+          setBoard={mockSetBoard} 
+          isConnected={isConnected} 
+          onlineUsers={onlineUsers} 
+        />
+      </BrowserRouter>
+    );
 
-    // To trigger a re-fetch, we would need to change the boardId prop.
-    // This test as written won't work as expected without a trigger.
+    await waitFor(() => {
+      expect(screen.getByText('Updated Board Title')).toBeInTheDocument();
+    });
   });
 });

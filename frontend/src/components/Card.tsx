@@ -31,7 +31,7 @@ const priorityLabels = {
 }
 
 export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardProps) {
-  const apiFetch = useApi()
+  const { apiFetch } = useApi()
   const { theme } = useTheme()
   // mark onCardUpdated as used for now (edit feature later)
   void onCardUpdated
