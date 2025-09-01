@@ -1,7 +1,7 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { THEMES, lightTheme } from './themes'
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import type { Theme } from './themes'
+import { THEMES, lightTheme } from './themes'
 
 type ThemeContextValue = {
   theme: Theme
@@ -10,10 +10,12 @@ type ThemeContextValue = {
   persist: boolean
   setPersist: (p: boolean) => void
   // Optional runtime transform (e.g., UI profiles overriding radius/shadow)
-  setTransform?: (fn: ((t: Theme) => Theme) | null) => void
+  setTransform?: (fn: ((t: Theme | null) => Theme) | null) => void
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
+
+export { ThemeContext }
 
 const LS_KEY = 'kanban_theme_current'
 const LS_PERSIST = 'kanban_theme_persist'
@@ -31,18 +33,31 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     try {
       const raw = localStorage.getItem(LS_KEY)
       if (raw) return JSON.parse(raw)
-    } catch {}
+    } catch { /* ignore */ }
     return lightTheme
   })
-  const [transform, setTransform] = useState<((t: Theme) => Theme) | null>(null)
-  const theme = useMemo<Theme>(() => transform ? transform(baseTheme) : baseTheme, [baseTheme, transform])
+  const [transform, setTransform] = useState<((t: Theme | null) => Theme) | null>(null)
+  const theme = useMemo<Theme>(() => {
+    if (transform && typeof transform === 'function') {
+      return transform(baseTheme)
+    }
+    return baseTheme
+  }, [baseTheme, transform])
 
-  const setTheme = (t: Theme) => {
+  const setTheme = useCallback((t: Theme) => {
     setThemeState(t)
     try {
       if (persist) localStorage.setItem(LS_KEY, JSON.stringify(t))
-    } catch {}
-  }
+    } catch { /* ignore */ }
+  }, [persist])
+
+  const safeSetTransform = useCallback((fn: ((t: Theme | null) => Theme) | null) => {
+    if (fn === null || typeof fn === 'function') {
+      setTransform(fn)
+    } else {
+      console.warn('setTransform called with invalid value:', fn)
+    }
+  }, [])
 
   useEffect(() => {
     try {
@@ -50,7 +65,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       else localStorage.removeItem(LS_PERSIST)
       // If disabling persistence, also clear saved theme
       if (!persist) localStorage.removeItem(LS_KEY)
-    } catch {}
+    } catch { /* ignore */ }
   }, [persist])
 
   // Apply background color to body for global feel
@@ -65,16 +80,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     available: THEMES,
     persist,
     setPersist,
-    setTransform,
-  }), [theme, persist])
+    setTransform: safeSetTransform,
+  }), [theme, persist, setTheme, safeSetTransform])
 
   return (
     <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
   )
-}
-
-export function useTheme() {
-  const ctx = useContext(ThemeContext)
-  if (!ctx) throw new Error('useTheme must be used within ThemeProvider')
-  return ctx
 }
