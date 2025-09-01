@@ -14,15 +14,18 @@ Uma aplicação colaborativa de quadro Kanban construída com React, TypeScript 
 
 - **Express + TypeScript** - Servidor de API REST completo
 - **Prisma ORM + SQLite** - Banco de dados com relacionamentos tipados
+- **Socket.IO Server** - Servidor WebSocket para colaboração em tempo real
 - **Sistema de posicionamento** - Suporte nativo para drag & drop
 - **Middleware de erros** - Tratamento de erros em português
+- **Activity Logger** - Sistema de logging e broadcasting de atividades
 
 ### Banco de Dados
 
-- **4 Modelos principais**: User, Board, Column, Card
+- **5 Modelos principais**: User, Board, Column, Card, Activity
 - **Relacionamentos completos**: Usuários podem ser atribuídos a cards
 - **Sistema de posições**: Ordenação automática para drag & drop
 - **IDs seguros**: CUID para melhor performance e segurança
+- **Sistema de atividades**: Logging completo de todas as ações com atribuição de usuário
 
 ## Como Começar
 
@@ -99,15 +102,22 @@ npm run dev:backend
 ```
 kanban/
 ├── frontend/          # Frontend React + Vite + TypeScript
+│   ├── src/
+│   │   ├── components/ # Componentes React (Board, Card, Column, ActivityFeed)
+│   │   ├── hooks/      # Hooks customizados (useSocket, useRealtimeBoard)
+│   │   ├── contexts/   # Context providers (SocketContext)
+│   │   └── types/      # Tipos TypeScript do frontend
 ├── backend/           # API REST Express + TypeScript
 │   ├── src/
 │   │   ├── routes/    # Rotas CRUD (boards, columns, cards, users)
 │   │   ├── middleware/# Tratamento de erros
+│   │   ├── services/  # Serviços (ActivityLogger)
+│   │   ├── socket/    # Socket.IO handler e autenticação
 │   │   ├── types/     # Tipos TypeScript da API
 │   │   └── index.ts   # Servidor principal
-├── prisma/           # Schema e banco SQLite
+├── prisma/           # Schema e banco SQLite (5 modelos)
 ├── generated/        # Cliente Prisma auto-gerado
-├── shared/          # Tipos TypeScript compartilhados (futuro)
+├── shared/          # Tipos TypeScript compartilhados para real-time collaboration (realtime.ts)
 └── package.json     # Configuração do workspace
 ```
 
@@ -303,6 +313,43 @@ Os testes cobrem funcionalidades essenciais incluindo CRUD operations, autentica
 ### Decisão técnica
 
 - Preferimos dnd-kit a alternativas (React DnD, @hello-pangea/dnd) por flexibilidade, acessibilidade e suporte nativo a múltiplos sensores. O PRD incentiva uso de bibliotecas prontas.
+
+## Sistema de Colaboração em Tempo Real
+
+### **Socket.IO Implementation**
+
+- **Servidor WebSocket**: Integrado ao Express com autenticação Clerk
+- **Rooms por Board**: Comunicação isolada entre projetos diferentes
+- **Eventos em Tempo Real**: 15+ tipos de eventos para todas as operações
+- **Autenticação Segura**: Handshake autenticado com tokens Clerk
+
+### **Eventos Implementados**
+
+- **Presença de Usuários**: `user:joined`, `user:left` com roster atualizado
+- **Operações de Cards**: `card:created`, `card:updated`, `card:deleted`, `card:moved`
+- **Operações de Colunas**: `column:created`, `column:updated`, `column:deleted`, `column:reordered`
+- **Sistema de Atividades**: `activity:created` para todas as ações
+
+### **Activity Feed System**
+
+- **Logging Completo**: Todas as ações são registradas com metadados
+- **Broadcasting em Tempo Real**: Atividades aparecem instantaneamente para todos os usuários
+- **Atribuição de Usuário**: Cada ação é vinculada ao usuário que a executou
+- **Interface Portuguesa**: Feed de atividades localizado com timestamps relativos
+
+### **User Presence & Collaboration**
+
+- **Roster em Tempo Real**: Mostra quem está atualmente visualizando cada board
+- **Notificações de Presença**: Join/leave events para colaboração
+- **Isolamento por Board**: Usuários só veem presença no board atual
+- **Gerenciamento de Estado**: Presença limpa automaticamente em desconexões
+
+### **Otimizações de Performance**
+
+- **Atualizações Otimistas**: UI responde imediatamente, sincroniza com servidor
+- **Deduplicação de Eventos**: Previne duplicatas com `X-Socket-Id` header
+- **Batch Processing**: Atividades processadas em lotes para eficiência
+- **Reconexão Automática**: Recuperação automática de falhas de conexão
 
 ## Próximos Passos para Melhorar a Aplicação
 
