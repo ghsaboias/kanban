@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2025-08-29
+
+### Added
+- Realtime collaboration foundation
+  - Socket.IO server on Express with Clerk-authenticated handshakes
+  - Per-board rooms and presence (user:joined/user:left) with roster on join
+  - Shared event types in `shared/realtime.ts` (cards/columns/presence)
+  - Server-authoritative emits from REST handlers (create/update/delete/reorder/move)
+  - Initiator exclusion via `X-Socket-Id` header to avoid client echo
+
+### Changed
+- Frontend API calls include `X-Socket-Id` when available
+- Frontend `useRealtimeBoard` dedupes create events to prevent duplicates with optimistic UI
+
 ## [0.7.0] - 2025-08-29
 
 ### Added

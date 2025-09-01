@@ -6,6 +6,7 @@ import type { DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from '@dnd-kit/sortable'
 import { SortableColumn } from './SortableColumn'
 import { CardDetailModal } from './CardDetailModal'
+import { RealtimeBoardWrapper } from './RealtimeBoardWrapper'
 import { useApi } from '../useApi'
 
 interface Card {
@@ -50,6 +51,7 @@ export function Board({ boardId }: BoardProps) {
   const [activeCard, setActiveCard] = useState<Card | null>(null)
   const [selectedCard, setSelectedCard] = useState<Card | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+
 
   // Configure sensors with activation constraints to allow click events
   const sensors = useSensors(
@@ -106,6 +108,7 @@ export function Board({ boardId }: BoardProps) {
         } : null)
         setColumnTitle('')
         setShowCreateColumn(false)
+        
       } else {
         setError('Failed to create column')
       }
@@ -158,6 +161,7 @@ export function Board({ boardId }: BoardProps) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ position: newIndex })
         })
+        
       } catch (err) {
         // rollback on error
         setBoard(prev => prev ? { ...prev, columns: prevColumns } : prev)
@@ -211,8 +215,11 @@ export function Board({ boardId }: BoardProps) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ position: targetIndex })
           })
+          
         } catch (err) {
+          console.error('Card reorder failed, reverting to previous state:', err)
           setBoard(prevBoard)
+          // Note: Server-authoritative broadcasts will ensure all clients get the correct state
         }
       } else {
         const fromCol = nextColumns[sourceColIndex]
@@ -230,7 +237,9 @@ export function Board({ boardId }: BoardProps) {
             body: JSON.stringify({ columnId: board.columns[targetColIndex].id, position: targetIndex })
           })
         } catch (err) {
+          console.error('Card move failed, reverting to previous state:', err)
           setBoard(prevBoard)
+          // Note: Server-authoritative broadcasts will ensure all clients get the correct state
         }
       }
     }
@@ -292,11 +301,84 @@ export function Board({ boardId }: BoardProps) {
   if (!board) return <div>Board not found</div>
 
   return (
-    <div style={{ padding: '20px' }}>
-      <div style={{ marginBottom: '20px' }}>
-        <h1 style={{ color: '#000' }}>{board.title}</h1>
-        {board.description && <p style={{ color: '#333' }}>{board.description}</p>}
-      </div>
+    <RealtimeBoardWrapper
+      boardId={boardId}
+      board={board}
+      setBoard={setBoard}
+    >
+      {({ isConnected, onlineUsers }) => (
+        <div style={{ padding: '20px' }}>
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+              <div>
+                <h1 style={{ color: '#000', margin: '0 0 8px 0' }}>{board.title}</h1>
+                {board.description && <p style={{ color: '#333', margin: 0 }}>{board.description}</p>}
+              </div>
+              
+              {/* Connection Status & Online Users */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '6px',
+                  color: isConnected ? '#28a745' : '#dc3545'
+                }}>
+                  <div style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: isConnected ? '#28a745' : '#dc3545'
+                  }} />
+                  {isConnected ? 'Connected' : 'Disconnected'}
+                </div>
+                
+                {onlineUsers.length > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#666' }}>
+                    <span>👥</span>
+                    <span>{onlineUsers.length} online</span>
+                    <div style={{ display: 'flex', gap: '4px', marginLeft: '8px' }}>
+                      {onlineUsers.slice(0, 3).map((user) => (
+                        <div
+                          key={user.userId}
+                          title={`${user.user.name} (${user.user.email})`}
+                          style={{
+                            width: '24px',
+                            height: '24px',
+                            borderRadius: '50%',
+                            backgroundColor: '#007bff',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '12px',
+                            fontWeight: 'bold'
+                          }}
+                        >
+                          {user.user.name?.charAt(0) || '?'}
+                        </div>
+                      ))}
+                      {onlineUsers.length > 3 && (
+                        <div style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '50%',
+                          backgroundColor: '#6c757d',
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '10px',
+                          fontWeight: 'bold'
+                        }}>
+                          +{onlineUsers.length - 3}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
       
       <DndContext 
         sensors={sensors}
@@ -487,15 +569,17 @@ export function Board({ boardId }: BoardProps) {
         </DragOverlay>
       </DndContext>
 
-      {/* Card Detail Modal */}
-      {selectedCard && (
-        <CardDetailModal
-          card={selectedCard}
-          isOpen={isModalOpen}
-          onClose={handleModalClose}
-          onCardUpdated={handleCardUpdated}
-        />
+          {/* Card Detail Modal */}
+          {selectedCard && (
+            <CardDetailModal
+              card={selectedCard}
+              isOpen={isModalOpen}
+              onClose={handleModalClose}
+              onCardUpdated={handleCardUpdated}
+            />
+          )}
+        </div>
       )}
-    </div>
+    </RealtimeBoardWrapper>
   )
 }
