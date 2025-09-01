@@ -1,7 +1,5 @@
 import '@testing-library/jest-dom';
-import { vi, beforeAll, afterAll } from 'vitest';
-
-import { vi, beforeAll, afterAll } from 'vitest';
+import { afterAll, beforeAll, vi } from 'vitest';
 
 // Set up environment variables for tests
 vi.stubEnv('VITE_API_URL', 'http://localhost:3001');
