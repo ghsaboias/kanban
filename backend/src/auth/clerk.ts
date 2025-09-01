@@ -8,7 +8,7 @@ export const requireAuthMw = requireAuth()
 // Debug middleware for development - can be enabled when needed
 export const debugAuthMw = (req: Request, res: Response, next: NextFunction) => {
   
-  const auth = getAuth(req)
+  const _auth = getAuth(req)
   
   next()
 }
