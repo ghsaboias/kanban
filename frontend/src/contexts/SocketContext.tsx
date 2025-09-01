@@ -17,5 +17,3 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   );
 };
 
-export { useSocketContext } from '../hooks/useSocketContext';
-
