@@ -4,7 +4,7 @@
 export const broadcastToRoom = (
   room: string, 
   event: string, 
-  data: any, 
+  data: unknown, 
   initiatorSocketId?: string
 ): void => {
   if (!global.io) {
