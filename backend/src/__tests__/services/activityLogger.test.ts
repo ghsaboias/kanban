@@ -394,7 +394,7 @@ describe('ActivityLogger Service', () => {
           columnId: card.columnId,
           userId: user.id,
           meta: {}
-        } as any);
+        });
 
       await activityLogger.logActivity({
         entityType: 'CARD',

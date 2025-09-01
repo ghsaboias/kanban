@@ -102,12 +102,12 @@ describe('sanitizeDescription', () => {
   });
 
   it('should handle null input', () => {
-    const result = sanitizeDescription(null as any);
+    const result = sanitizeDescription(null as unknown as string);
     expect(result).toBeNull();
   });
 
   it('should handle undefined input', () => {
-    const result = sanitizeDescription(undefined as any);
+    const result = sanitizeDescription(undefined as unknown as string);
     expect(result).toBeNull();
   });
 

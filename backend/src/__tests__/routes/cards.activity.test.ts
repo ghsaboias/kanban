@@ -1,4 +1,5 @@
 import request from 'supertest';
+import type { Request, Response, NextFunction } from 'express';
 import app from '../../app';
 import { testPrisma } from '../setup';
 
@@ -7,9 +8,9 @@ jest.unmock('../../services/activityLogger');
 
 // Mock authentication middleware
 jest.mock('../../auth/clerk', () => ({
-  withAuth: (req: any, res: any, next: any) => next(),
-  requireAuthMw: (req: any, res: any, next: any) => next(),
-  ensureUser: (req: any, res: any, next: any) => {
+  withAuth: (req: Request, res: Response, next: NextFunction) => next(),
+  requireAuthMw: (req: Request, res: Response, next: NextFunction) => next(),
+  ensureUser: (req: Request, res: Response, next: NextFunction) => {
     res.locals.user = {
       id: 'test-user-id',
       name: 'Test User',
@@ -21,14 +22,14 @@ jest.mock('../../auth/clerk', () => ({
 }));
 
 describe('Cards Routes - Activity Logging', () => {
-  let testUser: any;
-  let testBoard: any;
-  let testColumn: any;
-  let testAssignee: any;
+  let testUser: { id: string; email: string; name: string; clerkId: string; };
+  let testBoard: { id: string; title: string; description?: string | null; };
+  let testColumn: { id: string; title: string; position: number; boardId: string; };
+  let testAssignee: { id: string; email: string; name: string; clerkId: string; };
 
   beforeAll(() => {
-    const fakeBroadcaster: any = { emit: jest.fn(), except: jest.fn(() => fakeBroadcaster) };
-    (global as any).io = { to: jest.fn(() => fakeBroadcaster) };
+    const fakeBroadcaster = { emit: jest.fn(), except: jest.fn(() => fakeBroadcaster) };
+    (global as unknown as { io: { to: jest.Mock } }).io = { to: jest.fn(() => fakeBroadcaster) };
   });
 
   beforeEach(async () => {
@@ -198,7 +199,7 @@ describe('Cards Routes - Activity Logging', () => {
   });
 
   describe('PUT /api/cards/:id', () => {
-    let testCard: any;
+    let testCard: unknown;
 
     beforeEach(async () => {
       testCard = await testPrisma.card.create({
@@ -404,7 +405,7 @@ describe('Cards Routes - Activity Logging', () => {
   });
 
   describe('DELETE /api/cards/:id', () => {
-    let testCard: any;
+    let testCard: unknown;
 
     beforeEach(async () => {
       testCard = await testPrisma.card.create({
@@ -469,8 +470,8 @@ describe('Cards Routes - Activity Logging', () => {
   });
 
   describe('POST /api/cards/:id/move', () => {
-    let testCard: any;
-    let targetColumn: any;
+    let testCard: unknown;
+    let targetColumn: unknown;
 
     beforeEach(async () => {
       testCard = await testPrisma.card.create({
@@ -534,7 +535,7 @@ describe('Cards Routes - Activity Logging', () => {
 
     it('should log card reorder activity within same column', async () => {
       // Create another card in the same column to have something to reorder with
-      const secondCard = await testPrisma.card.create({
+      const _secondCard = await testPrisma.card.create({
         data: {
           title: 'Second Card',
           position: 1,
