@@ -39,13 +39,13 @@ jobs:
 
       - name: Run Tests (Pinned Prisma CLI)
         env:
-          DATABASE_URL: "file:./prisma/test.db"
+          DATABASE_URL: "file:${{ github.workspace }}/prisma/test.db"
         run: |
           # Prepare DB with Prisma v6 regardless of workspace deps
           npx prisma@6.15.0 db push --schema prisma/schema.prisma --force-reset
           # Run backend tests from backend directory so dotenv paths resolve
           cd backend
-          export DATABASE_URL="file:../prisma/test.db"
+          export DATABASE_URL="file:${GITHUB_WORKSPACE}/prisma/test.db"
           npx jest
           # Run frontend tests as usual
           cd ..
