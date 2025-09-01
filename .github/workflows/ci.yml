@@ -43,9 +43,11 @@ jobs:
         run: |
           # Prepare DB with Prisma v6 regardless of workspace deps
           npx prisma@6.15.0 db push --schema prisma/schema.prisma --force-reset
-          # Run backend tests directly (bypass its built-in db push using v5)
-          npm exec -w backend jest
+          # Run backend tests from backend directory so dotenv paths resolve
+          cd backend
+          npx jest
           # Run frontend tests as usual
+          cd ..
           npm run test:frontend
 
   # Optional: Auto-format and commit (uncomment to enable)
