@@ -18,6 +18,16 @@ export interface Theme {
   // Misc
   muted: string
   inputBg: string
+  // Optional extended tokens
+  brand?: string
+  action?: string
+  link?: string
+  focus?: string
+  danger?: string
+  success?: string
+  overlay?: string
+  radius?: { sm: string, md: string, lg: string }
+  shadow?: { sm: string, md: string, lg: string }
   // Priority badges
   priority: {
     HIGH: string
@@ -42,6 +52,19 @@ export const lightTheme: Theme = {
   accentText: '#ffffff',
   muted: '#6c757d',
   inputBg: '#f8f9fa',
+  brand: '#222f44',
+  action: '#3898ec',
+  link: '#3898ec',
+  focus: '#3898ec',
+  danger: '#ea384c',
+  success: '#28a745',
+  overlay: 'rgba(0,0,0,0.10)',
+  radius: { sm: '4px', md: '8px', lg: '12px' },
+  shadow: {
+    sm: '0 1px 3px rgba(0,0,0,0.1)',
+    md: '0 2px 8px rgba(0,0,0,0.12)',
+    lg: '0 12px 32px rgba(0,0,0,0.2)'
+  },
   priority: {
     HIGH: '#ff6b6b',
     MEDIUM: '#ffd93d',
@@ -65,6 +88,19 @@ export const darkTheme: Theme = {
   accentText: '#0f141a',
   muted: '#94a3b8',
   inputBg: '#111827',
+  brand: '#222f44',
+  action: '#4ea0ff',
+  link: '#4ea0ff',
+  focus: '#4ea0ff',
+  danger: '#ea384c',
+  success: '#34d399',
+  overlay: 'rgba(0,0,0,0.35)',
+  radius: { sm: '4px', md: '8px', lg: '12px' },
+  shadow: {
+    sm: '0 1px 3px rgba(0,0,0,0.3)',
+    md: '0 2px 8px rgba(0,0,0,0.35)',
+    lg: '0 12px 32px rgba(0,0,0,0.45)'
+  },
   priority: {
     HIGH: '#f87171',
     MEDIUM: '#f59e0b',
@@ -88,6 +124,19 @@ export const warmTheme: Theme = {
   accentText: '#1f1309',
   muted: '#8c7b72',
   inputBg: '#fff3e6',
+  brand: '#8c5a2b',
+  action: '#ff7a1f',
+  link: '#ff7a1f',
+  focus: '#ff7a1f',
+  danger: '#e85d5d',
+  success: '#5fbf75',
+  overlay: 'rgba(0,0,0,0.10)',
+  radius: { sm: '4px', md: '8px', lg: '12px' },
+  shadow: {
+    sm: '0 1px 3px rgba(0,0,0,0.1)',
+    md: '0 2px 8px rgba(0,0,0,0.12)',
+    lg: '0 12px 32px rgba(0,0,0,0.2)'
+  },
   priority: {
     HIGH: '#e85d5d',
     MEDIUM: '#eebc40',
@@ -95,10 +144,48 @@ export const warmTheme: Theme = {
   },
 }
 
+export const igcTheme: Theme = {
+  name: 'IGC',
+  key: 'igc',
+  // Brand-inspired light theme
+  background: '#ffffff',
+  surface: '#ffffff',
+  surfaceAlt: '#f5f5f5',
+  card: '#ffffff',
+  border: '#e2e2e2',
+  textPrimary: '#333333',
+  textSecondary: '#5d6c7b',
+  textMuted: '#758696',
+  accent: '#cbaa58', // gold
+  accentHover: '#b8954d',
+  accentText: '#ffffff',
+  muted: '#6c757d',
+  inputBg: '#f3f3f3',
+  brand: '#222f44',
+  action: '#3898ec',
+  link: '#3898ec',
+  focus: '#3898ec',
+  danger: '#ea384c',
+  success: '#28a745',
+  overlay: 'rgba(0,0,0,0.10)',
+  radius: { sm: '4px', md: '8px', lg: '12px' },
+  shadow: {
+    sm: '0 1px 3px rgba(0,0,0,0.1)',
+    md: '0 2px 8px rgba(0,0,0,0.12)',
+    lg: '0 12px 32px rgba(0,0,0,0.2)'
+  },
+  priority: {
+    HIGH: '#ea384c',
+    MEDIUM: '#d3a93d',
+    LOW: '#34d399',
+  },
+}
+
 export const THEMES: Record<string, Theme> = {
   light: lightTheme,
   dark: darkTheme,
   warm: warmTheme,
+  igc: igcTheme,
 }
 
 // Simple color utils to derive variants
@@ -190,4 +277,3 @@ export function generateVariants(base: Theme): Variant[] {
     },
   ]
 }
-
