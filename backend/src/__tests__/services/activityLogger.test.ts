@@ -60,7 +60,7 @@ describe('ActivityLogger Service', () => {
 
   beforeEach(async () => {
     // Create fresh activity logger instance
-    activityLogger = new ActivityLogger(testPrisma, mockIo as any);
+    activityLogger = new ActivityLogger(testPrisma);
     // Clear all mocks
     mockEmit.mockClear();
     mockExceptEmit.mockClear();
@@ -343,7 +343,7 @@ describe('ActivityLogger Service', () => {
       const { user, board, card } = await createTestBoard();
 
       // Create activity logger with small queue size
-      const smallQueueLogger = new ActivityLogger(testPrisma, mockIo as any, {
+      const smallQueueLogger = new ActivityLogger(testPrisma, {
         maxQueueSize: 3,
         batchSize: 2
       });
@@ -452,7 +452,7 @@ describe('ActivityLogger Service', () => {
 
       const duration = Date.now() - startTime;
       expect(duration).toBeLessThan(500); // More reasonable for test environment
-      
+
       const activities = await testPrisma.activity.findMany();
       expect(activities).toHaveLength(1);
       expect(activities[0].action).toBe('CREATE');

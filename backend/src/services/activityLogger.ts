@@ -1,5 +1,4 @@
 import { PrismaClient } from '../../../generated/prisma';
-import { Server } from 'socket.io';
 
 export interface ActivityLogRequest {
   entityType: 'BOARD' | 'COLUMN' | 'CARD';
@@ -31,7 +30,7 @@ export class ActivityLogger {
   private batchTimer: NodeJS.Timeout | null = null;
   private isProcessing = false;
   private options: Required<ActivityLoggerOptions>;
-  
+
   // Rate limiting for high-frequency events
   private rateLimitMap = new Map<string, number>();
   private readonly RATE_LIMIT_WINDOW = 1000; // 1 second
@@ -39,7 +38,6 @@ export class ActivityLogger {
 
   constructor(
     private prisma: PrismaClient,
-    private io?: Server,
     options: ActivityLoggerOptions = {}
   ) {
     this.options = {
@@ -78,7 +76,7 @@ export class ActivityLogger {
     const key = `${request.entityId}:${request.action}`;
     const now = Date.now();
     const windowStart = now - this.RATE_LIMIT_WINDOW;
-    
+
     // Clean up old entries
     for (const [k, timestamp] of this.rateLimitMap.entries()) {
       if (timestamp < windowStart) {
@@ -113,7 +111,7 @@ export class ActivityLogger {
     } else if (!this.batchTimer) {
       // Start batch timer
       this.batchTimer = setTimeout(() => {
-        this.processBatch().catch(error => 
+        this.processBatch().catch(error =>
           console.error('Batch processing error:', error)
         );
       }, this.options.batchIntervalMs);
@@ -137,7 +135,7 @@ export class ActivityLogger {
           await this.processActivity(activity);
         } catch (error) {
           console.error(`Failed to process activity ${activity.entityId}:`, error);
-          
+
           if (activity.retryCount < this.options.maxRetries) {
             failed.push({
               ...activity,
@@ -158,7 +156,7 @@ export class ActivityLogger {
       // Continue processing if there are more items
       if (this.queue.length > 0) {
         this.batchTimer = setTimeout(() => {
-          this.processBatch().catch(error => 
+          this.processBatch().catch(error =>
             console.error('Batch processing error:', error)
           );
         }, this.options.batchIntervalMs);
@@ -171,7 +169,7 @@ export class ActivityLogger {
   private async processActivity(request: ActivityLogRequest): Promise<void> {
     // Retry logic for high priority activities
     let lastError: Error | null = null;
-    
+
     for (let attempt = 0; attempt <= this.options.maxRetries; attempt++) {
       try {
         const activity = await this.prisma.activity.create({
@@ -212,28 +210,40 @@ export class ActivityLogger {
 
   private shouldSkipBroadcast(request: ActivityLogRequest): boolean {
     // Skip broadcasting high-frequency events to avoid spam
-    return request.action === 'REORDER';
+    // Note: REORDER actions need to be broadcast for real-time collaboration
+    return false; // Temporarily disabled to ensure all actions broadcast
   }
 
   private broadcastActivity(activity: any, request: ActivityLogRequest): void {
-    if (!this.io) return;
+    // Get the io instance dynamically to avoid initialization order issues
+    const io = (global as any).io;
+    if (!io) {
+      return;
+    }
 
     const room = `board-${request.boardId}`;
-    const broadcaster = request.initiatorSocketId 
-      ? this.io.to(room).except(request.initiatorSocketId)
-      : this.io.to(room);
 
-    broadcaster.emit('activity:created', {
+    // Always broadcast activity events to all clients, including the initiator,
+    // because the activity feed relies on this event to stay in sync.
+    const broadcaster = io.to(room);
+
+    const activityData = {
       boardId: request.boardId,
       activity: {
         id: activity.id,
         entityType: activity.entityType,
+        entityId: activity.entityId,
         action: activity.action,
+        boardId: activity.boardId,
+        columnId: activity.columnId,
+        userId: activity.userId,
         user: activity.user,
         createdAt: activity.createdAt.toISOString(),
         meta: activity.meta
       }
-    });
+    };
+
+    broadcaster.emit('activity:created', activityData);
   }
 
   async flush(): Promise<void> {
