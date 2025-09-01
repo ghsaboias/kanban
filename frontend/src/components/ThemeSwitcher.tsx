@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useTheme } from '../theme/ThemeProvider'
 import { THEMES, generateVariants, type Theme, type Variant } from '../theme/themes'
+import { useTheme } from '../theme/useTheme'
 
 type Level = {
   title: string
@@ -138,7 +138,7 @@ export function ThemeSwitcher() {
                       padding: '6px 8px',
                       cursor: 'pointer'
                     }}>Apply</button>
-                    <button onClick={() => setStack(s => [...s, { title: `Explore: ${t.name}` , base: t, variants: generateVariants(t) }])} style={{
+                    <button onClick={() => setStack(s => [...s, { title: `Explore: ${t.name}`, base: t, variants: generateVariants(t) }])} style={{
                       backgroundColor: theme.surfaceAlt,
                       color: theme.textSecondary,
                       border: `1px solid ${theme.border}`,

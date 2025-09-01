@@ -4,7 +4,6 @@ import { RichTextEditor } from './RichTextEditor'
 import { hasContent, extractImages } from '../utils/html'
 import { useApi } from '../useApi'
 import type { ApiResponse } from '../types/api'
-import { useTheme } from '../theme/ThemeProvider'
 
 interface CardData {
   id: string
@@ -38,9 +37,13 @@ const priorityLabels = {
   LOW: 'Baixa'
 }
 
+const priorityColors = {
+  HIGH: '#ff6b6b',
+  MEDIUM: '#ffd93d',
+  LOW: '#6bcf7f'
+}
 
 export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDetailModalProps) {
-  const { theme } = useTheme()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(false)
   // Local visibility state to enable entry transition without parent rAF
@@ -91,11 +94,7 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
         }
       })
       .catch((err: unknown) => console.error('Error loading users:', err))
-<<<<<<< HEAD
-  }, [])
-=======
   }, [apiFetch])
->>>>>>> master
 
   useEffect(() => {
     if (isOpen) {
@@ -191,7 +190,7 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
         style={{
           width: 'min(400px, 100vw)',
           height: '100vh',
-          backgroundColor: theme.surface,
+          backgroundColor: 'white',
           boxShadow: '-2px 0 10px rgba(0, 0, 0, 0.1)',
           transform: visible ? 'translateX(0)' : 'translateX(100%)',
           transition: 'transform 200ms ease',
@@ -206,7 +205,7 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
         {/* Header */}
         <div style={{
           padding: '20px',
-          borderBottom: `1px solid ${theme.border}`,
+          borderBottom: '1px solid #e1e1e1',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between'
@@ -221,7 +220,7 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
               outline: 'none',
               fontSize: '20px',
               fontWeight: '600',
-              color: theme.textSecondary,
+              color: '#333',
               background: 'transparent',
               flex: 1,
               marginRight: '16px',
@@ -239,7 +238,7 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
               background: 'none',
               border: 'none',
               fontSize: '24px',
-              color: theme.textMuted,
+              color: '#666',
               cursor: 'pointer',
               padding: '4px',
               borderRadius: '4px',
@@ -248,7 +247,7 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
               justifyContent: 'center'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = theme.surfaceAlt
+              e.currentTarget.style.backgroundColor = '#f0f0f0'
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent'
@@ -281,12 +280,12 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
                 width: '16px',
                 height: '16px',
                 borderRadius: '50%',
-                backgroundColor: theme.priority[formData.priority]
+                backgroundColor: priorityColors[formData.priority]
               }}></div>
               <span style={{
                 fontSize: '14px',
                 fontWeight: '500',
-                color: theme.textMuted
+                color: '#666'
               }}>Status</span>
             </div>
             <select
@@ -295,11 +294,11 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
               style={{
                 width: '100%',
                 padding: '8px 12px',
-                border: `1px solid ${theme.border}`,
+                border: '1px solid #cbd5e1',
                 borderRadius: '6px',
                 fontSize: '14px',
-                backgroundColor: theme.inputBg,
-                color: theme.textPrimary,
+                backgroundColor: 'white',
+                color: '#111827',
                 cursor: 'pointer',
                 boxSizing: 'border-box',
                 maxWidth: '100%'
@@ -326,12 +325,12 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: '12px',
-                color: theme.textMuted
+                color: '#666'
               }}>👤</div>
               <span style={{
                 fontSize: '14px',
                 fontWeight: '500',
-                color: theme.textMuted
+                color: '#666'
               }}>Assign</span>
             </div>
             <select
@@ -340,11 +339,11 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
               style={{
                 width: '100%',
                 padding: '8px 12px',
-                border: `1px solid ${theme.border}`,
+                border: '1px solid #cbd5e1',
                 borderRadius: '6px',
                 fontSize: '14px',
-                backgroundColor: theme.inputBg,
-                color: theme.textPrimary,
+                backgroundColor: 'white',
+                color: '#111827',
                 cursor: 'pointer',
                 boxSizing: 'border-box',
                 maxWidth: '100%'
@@ -372,7 +371,7 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: '12px',
-                color: theme.textMuted
+                color: '#666'
               }}>📝</div>
               <span style={{
                 fontSize: '14px',
@@ -509,7 +508,7 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
         {hasChanges() && (
           <div style={{
             padding: '16px 20px',
-            borderTop: `1px solid ${theme.border}`,
+            borderTop: '1px solid #e1e1e1',
             display: 'flex',
             gap: '12px',
             justifyContent: 'flex-end'
@@ -518,10 +517,10 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
               onClick={onClose}
               style={{
                 padding: '8px 16px',
-                border: `1px solid ${theme.border}`,
+                border: '1px solid #e1e1e1',
                 borderRadius: '6px',
-                backgroundColor: theme.card,
-                color: theme.textMuted,
+                backgroundColor: 'white',
+                color: '#666',
                 cursor: 'pointer',
                 fontSize: '14px'
               }}
@@ -535,8 +534,8 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
                 padding: '8px 16px',
                 border: 'none',
                 borderRadius: '6px',
-                backgroundColor: loading ? theme.muted : theme.accent,
-                color: theme.accentText,
+                backgroundColor: loading ? '#999' : '#007bff',
+                color: 'white',
                 cursor: loading ? 'not-allowed' : 'pointer',
                 fontSize: '14px'
               }}

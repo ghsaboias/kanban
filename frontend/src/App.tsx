@@ -1,12 +1,12 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { BoardsList } from './components/BoardsList'
-import { BoardPage } from './components/BoardPage'
-import { SocketProvider } from './contexts/SocketContext'
+import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/clerk-react'
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom'
 import './App.css'
-import { useTheme } from './theme/ThemeProvider'
+import { BoardPage } from './components/BoardPage'
+import { BoardsList } from './components/BoardsList'
 import { ThemeSwitcher } from './components/ThemeSwitcher'
 import { UISwitcher } from './components/UISwitcher'
-import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/clerk-react'
+import { SocketProvider } from './contexts/SocketContext'
+import { useTheme } from './theme/useTheme'
 
 function App() {
   const { theme } = useTheme()
@@ -34,7 +34,7 @@ function App() {
             </SignedIn>
           </div>
         </header>
-        
+
         <SignedOut>
           <div style={{ padding: '24px' }}>
             <p style={{ color: theme.textPrimary }}>Please sign in to continue.</p>

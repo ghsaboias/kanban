@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { toPlainText, truncate, extractImages } from '../utils/html'
+import { useTheme } from '../theme/useTheme'
 import { useApi } from '../useApi'
-import { useTheme } from '../theme/ThemeProvider'
+import { extractImages, toPlainText, truncate } from '../utils/html'
 
 interface CardData {
   id: string
@@ -26,7 +26,7 @@ interface CardProps {
 
 const priorityLabels = {
   HIGH: 'Alta',
-  MEDIUM: 'Média', 
+  MEDIUM: 'Média',
   LOW: 'Baixa'
 }
 
@@ -65,7 +65,7 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
   }
 
   return (
-    <div 
+    <div
       style={{
         backgroundColor: theme.card,
         border: `1px solid ${theme.border}`,
@@ -148,9 +148,9 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
       </button>
 
       <div style={{ marginBottom: '8px' }}>
-        <h4 style={{ 
-          margin: 0, 
-          fontSize: '14px', 
+        <h4 style={{
+          margin: 0,
+          fontSize: '14px',
           fontWeight: '600',
           color: theme.textSecondary,
           paddingRight: '20px'
@@ -158,35 +158,35 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
           {card.title}
         </h4>
       </div>
-      
+
       {card.description && (
-        <p style={{ 
-          margin: '0 0 8px 0', 
-          fontSize: '12px', 
+        <p style={{
+          margin: '0 0 8px 0',
+          fontSize: '12px',
           color: theme.textSecondary,
           lineHeight: '1.4'
         }}>
           {truncate(toPlainText(card.description || ''), 100)}
         </p>
       )}
-      
+
       {/* Images Section in Card */}
       {(() => {
         const images = extractImages(card.description || '')
         if (images.length === 0) return null
-        
+
         return (
           <div style={{ marginBottom: '8px' }}>
-            <span style={{ 
-              fontSize: '10px', 
-              color: theme.textMuted, 
-              display: 'block', 
-              marginBottom: '4px' 
+            <span style={{
+              fontSize: '10px',
+              color: theme.textMuted,
+              display: 'block',
+              marginBottom: '4px'
             }}>Images ({images.length})</span>
-            <div style={{ 
-              display: 'flex', 
-              gap: '4px', 
-              flexWrap: 'wrap' 
+            <div style={{
+              display: 'flex',
+              gap: '4px',
+              flexWrap: 'wrap'
             }}>
               {images.slice(0, 3).map((src, index) => (
                 <div
@@ -231,10 +231,10 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
           </div>
         )
       })()}
-      
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
+
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'center',
         marginTop: '8px'
       }}>
@@ -251,10 +251,10 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
           <span>{priorityLabels[card.priority]}</span>
           <span style={{ marginLeft: '4px' }}>{card.priority}</span>
         </span>
-        
+
         {card.assignee && (
           <div style={{
-            fontSize: '10px', 
+            fontSize: '10px',
             color: theme.textSecondary,
             backgroundColor: theme.surfaceAlt,
             padding: '2px 6px',

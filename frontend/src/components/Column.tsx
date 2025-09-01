@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useDroppable } from '@dnd-kit/core'
-import { SortableCard } from './SortableCard'
-import { useApi } from '../useApi'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { useEffect, useState } from 'react'
+import { useTheme } from '../theme/useTheme'
 import type { ApiResponse } from '../types/api'
-import { useTheme } from '../theme/ThemeProvider'
+import { useApi } from '../useApi'
+import { SortableCard } from './SortableCard'
 
 interface CardData {
   id: string
@@ -168,7 +168,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
     }
   }
   return (
-    <div data-testid={`column-${column.id}`} style={{ 
+    <div data-testid={`column-${column.id}`} style={{
       minWidth: '300px',
       backgroundColor: theme.surfaceAlt,
       borderRadius: '8px',
@@ -177,8 +177,8 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
       flexDirection: 'column',
       gap: '12px'
     }}>
-      <div style={{ 
-        display: 'flex', 
+      <div style={{
+        display: 'flex',
         alignItems: 'center',
         marginBottom: '8px'
       }}>
@@ -216,10 +216,10 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
             aria-label="Edit column title"
           />
         ) : (
-          <h3 
-            style={{ 
-              margin: 0, 
-              fontSize: '16px', 
+          <h3
+            style={{
+              margin: 0,
+              fontSize: '16px',
               fontWeight: 600,
               lineHeight: '24px',
               height: '24px',
@@ -324,14 +324,14 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
           </button>
         </div>
       </div>
-      
+
       <div ref={setDroppableNodeRef} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <SortableContext items={column.cards.map(c => `card-${c.id}`)} strategy={verticalListSortingStrategy}>
           {column.cards
             .sort((a, b) => a.position - b.position)
             .map(card => (
-              <SortableCard 
-                key={card.id} 
+              <SortableCard
+                key={card.id}
                 card={card}
                 onCardUpdated={onCardUpdated}
                 onCardDeleted={onCardDeleted}
@@ -339,11 +339,11 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
               />
             ))}
         </SortableContext>
-        
+
         {column.cards.length === 0 && !showCreateCard && (
-          <div style={{ 
-            padding: '20px', 
-            textAlign: 'center', 
+          <div style={{
+            padding: '20px',
+            textAlign: 'center',
             color: theme.textSecondary,
             fontStyle: 'italic'
           }}>
@@ -352,7 +352,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
         )}
 
         {showCreateCard && (
-          <div 
+          <div
             style={{
               backgroundColor: theme.card,
               border: `1px solid ${theme.border}`,
@@ -525,11 +525,11 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
             }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLButtonElement).style.borderColor = theme.accent
-              ;(e.currentTarget as HTMLButtonElement).style.color = theme.accent
+                ; (e.currentTarget as HTMLButtonElement).style.color = theme.accent
             }}
             onMouseLeave={(e) => {
               (e.currentTarget as HTMLButtonElement).style.borderColor = theme.border
-              ;(e.currentTarget as HTMLButtonElement).style.color = theme.textMuted
+                ; (e.currentTarget as HTMLButtonElement).style.color = theme.textMuted
             }}
           >
             + Add a card

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useTheme } from '../theme/ThemeProvider'
-import { useUI } from '../ui/UIProvider'
+import { useTheme } from '../theme/useTheme'
+import { useUI } from '../ui/useUI'
 
 export function UISwitcher() {
   const { theme } = useTheme()

@@ -5,7 +5,7 @@ import { Board, type BoardData } from './Board';
 import { useApi } from '../useApi';
 import { useRealtimeBoard } from '../hooks/useRealtimeBoard';
 import type { Activity, ActivityFeedData, ApiResponse } from '../types/api';
-import { useTheme } from '../theme/ThemeProvider';
+import { useTheme } from '../theme/useTheme';
 
 export function BoardPage() {
   const { id } = useParams<{ id: string }>();
