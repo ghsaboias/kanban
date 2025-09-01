@@ -5,6 +5,7 @@ import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { ActivityLogger } from '../services/activityLogger';
 import { toPriority } from '../utils/priority';
 import { CreateColumnRequest, ReorderColumnRequest, UpdateColumnRequest } from '../types/api';
+import { broadcastToRoom } from '../utils/socketBroadcaster';
 
 const router = Router();
 
@@ -95,12 +96,13 @@ router.post('/boards/:boardId/columns', asyncHandler(async (req: Request, res: R
       cards: []
     }
   };
-  {
-    const initiator = req.get('x-socket-id') || undefined;
-    const room = `board-${boardId}`;
-    const broadcaster = initiator ? global.io.to(room).except(initiator) : global.io.to(room);
-    broadcaster.emit('column:created', columnCreatedEvent);
-  }
+  // Broadcast real-time event
+  broadcastToRoom(
+    `board-${boardId}`,
+    'column:created',
+    columnCreatedEvent,
+    req.get('x-socket-id') || undefined
+  );
 
   res.status(201).json({
     success: true,
@@ -255,12 +257,13 @@ router.put('/columns/:id', asyncHandler(async (req: Request, res: Response) => {
       }))
     }
   };
-  {
-    const initiator = req.get('x-socket-id') || undefined;
-    const room = `board-${existingColumn.boardId}`;
-    const broadcaster = initiator ? global.io.to(room).except(initiator) : global.io.to(room);
-    broadcaster.emit('column:updated', columnUpdatedEvent);
-  }
+  // Broadcast real-time event
+  broadcastToRoom(
+    `board-${existingColumn.boardId}`,
+    'column:updated',
+    columnUpdatedEvent,
+    req.get('x-socket-id') || undefined
+  );
 
   res.json({
     success: true,
@@ -333,12 +336,13 @@ router.delete('/columns/:id', asyncHandler(async (req: Request, res: Response) =
     boardId: existingColumn.boardId,
     columnId: id
   };
-  {
-    const initiator = req.get('x-socket-id') || undefined;
-    const room = `board-${existingColumn.boardId}`;
-    const broadcaster = initiator ? global.io.to(room).except(initiator) : global.io.to(room);
-    broadcaster.emit('column:deleted', columnDeletedEvent);
-  }
+  // Broadcast real-time event
+  broadcastToRoom(
+    `board-${existingColumn.boardId}`,
+    'column:deleted',
+    columnDeletedEvent,
+    req.get('x-socket-id') || undefined
+  );
 
   res.json({
     success: true,
@@ -448,12 +452,13 @@ router.post('/columns/:id/reorder', asyncHandler(async (req: Request, res: Respo
       cards: []
     }
   };
-  {
-    const initiator = req.get('x-socket-id') || undefined;
-    const room = `board-${boardId}`;
-    const broadcaster = initiator ? global.io.to(room).except(initiator) : global.io.to(room);
-    broadcaster.emit('column:reordered', columnReorderedEvent);
-  }
+  // Broadcast real-time event
+  broadcastToRoom(
+    `board-${boardId}`,
+    'column:reordered',
+    columnReorderedEvent,
+    req.get('x-socket-id') || undefined
+  );
 
   res.json({
     success: true,

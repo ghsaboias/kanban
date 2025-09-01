@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../../generated/prisma';
+import { PrismaClient, Activity, User } from '../../../generated/prisma';
 
 export interface ActivityLogRequest {
   entityType: 'BOARD' | 'COLUMN' | 'CARD';
@@ -12,6 +12,10 @@ export interface ActivityLogRequest {
   broadcastRealtime?: boolean;
   initiatorSocketId?: string;
 }
+
+type ActivityWithUser = Activity & {
+  user: User | null;
+};
 
 interface ActivityLoggerOptions {
   batchSize?: number;
@@ -214,10 +218,10 @@ export class ActivityLogger {
     return false; // Temporarily disabled to ensure all actions broadcast
   }
 
-  private broadcastActivity(activity: unknown, request: ActivityLogRequest): void {
+  private broadcastActivity(activity: ActivityWithUser, request: ActivityLogRequest): void {
     // Get the io instance dynamically to avoid initialization order issues
-    const io = (global as { io?: unknown }).io;
-    if (!io) {
+    const io = global.io;
+    if (!io || typeof io.to !== 'function') {
       return;
     }
 

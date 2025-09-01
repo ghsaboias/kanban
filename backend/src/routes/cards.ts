@@ -6,6 +6,7 @@ import { ActivityLogger } from '../services/activityLogger';
 import { CreateCardRequest, MoveCardRequest, UpdateCardRequest } from '../types/api';
 import { sanitizeDescription } from '../utils/sanitize';
 import { toPriority } from '../utils/priority';
+import { broadcastToRoom } from '../utils/socketBroadcaster';
 
 const router = Router();
 
@@ -124,12 +125,13 @@ router.post('/columns/:columnId/cards', asyncHandler(async (req: Request, res: R
     },
     columnId: card.columnId
   };
-  {
-    const initiator = req.get('x-socket-id') || undefined;
-    const room = `board-${card.column.boardId}`;
-    const broadcaster = initiator ? global.io.to(room).except(initiator) : global.io.to(room);
-    broadcaster.emit('card:created', cardCreatedEvent);
-  }
+  // Broadcast real-time event
+  broadcastToRoom(
+    `board-${card.column.boardId}`,
+    'card:created',
+    cardCreatedEvent,
+    req.get('x-socket-id') || undefined
+  );
 
   res.status(201).json({
     success: true,
@@ -354,12 +356,13 @@ router.put('/cards/:id', asyncHandler(async (req: Request, res: Response) => {
       assignee: card.assignee
     }
   };
-  {
-    const initiator = req.get('x-socket-id') || undefined;
-    const room = `board-${card.column.boardId}`;
-    const broadcaster = initiator ? global.io.to(room).except(initiator) : global.io.to(room);
-    broadcaster.emit('card:updated', cardUpdatedEvent);
-  }
+  // Broadcast real-time event
+  broadcastToRoom(
+    `board-${card.column.boardId}`,
+    'card:updated',
+    cardUpdatedEvent,
+    req.get('x-socket-id') || undefined
+  );
 
   res.json({
     success: true,
@@ -439,12 +442,13 @@ router.delete('/cards/:id', asyncHandler(async (req: Request, res: Response) => 
     boardId: existingCard.column.boardId,
     cardId: id
   };
-  {
-    const initiator = req.get('x-socket-id') || undefined;
-    const room = `board-${existingCard.column.boardId}`;
-    const broadcaster = initiator ? global.io.to(room).except(initiator) : global.io.to(room);
-    broadcaster.emit('card:deleted', cardDeletedEvent);
-  }
+  // Broadcast real-time event
+  broadcastToRoom(
+    `board-${existingCard.column.boardId}`,
+    'card:deleted',
+    cardDeletedEvent,
+    req.get('x-socket-id') || undefined
+  );
 
   res.json({
     success: true,
@@ -695,12 +699,13 @@ router.post('/cards/:id/move', asyncHandler(async (req: Request, res: Response) 
     toColumnId: columnId,
     position
   };
-  {
-    const initiator = req.get('x-socket-id') || undefined;
-    const room = `board-${card.column.boardId}`;
-    const broadcaster = initiator ? global.io.to(room).except(initiator) : global.io.to(room);
-    broadcaster.emit('card:moved', cardMovedEvent);
-  }
+  // Broadcast real-time event
+  broadcastToRoom(
+    `board-${card.column.boardId}`,
+    'card:moved',
+    cardMovedEvent,
+    req.get('x-socket-id') || undefined
+  );
 
   res.json({
     success: true,
