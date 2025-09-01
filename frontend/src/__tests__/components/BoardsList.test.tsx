@@ -15,7 +15,7 @@ type TestBoard = {
 const mockApiFetch = vi.fn()
 
 vi.mock('../../useApi', () => ({
-  useApi: () => mockApiFetch
+  useApi: () => ({ apiFetch: mockApiFetch })
 }))
 
 describe('BoardsList', () => {
