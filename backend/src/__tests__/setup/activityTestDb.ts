@@ -22,11 +22,11 @@ export async function setupActivityTestDb() {
     console.debug('Failed to remove test database file:', error);
   }
   
-  // Push schema to test database
+  // Push schema to test database (pin Prisma v6 and correct schema path)
   const originalDbUrl = process.env.DATABASE_URL;
   process.env.DATABASE_URL = `file:${testDbPath}`;
-  execSync('npx prisma db push --force-reset --schema=../../../prisma/schema.prisma', { 
-    cwd: path.join(__dirname, '../../../'),
+  execSync('npx prisma@6.15.0 db push --force-reset --schema=prisma/schema.prisma', { 
+    cwd: path.join(__dirname, '../../..'),
     stdio: 'inherit'
   });
   
