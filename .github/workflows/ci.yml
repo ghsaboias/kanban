@@ -45,6 +45,9 @@ jobs:
           npx prisma@6.15.0 db push --schema prisma/schema.prisma --force-reset
           # Run backend tests from backend directory so dotenv paths resolve
           cd backend
+          export DATABASE_URL="file:../prisma/test.db"
+          # Ensure schema is applied relative to backend as well
+          npx prisma@6.15.0 db push --schema ../prisma/schema.prisma --force-reset
           npx jest
           # Run frontend tests as usual
           cd ..
