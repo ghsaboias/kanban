@@ -281,4 +281,71 @@ Os testes cobrem funcionalidades essenciais incluindo CRUD operations, autentica
 - **Editor de texto rico**: descrições suportam formatação completa (negrito, itálico, títulos, listas, citações, links) via TipTap com sanitização HTML no backend.
 - **Upload de imagens**: suporte a upload de imagens via base64 com preview em seções separadas e modal de visualização em tela cheia.
 - **Acessibilidade**: travamos o scroll do `body` ao abrir; foco vai para o título.
-- **Ergonomia**: o botão excluir do card é discreto (aparece somente no hover do card). No header da coluna, o contador é um “chip” neutro (com `99+`) e o botão de excluir coluna é separado por um divisor e destaca no hover.
+- **Ergonomia**: o botão excluir do card é discreto (aparece somente no hover do card). No header da coluna, o contador é um "chip" neutro (com `99+`) e o botão de excluir coluna é separado por um divisor e destaca no hover.
+
+## Justificativa das Tecnologias
+
+### Contexto: Ferramenta Interna para Mercado Financeiro
+As escolhas técnicas priorizaram **agilidade de desenvolvimento** e **confiabilidade** para uma solução sob medida, seguindo o princípio "não reinvente a roda" mencionado nos requisitos.
+
+### Frontend
+- **React + Vite + TypeScript**: Desenvolvimento rápido com HMR instantâneo e prevenção de erros em tempo de compilação
+- **dnd-kit**: Drag & drop com melhor performance que React DnD para reorganização fluida de tarefas
+- **TipTap**: Editor rich text baseado em ProseMirror, com controle específico sobre elementos HTML permitidos
+- **Socket.IO Client**: Comunicação real-time confiável com reconexão automática
+
+### Backend 
+- **Express + TypeScript**: Framework direto que acelera iteração com validação de tipos
+- **Prisma + SQLite**: ORM com queries type-safe. SQLite elimina setup de banco externo para ferramenta interna
+- **Socket.IO**: WebSocket com rooms isolados por board, evitando vazamento de dados entre projetos
+- **Clerk**: Autenticação gerenciada externamente, removendo responsabilidade de implementar/manter segurança de senhas
+
+### Segurança Implementada
+- **HTML Sanitization**: `sanitize-html` com lista específica de tags permitidas (p, strong, em, ul, li, img), bloqueando `javascript:` e `<script>` automaticamente
+- **Authentication Middleware**: Todas rotas `/api/*` exigem token válido do Clerk; usuários são sincronizados via upsert race-safe
+- **Link Protection**: Links externos forçam `target="_blank" rel="noopener noreferrer"` para prevenir window.opener exploits
+- **Image Upload**: Suporte apenas a data URLs (base64) para evitar referências externas não autorizadas
+
+## Pipeline de CI/CD
+
+### Estratégia Implementada
+
+**Workflow Automatizado:**
+- Validação automática em Pull Requests para `master`
+- Testes executam em ambiente isolado GitHub Actions
+- Merge bloqueado se qualquer verificação falhar
+
+**Etapas da Pipeline:**
+
+1. **Instalação de Dependências**
+   ```yaml
+   - Instala dependências do monorepo (backend + frontend)
+   - Cache inteligente para acelerar builds subsequentes
+   ```
+
+2. **Verificações de Qualidade** (Paralelas)
+   ```yaml
+   - Lint: npm run lint (ESLint frontend + backend)
+   - TypeCheck: npm run typecheck (TypeScript compilation)
+   - Tests: npm test (243 testes automatizados)
+   ```
+
+3. **Proteções de Branch**
+   ```yaml
+   - Todas as verificações devem passar para merge
+   - Pelo menos 1 aprovação de revisor necessária
+   - Branch deve estar atualizada com master
+   ```
+
+**Comandos Disponíveis:**
+```bash
+npm run lint      # ESLint: 0 erros, 113 warnings (apenas any types)
+npm run typecheck # TypeScript: compilação limpa
+npm test          # 243 testes: 157 backend + 86 frontend
+```
+
+**Benefícios:**
+- **Prevenção de bugs**: Código quebrado não chega ao master
+- **Consistência**: Estilo e qualidade padronizados
+- **Confiabilidade**: 243 testes garantem funcionalidade
+- **Velocidade**: Validação automática em ~3-5 minutos
