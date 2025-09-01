@@ -2,11 +2,41 @@ import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Board } from '../../components/Board';
 
-let mockedBoardData: any = null;
+interface MockBoardData {
+  id: string;
+  title: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+  columns: Array<{
+    id: string;
+    title: string;
+    position: number;
+    boardId: string;
+    createdAt: string;
+    updatedAt: string;
+    cards: Array<{
+      id: string;
+      title: string;
+      description: string;
+      priority: 'LOW' | 'MEDIUM' | 'HIGH';
+      position: number;
+      columnId: string;
+      assigneeId: string | null;
+      createdById: string;
+      createdAt: string;
+      updatedAt: string;
+      assignee: { id: string; name: string; email: string } | null;
+      createdBy: { id: string; name: string; email: string };
+    }>;
+  }>;
+}
+
+let mockedBoardData: MockBoardData | null = null;
 
 // Mock all dependencies to isolate performance testing
 vi.mock('@dnd-kit/core', () => ({
-  DndContext: ({ children }: { children: any }) => <div data-testid="dnd-context">{children}</div>,
+  DndContext: ({ children }: { children: React.ReactNode }) => <div data-testid="dnd-context">{children}</div>,
   DragOverlay: () => <div data-testid="drag-overlay" />,
   useSensor: vi.fn(),
   useSensors: vi.fn(() => []),
@@ -16,7 +46,7 @@ vi.mock('@dnd-kit/core', () => ({
 }));
 
 vi.mock('@dnd-kit/sortable', () => ({
-  SortableContext: ({ children }: { children: any }) => <div data-testid="sortable-context">{children}</div>,
+  SortableContext: ({ children }: { children: React.ReactNode }) => <div data-testid="sortable-context">{children}</div>,
   horizontalListSortingStrategy: 'horizontal',
   verticalListSortingStrategy: 'vertical',
   useSortable: () => ({
@@ -27,7 +57,7 @@ vi.mock('@dnd-kit/sortable', () => ({
     transition: null,
     isDragging: false,
   }),
-  arrayMove: (array: any[], oldIndex: number, newIndex: number) => {
+  arrayMove: (array: unknown[], oldIndex: number, newIndex: number): unknown[] => {
     const result = [...array];
     const [removed] = result.splice(oldIndex, 1);
     result.splice(newIndex, 0, removed);
@@ -119,7 +149,7 @@ describe('Board Performance Tests', () => {
     const board = generateBoard(3, 5);
     const mockSetBoard = vi.fn();
     const isConnected = true;
-    const onlineUsers: Array<{ userId: string; user: any }> = [];
+    const onlineUsers: Array<{ userId: string; user: { id: string; name: string; email: string } }> = [];
     
     const startTime = performance.now();
     mockedBoardData = board;
@@ -149,7 +179,7 @@ describe('Board Performance Tests', () => {
     const board = generateBoard(5, 10);
     const mockSetBoard = vi.fn();
     const isConnected = true;
-    const onlineUsers: Array<{ userId: string; user: any }> = [];
+    const onlineUsers: Array<{ userId: string; user: { id: string; name: string; email: string } }> = [];
     
     const startTime = performance.now();
     mockedBoardData = board;
@@ -177,7 +207,7 @@ describe('Board Performance Tests', () => {
     const board = generateBoard(10, 20);
     const mockSetBoard = vi.fn();
     const isConnected = true;
-    const onlineUsers: Array<{ userId: string; user: any }> = [];
+    const onlineUsers: Array<{ userId: string; user: { id: string; name: string; email: string } }> = [];
     
     const startTime = performance.now();
     mockedBoardData = board;
@@ -205,7 +235,7 @@ describe('Board Performance Tests', () => {
     const board = generateBoard(15, 50);
     const mockSetBoard = vi.fn();
     const isConnected = true;
-    const onlineUsers: Array<{ userId: string; user: any }> = [];
+    const onlineUsers: Array<{ userId: string; user: { id: string; name: string; email: string } }> = [];
     
     const startTime = performance.now();
     mockedBoardData = board;
@@ -233,7 +263,7 @@ describe('Board Performance Tests', () => {
     const board = generateBoard(5, 10);
     const mockSetBoard = vi.fn();
     const isConnected = true;
-    const onlineUsers: Array<{ userId: string; user: any }> = [];
+    const onlineUsers: Array<{ userId: string; user: { id: string; name: string; email: string } }> = [];
     
     const renderTimes: number[] = [];
     
@@ -294,7 +324,7 @@ describe('Board Performance Tests', () => {
     
     const mockSetBoard = vi.fn();
     const isConnected = true;
-    const onlineUsers: Array<{ userId: string; user: any }> = [];
+    const onlineUsers: Array<{ userId: string; user: { id: string; name: string; email: string } }> = [];
     
     const startTime = performance.now();
     mockedBoardData = board;

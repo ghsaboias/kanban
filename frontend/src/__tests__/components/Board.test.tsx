@@ -13,17 +13,17 @@ vi.mock('../../useApi', () => ({
 
 // Mock drag and drop library
 vi.mock('@dnd-kit/core', () => ({
-  DndContext: ({ children }: any) => <div data-testid="dnd-context">{children}</div>,
-  DragOverlay: ({ children }: any) => <div data-testid="drag-overlay">{children}</div>,
+  DndContext: ({ children }: { children: React.ReactNode }) => <div data-testid="dnd-context">{children}</div>,
+  DragOverlay: ({ children }: { children?: React.ReactNode }) => <div data-testid="drag-overlay">{children}</div>,
   useSensor: vi.fn(),
   useSensors: vi.fn(() => []),
   PointerSensor: vi.fn(),
   closestCenter: vi.fn(),
-  useDroppable: () => ({ setNodeRef: () => {} }),
+  useDroppable: () => ({ setNodeRef: () => {} } as const),
 }));
 
 vi.mock('@dnd-kit/sortable', () => ({
-  SortableContext: ({ children }: any) => <div data-testid="sortable-context">{children}</div>,
+  SortableContext: ({ children }: { children: React.ReactNode }) => <div data-testid="sortable-context">{children}</div>,
   horizontalListSortingStrategy: 'horizontal',
   verticalListSortingStrategy: 'vertical',
   useSortable: () => ({
@@ -68,7 +68,7 @@ const mockBoard = {
           id: 'card-1',
           title: 'Test Card 1',
           description: 'Test Description 1',
-          priority: 'HIGH',
+          priority: 'HIGH' as const,
           position: 0,
           columnId: 'column-1',
           createdAt: '2023-01-01T00:00:00Z',
@@ -83,7 +83,7 @@ const mockBoard = {
           id: 'card-2',
           title: 'Test Card 2',
           description: null,
-          priority: 'MEDIUM',
+          priority: 'MEDIUM' as const,
           position: 1,
           columnId: 'column-1',
           createdAt: '2023-01-01T00:00:00Z',
@@ -104,10 +104,10 @@ const mockBoard = {
   ],
 };
 
-const renderBoard = (board: any = mockBoard) => {
+const renderBoard = (board = mockBoard) => {
   const mockSetBoard = vi.fn();
   const isConnected = true;
-  const onlineUsers: Array<{ userId: string; user: any }> = [];
+  const onlineUsers: Array<{ userId: string; user: { id: string; name: string; email: string } }> = [];
   
   return render(
     <BrowserRouter>
@@ -310,7 +310,7 @@ describe('Board Component', () => {
     
     const mockSetBoard = vi.fn();
     const isConnected = true;
-    const onlineUsers: Array<{ userId: string; user: any }> = [];
+    const onlineUsers: Array<{ userId: string; user: { id: string; name: string; email: string } }> = [];
     
     rerender(
       <BrowserRouter>

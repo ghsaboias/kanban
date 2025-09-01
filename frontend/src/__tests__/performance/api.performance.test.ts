@@ -4,7 +4,7 @@ import { api } from '../../api';
 // Mock fetch globally
 global.fetch = vi.fn();
 
-const mockFetch = global.fetch as any;
+const mockFetch = global.fetch as ReturnType<typeof vi.fn>;
 
 describe('API Performance Tests', () => {
   beforeEach(() => {

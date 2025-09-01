@@ -26,7 +26,7 @@ interface BoardData {
 
 export const useRealtimeBoard = (
   boardId: string,
-  initialBoard: BoardData | null,
+  _initialBoard: BoardData | null,
   initialActivities: Activity[],
   setBoard: React.Dispatch<React.SetStateAction<BoardData | null>>
 ) => {

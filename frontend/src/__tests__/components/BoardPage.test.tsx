@@ -6,7 +6,7 @@ import { SocketProvider } from '../../contexts/SocketContext'
 
 // Mock the Board component used inside BoardPage to avoid deep rendering
 vi.mock('../../components/Board', () => ({
-  Board: ({ board }: any) => <div>Board Component (id: {board?.id})</div>
+  Board: ({ board }: { board?: { id: string } | null }) => <div>Board Component (id: {board?.id})</div>
 }))
 
 // Mock useApi hook
