@@ -33,6 +33,16 @@ backend/.env*
 prisma/*.db*
 prisma/**/*.db*
 
+# Prisma test artifacts and temp files
+prisma/test-dbs/
+prisma/:memory:
+
+# Shared package build outputs and stray artifacts
+shared/dist/
+shared/*.js
+shared/*.d.ts
+shared/*.map
+
 PRD_TASKS.md
 
 # Test coverage and reports
