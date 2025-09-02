@@ -5,6 +5,7 @@ import App from './App.tsx'
 import { ClerkProvider } from '@clerk/clerk-react'
 import { ThemeProvider } from './theme/ThemeProvider'
 import { UIProvider } from './ui/UIProvider'
+import { ToastProvider } from './ui/ToastProvider'
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined
 if (!PUBLISHABLE_KEY) {
@@ -16,7 +17,9 @@ createRoot(document.getElementById('root')!).render(
     <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
       <ThemeProvider>
         <UIProvider>
-          <App />
+          <ToastProvider>
+            <App />
+          </ToastProvider>
         </UIProvider>
       </ThemeProvider>
     </ClerkProvider>

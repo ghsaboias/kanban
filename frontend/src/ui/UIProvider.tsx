@@ -16,6 +16,7 @@ const UI_PROFILES: UIProfile[] = [
   { key: 'default', name: 'Default', description: 'Current theme values', rounding: 'rounded', elevation: 'elevated' },
   { key: 'sharp-flat', name: 'Sharp • Flat', description: 'Square corners, no shadows', rounding: 'sharp', elevation: 'flat' },
   { key: 'soft-elevated', name: 'Soft • Elevated', description: 'Softer corners, subtle elevation', rounding: 'soft', elevation: 'elevated' },
+  { key: 'modern-kanban', name: 'Modern Kanban', description: 'Clean, professional kanban board design', rounding: 'rounded', elevation: 'elevated' },
 ]
 
 type UIContextValue = {
@@ -60,6 +61,35 @@ function applyProfileToTheme(profile: UIProfile) {
         shadow: profile.elevation === 'flat'
           ? { sm: 'none', md: 'none', lg: 'none' }
           : { sm: '0 1px 3px rgba(0,0,0,0.1)', md: '0 2px 8px rgba(0,0,0,0.12)', lg: '0 12px 32px rgba(0,0,0,0.2)' }
+      }
+    }
+
+    // Modern Kanban profile gets special theme overrides
+    if (profile.key === 'modern-kanban') {
+      return {
+        ...t,
+        name: 'Modern Kanban',
+        background: '#f6f8fa',
+        surface: '#ffffff',
+        surfaceAlt: '#f6f8fa',
+        card: '#ffffff',
+        border: '#e1e8ed',
+        textPrimary: '#1c2025',
+        textSecondary: '#495057',
+        textMuted: '#6c757d',
+        accent: '#007AFF',
+        accentHover: '#0056CC',
+        accentText: '#ffffff',
+        muted: '#8e959d',
+        inputBg: '#ffffff',
+        overlay: 'rgba(0,0,0,0.15)',
+        priority: { HIGH: '#ff3b30', MEDIUM: '#ff9500', LOW: '#34c759' },
+        radius: { sm: '6px', md: '8px', lg: '12px' },
+        shadow: { 
+          sm: '0 1px 3px rgba(0,0,0,0.08)', 
+          md: '0 2px 8px rgba(0,0,0,0.10)', 
+          lg: '0 4px 20px rgba(0,0,0,0.15)' 
+        }
       }
     }
 

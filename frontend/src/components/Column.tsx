@@ -168,15 +168,19 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
     }
   }
   return (
-    <div data-testid={`column-${column.id}`} style={{
-      minWidth: '300px',
-      backgroundColor: theme.surfaceAlt,
-      borderRadius: '8px',
-      padding: '16px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '12px'
-    }}>
+    <div
+      data-testid={`column-${column.id}`}
+      className="kanban-column-perf"
+      style={{
+        minWidth: '300px',
+        backgroundColor: theme.surfaceAlt,
+        borderRadius: '8px',
+        padding: '16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px'
+      }}
+    >
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -327,9 +331,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
 
       <div ref={setDroppableNodeRef} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <SortableContext items={column.cards.map(c => `card-${c.id}`)} strategy={verticalListSortingStrategy}>
-          {column.cards
-            .sort((a, b) => a.position - b.position)
-            .map(card => (
+          {column.cards.map(card => (
               <SortableCard
                 key={card.id}
                 card={card}
@@ -351,17 +353,17 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
           </div>
         )}
 
-        {showCreateCard && (
-          <div
-            style={{
-              backgroundColor: theme.card,
-              border: `1px solid ${theme.border}`,
-              borderRadius: '6px',
-              padding: '12px',
-              marginTop: '8px'
-            }}
-            onPointerDown={(e) => e.stopPropagation()}
-          >
+        <div style={{ marginTop: '8px', minHeight: showCreateCard ? 'auto' : '48px' }}>
+          {showCreateCard && (
+            <div
+              style={{
+                backgroundColor: theme.card,
+                border: `1px solid ${theme.border}`,
+                borderRadius: '6px',
+                padding: '12px'
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+            >
             <form onSubmit={handleCreateCard}>
               <div style={{ marginBottom: '12px' }}>
                 <input
@@ -504,10 +506,10 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                 </button>
               </div>
             </form>
-          </div>
-        )}
+            </div>
+          )}
 
-        {!showCreateCard && (
+          {!showCreateCard && (
           <button
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => setShowCreateCard(true)}
@@ -520,7 +522,6 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
               cursor: 'pointer',
               fontSize: '14px',
               color: theme.textMuted,
-              marginTop: '8px',
               transition: 'border-color 0.2s, color 0.2s'
             }}
             onMouseEnter={(e) => {
@@ -534,7 +535,8 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
           >
             + Add a card
           </button>
-        )}
+          )}
+        </div>
       </div>
     </div>
   )

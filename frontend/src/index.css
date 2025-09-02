@@ -71,6 +71,15 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+/* Kanban performance helpers */
+.kanban-column-perf {
+  /* Isolate layout/paint and avoid rendering offscreen columns */
+  contain: content;
+  content-visibility: auto;
+  /* Reserve a reasonable intrinsic size for offscreen columns */
+  contain-intrinsic-size: 300px auto;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;

@@ -117,7 +117,9 @@ export function BoardPage() {
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            transition: 'background-color 0.2s'
+            transition: 'background-color 0.2s',
+            width: '180px',
+            justifyContent: 'center'
           }}
         >
           <span>📊</span>
@@ -128,33 +130,35 @@ export function BoardPage() {
       {/* Main Content */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         {/* Board Area */}
-        <div style={{ flex: showActivityFeed ? '1 1 70%' : '1 1 100%', overflow: 'hidden', transition: 'flex 0.3s ease' }}>
+        <div style={{ flex: '1', minWidth: '0', overflow: 'hidden' }}>
           <Board 
             board={board} 
             setBoard={setBoard} 
             isConnected={isConnected} 
-            onlineUsers={onlineUsers} 
+            onlineUsers={onlineUsers}
+            isCompact={showActivityFeed}
           />
         </div>
 
         {/* Activity Feed Sidebar */}
-        {showActivityFeed && (
-          <div style={{
-            width: '400px',
-            flexShrink: 0,
-            backgroundColor: 'white',
-            borderLeft: '1px solid #e5e7eb',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden'
-          }}>
+        <div style={{
+          width: showActivityFeed ? '400px' : '0px',
+          flexShrink: 0,
+          backgroundColor: 'white',
+          borderLeft: showActivityFeed ? '1px solid #e5e7eb' : 'none',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          transition: 'width 0.3s ease'
+        }}>
+          {showActivityFeed && (
             <ActivityFeed
               activities={activities}
               boardTitle={board.title}
               isLoading={false} // Loading is handled by the page
             />
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   )

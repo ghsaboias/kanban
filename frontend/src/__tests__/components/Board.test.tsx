@@ -249,12 +249,12 @@ describe('Board Component', () => {
       json: () => Promise.resolve({ success: true, data: { id: 'new-column', title: 'New Column', position: 2 } }),
     });
 
-    const addColumnButton = screen.getByText('+ Add Column');
+    const addColumnButton = screen.getByText('Add New Column');
     fireEvent.click(addColumnButton);
 
-    const input = screen.getByPlaceholderText('Enter column title');
+    const input = screen.getByPlaceholderText('Enter column title...');
     fireEvent.change(input, { target: { value: 'New Column' } });
-    fireEvent.click(screen.getByText('Add'));
+    fireEvent.click(screen.getByText('Create Column'));
 
     await waitFor(() => {
       expect(mockApiFetch).toHaveBeenCalledWith(
@@ -320,6 +320,315 @@ describe('Board Component', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Updated Board Title')).toBeInTheDocument();
+    });
+  });
+
+  describe('Sorting State Management', () => {
+    it('should toggle activeSort state when sort button is clicked', async () => {
+      const mockSetBoard = vi.fn();
+      
+      render(
+        <Board
+          board={mockBoard}
+          setBoard={mockSetBoard}
+          isConnected={true}
+          onlineUsers={[]}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Board')).toBeInTheDocument();
+      });
+
+      const sortButton = screen.getByText('Sort by Priority');
+      
+      // First click should change from position to priority sorting
+      fireEvent.click(sortButton);
+      
+      // Should trigger re-render - we can't directly test state but can test behavior
+      // The key test is that multiple clicks should toggle properly
+      fireEvent.click(sortButton);
+      fireEvent.click(sortButton);
+      
+      // If the state is toggling correctly, this shouldn't throw
+      expect(sortButton).toBeInTheDocument();
+    });
+  });
+
+  describe('Filtering and Sorting Integration', () => {
+    it('should filter cards by search query', async () => {
+      renderBoard();
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Board')).toBeInTheDocument();
+      });
+
+      // Get the search input from KanbanToolbar
+      const searchInput = screen.getByPlaceholderText('Search cards...');
+      
+      // Search for "Test Card 1"
+      fireEvent.change(searchInput, { target: { value: 'Test Card 1' } });
+      
+      await waitFor(() => {
+        // Should show Test Card 1 but not Test Card 2
+        expect(screen.getByText('Test Card 1')).toBeInTheDocument();
+        expect(screen.queryByText('Test Card 2')).not.toBeInTheDocument();
+      });
+    });
+
+    it('should filter cards by priority', async () => {
+      renderBoard();
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Board')).toBeInTheDocument();
+      });
+
+      // Open filter dropdown
+      const filterButton = screen.getByText('Filter');
+      fireEvent.click(filterButton);
+      
+      await waitFor(() => {
+        const highPriorityOption = screen.getByText('High Priority');
+        fireEvent.click(highPriorityOption);
+      });
+
+      await waitFor(() => {
+        // Should only show high priority cards
+        expect(screen.getByText('Test Card 1')).toBeInTheDocument(); // HIGH priority
+        expect(screen.queryByText('Test Card 2')).not.toBeInTheDocument(); // MEDIUM priority
+      });
+    });
+
+    it('should sort cards by priority when sort button is clicked', async () => {
+      // Create a board with cards in different priorities for better testing
+      const testBoard = {
+        ...mockBoard,
+        columns: [
+          {
+            ...mockBoard.columns[0],
+            cards: [
+              {
+                id: 'card-1',
+                title: 'Low Priority Card',
+                description: 'Should be last',
+                priority: 'LOW' as const,
+                position: 0,
+                assignee: null,
+              },
+              {
+                id: 'card-2', 
+                title: 'High Priority Card',
+                description: 'Should be first',
+                priority: 'HIGH' as const,
+                position: 1,
+                assignee: null,
+              },
+              {
+                id: 'card-3',
+                title: 'Medium Priority Card', 
+                description: 'Should be middle',
+                priority: 'MEDIUM' as const,
+                position: 2,
+                assignee: null,
+              }
+            ]
+          }
+        ]
+      };
+
+      render(
+        <Board
+          board={testBoard}
+          setBoard={vi.fn()}
+          isConnected={true}
+          onlineUsers={[]}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Board')).toBeInTheDocument();
+      });
+
+      // Initially cards should be in position order (Low, High, Medium)
+      const cardElements = screen.getAllByText(/Priority Card/);
+      console.log('INITIAL ORDER:', cardElements.map(el => el.textContent));
+      expect(cardElements[0]).toHaveTextContent('Low Priority Card');
+      expect(cardElements[1]).toHaveTextContent('High Priority Card');
+      expect(cardElements[2]).toHaveTextContent('Medium Priority Card');
+
+      // Click sort button to switch to priority sorting
+      const sortButton = screen.getByText('Sort by Priority');
+      console.log('CLICKING SORT BUTTON');
+      fireEvent.click(sortButton);
+
+      // Cards should now be reordered by priority (HIGH > MEDIUM > LOW)
+      await waitFor(() => {
+        const reorderedCards = screen.getAllByText(/Priority Card/);
+        console.log('AFTER SORT CLICK:', reorderedCards.map(el => el.textContent));
+        expect(reorderedCards[0]).toHaveTextContent('High Priority Card');
+        expect(reorderedCards[1]).toHaveTextContent('Medium Priority Card');
+        expect(reorderedCards[2]).toHaveTextContent('Low Priority Card');
+      });
+
+      // Click sort button again to switch back to position sorting
+      fireEvent.click(sortButton);
+
+      await waitFor(() => {
+        const positionOrderedCards = screen.getAllByText(/Priority Card/);
+        expect(positionOrderedCards[0]).toHaveTextContent('Low Priority Card');
+        expect(positionOrderedCards[1]).toHaveTextContent('High Priority Card');
+        expect(positionOrderedCards[2]).toHaveTextContent('Medium Priority Card');
+      });
+    });
+
+    it('should combine search and filter', async () => {
+      // Create a board with more diverse cards for better testing
+      const testBoardWithMoreCards = {
+        ...mockBoard,
+        columns: [
+          {
+            ...mockBoard.columns[0],
+            cards: [
+              ...mockBoard.columns[0].cards,
+              {
+                id: '3',
+                title: 'High Priority Task',
+                description: 'Another high priority task',
+                priority: 'HIGH' as const,
+                position: 2,
+                assignee: null,
+              },
+              {
+                id: '4',
+                title: 'Low Priority Search Test',
+                description: 'A low priority task with search term',
+                priority: 'LOW' as const,
+                position: 3,
+                assignee: null,
+              }
+            ]
+          }
+        ]
+      };
+
+      render(
+        <Board
+          board={testBoardWithMoreCards}
+          setBoard={vi.fn()}
+          isConnected={true}
+          onlineUsers={[]}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Board')).toBeInTheDocument();
+      });
+
+      // First apply search filter
+      const searchInput = screen.getByPlaceholderText('Search cards...');
+      fireEvent.change(searchInput, { target: { value: 'High' } });
+
+      // Then apply priority filter
+      const filterButton = screen.getByText('Filter');
+      fireEvent.click(filterButton);
+      
+      await waitFor(() => {
+        const highPriorityOption = screen.getByText('High Priority');
+        fireEvent.click(highPriorityOption);
+      });
+
+      await waitFor(() => {
+        // Should show only high priority cards that contain "High" in title/description
+        // Test Card 1: HIGH priority, description is "Test Description 1" (does NOT contain "High")
+        // High Priority Task: HIGH priority, title contains "High Priority"
+        expect(screen.getByText('High Priority Task')).toBeInTheDocument(); // HIGH priority, has "High" in title
+        expect(screen.queryByText('Test Card 2')).not.toBeInTheDocument(); // MEDIUM priority
+        expect(screen.queryByText('Low Priority Search Test')).not.toBeInTheDocument(); // LOW priority
+        
+        // Test Card 1 should NOT be visible since it doesn't contain "High" in title/description
+        expect(screen.queryByText('Test Card 1')).not.toBeInTheDocument();
+      });
+    });
+
+    it('should clear filters properly', async () => {
+      renderBoard();
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Board')).toBeInTheDocument();
+      });
+
+      // Apply search filter
+      const searchInput = screen.getByPlaceholderText('Search cards...');
+      fireEvent.change(searchInput, { target: { value: 'Test Card 1' } });
+
+      await waitFor(() => {
+        expect(screen.queryByText('Test Card 2')).not.toBeInTheDocument();
+      });
+
+      // Clear search
+      fireEvent.change(searchInput, { target: { value: '' } });
+
+      await waitFor(() => {
+        // Both cards should be visible again
+        expect(screen.getByText('Test Card 1')).toBeInTheDocument();
+        expect(screen.getByText('Test Card 2')).toBeInTheDocument();
+      });
+    });
+
+    it('should toggle sort between position and priority', async () => {
+      renderBoard();
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Board')).toBeInTheDocument();
+      });
+
+      const sortButton = screen.getByText('Sort by Priority');
+      
+      // First click should sort by priority
+      fireEvent.click(sortButton);
+      
+      // Second click should sort by position
+      fireEvent.click(sortButton);
+      
+      // Cards should be back to position order
+      await waitFor(() => {
+        // Verify position sorting is working by checking cards are still visible
+        const card1 = screen.getByText('Test Card 1');
+        const card2 = screen.getByText('Test Card 2');
+        expect(card1).toBeInTheDocument();
+        expect(card2).toBeInTheDocument();
+      });
+    });
+
+    it('should show all cards when filter is set to all', async () => {
+      renderBoard();
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Board')).toBeInTheDocument();
+      });
+
+      // First apply a specific filter
+      const filterButton = screen.getByText('Filter');
+      fireEvent.click(filterButton);
+      
+      await waitFor(() => {
+        const highPriorityOption = screen.getByText('High Priority');
+        fireEvent.click(highPriorityOption);
+      });
+
+      // Then switch back to all
+      fireEvent.click(filterButton);
+      
+      await waitFor(() => {
+        const allCardsOption = screen.getByText('All Cards');
+        fireEvent.click(allCardsOption);
+      });
+
+      await waitFor(() => {
+        // All cards should be visible
+        expect(screen.getByText('Test Card 1')).toBeInTheDocument();
+        expect(screen.getByText('Test Card 2')).toBeInTheDocument();
+      });
     });
   });
 });

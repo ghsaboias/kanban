@@ -419,6 +419,8 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
                         <img
                           src={src}
                           alt={`Preview ${index + 1}`}
+                          loading="lazy"
+                          decoding="async"
                           style={{
                             width: '100%',
                             height: '100%',

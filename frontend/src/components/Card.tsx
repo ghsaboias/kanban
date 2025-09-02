@@ -74,7 +74,9 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
         cursor: 'pointer',
         boxShadow: theme.shadow?.sm || '0 1px 3px rgba(0,0,0,0.1)',
         transition: 'box-shadow 0.2s',
-        position: 'relative'
+        position: 'relative',
+        // Perf: keep paint work scoped to the card box
+        contain: 'paint'
       }}
       onClick={handleCardClick}
       onMouseEnter={(e) => {
@@ -203,6 +205,8 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
                   <img
                     src={src}
                     alt={`Preview ${index + 1}`}
+                    loading="lazy"
+                    decoding="async"
                     style={{
                       width: '100%',
                       height: '100%',
