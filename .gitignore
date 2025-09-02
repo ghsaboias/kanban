@@ -54,3 +54,5 @@ jest-results.json
 */jest-results.json
 vitest-out.json
 */vitest-out.json
+
+logs/

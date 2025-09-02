@@ -35,6 +35,7 @@ export function BoardsList() {
     execute: loadBoards,
     setError
   } = useAsyncOperation<Board[]>()
+  const [hasLoaded, setHasLoaded] = useState(false)
   
   // Use async operation hook for creating boards
   const {
@@ -78,6 +79,8 @@ export function BoardsList() {
     }
   }
 
+  const initializedRef = useRef(false)
+
   useEffect(() => {
     const fetchBoards = async () => {
       const response = await apiFetch('/api/boards')
@@ -85,13 +88,17 @@ export function BoardsList() {
       
       if (data.success) {
         setBoards(data.data)
+        setHasLoaded(true)
         return data.data
       } else {
         throw new Error(data.error || 'Failed to load boards')
       }
     }
     
-    loadBoards(fetchBoards)
+    if (!initializedRef.current) {
+      initializedRef.current = true
+      loadBoards(fetchBoards)
+    }
   }, [apiFetch, loadBoards])
 
   useEffect(() => {
@@ -212,7 +219,7 @@ export function BoardsList() {
     setShowCreateForm(true)
   }
 
-  if (loading) return <div>Loading boards...</div>
+  if (loading && !hasLoaded) return <div>Loading boards...</div>
   if (error) return <div>Error: {error}</div>
 
   return (

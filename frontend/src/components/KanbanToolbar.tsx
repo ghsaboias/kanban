@@ -58,6 +58,8 @@ export function KanbanToolbar({
   const { theme } = useTheme()
   const { apiFetch } = useApi()
   const [searchQuery, setSearchQuery] = useState('')
+  const rightRef = useRef<HTMLDivElement>(null)
+  const [rightWidth, setRightWidth] = useState(0)
   const [showFilters, setShowFilters] = useState(false)
   const [showNewDropdown, setShowNewDropdown] = useState(false)
   const [showMoreOptions, setShowMoreOptions] = useState(false)
@@ -134,6 +136,33 @@ export function KanbanToolbar({
     }
   }, [showMoreOptions, showFilters, showNewDropdown])
 
+  // Measure right controls width so the left scroller doesn't underlap it
+  useEffect(() => {
+    const el = rightRef.current
+    if (!el) return
+
+    const measure = () => {
+      const rect = el.getBoundingClientRect()
+      // Add small buffer for gaps
+      setRightWidth(Math.ceil(rect.width) + 8)
+    }
+
+    measure()
+
+    let ro: ResizeObserver | undefined
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => measure())
+      ro.observe(el)
+    } else {
+      window.addEventListener('resize', measure)
+    }
+
+    return () => {
+      if (ro) ro.disconnect()
+      else window.removeEventListener('resize', measure)
+    }
+  }, [])
+
   const toolbarStyle = {
     display: 'flex',
     justifyContent: 'space-between',
@@ -147,7 +176,14 @@ export function KanbanToolbar({
   const leftSectionStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: theme.spacing?.sm || '12px'
+    gap: theme.spacing?.sm || '12px',
+    flex: 1,
+    minWidth: 0,
+    overflowX: 'auto' as const,
+    overflowY: 'hidden' as const,
+    whiteSpace: 'nowrap' as const,
+    WebkitOverflowScrolling: 'touch' as const,
+    maxWidth: `calc(100% - ${rightWidth}px)`
   }
 
   const rightSectionStyle = {
@@ -235,7 +271,7 @@ export function KanbanToolbar({
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: theme.spacing?.xs || '4px',
+          gap: isCompact ? 0 : (theme.spacing?.xs || '4px'),
           padding: isCompact ? '8px 8px' : '8px 16px',
           backgroundColor: theme.accent,
           color: theme.accentText,
@@ -243,10 +279,19 @@ export function KanbanToolbar({
           fontSize: '14px',
           fontWeight: '600',
           whiteSpace: 'nowrap',
-          flexShrink: 0
+          flexShrink: 0,
+          transition: 'padding 0.3s ease, gap 0.3s ease'
         }}>
-          <span>🧠</span>
-          {!isCompact && 'Board view'}
+          <span aria-hidden>🧠</span>
+          <span style={{
+            maxWidth: isCompact ? '0px' : '200px',
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            opacity: isCompact ? 0 : 1,
+            transition: 'max-width 0.25s ease, opacity 0.2s ease'
+          }}>
+            Board view
+          </span>
         </div>
 
         {/* Filter Button */}
@@ -448,7 +493,7 @@ export function KanbanToolbar({
         </div>
       </div>
 
-      <div style={rightSectionStyle}>
+      <div ref={rightRef} style={rightSectionStyle}>
         {/* New Button */}
         <div ref={newDropdownRef} style={{ position: 'relative' }}>
           <button

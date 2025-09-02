@@ -24,6 +24,7 @@ export function useAsyncOperation<T = unknown>(): UseAsyncOperationReturn<T> {
   });
 
   const isMountedRef = useRef(true);
+  const lastOpIdRef = useRef(0);
 
   useEffect(() => {
     return () => {
@@ -37,6 +38,8 @@ export function useAsyncOperation<T = unknown>(): UseAsyncOperationReturn<T> {
   ) => {
     if (!isMountedRef.current) return;
 
+    const opId = ++lastOpIdRef.current;
+
     setState(prev => ({
       ...prev,
       loading: true,
@@ -47,6 +50,7 @@ export function useAsyncOperation<T = unknown>(): UseAsyncOperationReturn<T> {
       const result = await operation(...args);
       
       if (!isMountedRef.current) return;
+      if (opId !== lastOpIdRef.current) return;
 
       setState(prev => ({
         ...prev,
@@ -56,6 +60,7 @@ export function useAsyncOperation<T = unknown>(): UseAsyncOperationReturn<T> {
       }));
     } catch (error) {
       if (!isMountedRef.current) return;
+      if (opId !== lastOpIdRef.current) return;
 
       const errorMessage = error instanceof Error ? error.message : String(error);
       

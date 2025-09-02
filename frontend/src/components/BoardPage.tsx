@@ -17,6 +17,7 @@ export function BoardPage() {
   const [showActivityFeed, setShowActivityFeed] = useState(false);
   const [board, setBoard] = useState<BoardData | null>(null);
   const [initialActivities, setInitialActivities] = useState<Activity[]>([]);
+  const [hasLoaded, setHasLoaded] = useState(false);
   
   // Use async operation hook for loading board data
   const {
@@ -32,6 +33,11 @@ export function BoardPage() {
     initialActivities,
     setBoard
   );
+
+  // Prefetch ActivityFeed chunk to avoid Suspense fallback on first open
+  useEffect(() => {
+    void import('./ActivityFeed');
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -61,6 +67,7 @@ export function BoardPage() {
       // Set the state after successful fetch
       setBoard(boardResult.data);
       setInitialActivities(activities);
+      setHasLoaded(true);
       
       return { board: boardResult.data, activities };
     };
@@ -71,7 +78,7 @@ export function BoardPage() {
     return <div>Board ID not found</div>;
   }
 
-  if (loading) {
+  if (loading && !hasLoaded) {
     return <div>Loading board...</div>;
   }
 
