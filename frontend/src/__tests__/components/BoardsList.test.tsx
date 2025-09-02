@@ -7,7 +7,7 @@ vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
-    Link: ({ children, ...props }: any) => <a {...props}>{children}</a>,
+    Link: ({ children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => <a {...props}>{children}</a>,
   };
 })
 

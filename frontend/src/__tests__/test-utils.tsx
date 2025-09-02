@@ -1,15 +1,18 @@
 import { render, type RenderOptions } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { ThemeProvider } from '../theme/ThemeProvider'
+import { ToastProvider } from '../ui/ToastProvider'
 import { UIProvider } from '../ui/UIProvider'
 
 // Wrapper component with all necessary providers
-const AllTheProviders = ({ children }: { children: ReactNode }) => {
+export const AllTheProviders = ({ children }: { children: ReactNode }) => {
     return (
         <div data-testid="clerk-provider">
             <ThemeProvider>
                 <UIProvider>
-                    {children}
+                    <ToastProvider>
+                        {children}
+                    </ToastProvider>
                 </UIProvider>
             </ThemeProvider>
         </div>
@@ -23,7 +26,9 @@ const customRender = (
 ) => render(ui, { wrapper: AllTheProviders, ...options })
 
 // Re-export everything from testing-library
+// eslint-disable-next-line react-refresh/only-export-components
 export * from '@testing-library/react'
 
 // Override render method
+// eslint-disable-next-line react-refresh/only-export-components
 export { customRender as render }

@@ -14,7 +14,7 @@ vi.mock('react-router-dom', async () => {
   return {
     ...actual,
     useParams: () => ({ id: 'abc123' }),
-    Link: ({ children, ...props }: any) => <a {...props}>{children}</a>,
+    Link: ({ children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => <a {...props}>{children}</a>,
   };
 })
 
