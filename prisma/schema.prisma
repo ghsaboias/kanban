@@ -22,6 +22,7 @@ model User {
   // Relations
   assignedCards Card[] @relation("CardAssignee")
   createdCards  Card[] @relation("CardCreator")
+  ownedCards    Card[] @relation("CardOwner")
   activities    Activity[]
 
   @@map("users")
@@ -66,6 +67,11 @@ model Card {
   assigneeId  String?
   createdById String
 
+  // M&A specific fields
+  deadline         String?
+  riskLevel        String?
+  ownerId          String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -73,6 +79,7 @@ model Card {
   column    Column @relation(fields: [columnId], references: [id], onDelete: Cascade)
   assignee  User?  @relation("CardAssignee", fields: [assigneeId], references: [id])
   createdBy User   @relation("CardCreator", fields: [createdById], references: [id])
+  owner     User?  @relation("CardOwner", fields: [ownerId], references: [id])
 
   @@map("cards")
 }
