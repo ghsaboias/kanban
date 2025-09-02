@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express';
-import { ColumnCreatedEvent, ColumnDeletedEvent, ColumnReorderedEvent, ColumnUpdatedEvent } from '../../../shared/realtime';
+import type { ColumnCreatedEvent, ColumnDeletedEvent, ColumnReorderedEvent, ColumnUpdatedEvent } from '@kanban/shared/realtime';
 import { prisma } from '../database';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { ActivityLogger } from '../services/activityLogger';

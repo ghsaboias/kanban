@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express';
-import { CardCreatedEvent, CardDeletedEvent, CardMovedEvent, CardUpdatedEvent } from '../../../shared/realtime';
+import type { CardCreatedEvent, CardDeletedEvent, CardMovedEvent, CardUpdatedEvent } from '@kanban/shared/realtime';
 import { prisma } from '../database';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { ActivityLogger } from '../services/activityLogger';

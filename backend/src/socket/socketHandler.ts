@@ -2,7 +2,7 @@ import { Server, Socket } from 'socket.io';
 import { Server as HTTPServer } from 'http';
 import { verifyToken } from '@clerk/backend';
 import { prisma } from '../database';
-import { UserJoinedEvent, UserLeftEvent, BoardJoinedEvent, ErrorEvent } from '../../../shared/realtime';
+import type { UserJoinedEvent, UserLeftEvent, BoardJoinedEvent, ErrorEvent } from '@kanban/shared/realtime';
 
 export interface AuthenticatedSocket extends Socket {
   userId: string;
