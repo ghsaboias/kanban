@@ -1,6 +1,6 @@
 // React import removed - not needed with new JSX transform
 import type { Activity } from '../../../shared/realtime';
-import { useTheme } from '../theme/useTheme'
+import { useAppearance } from '../appearance'
 
 interface ActivityFeedProps {
   activities: Activity[];
@@ -14,7 +14,7 @@ interface ActivityItemProps {
 }
 
 function ActivityItem({ activity }: ActivityItemProps) {
-  const { theme } = useTheme()
+  const { theme } = useAppearance()
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -160,7 +160,7 @@ function ActivityItem({ activity }: ActivityItemProps) {
 }
 
 export function ActivityFeed({ activities, boardTitle, isLoading, className }: ActivityFeedProps) {
-  const { theme } = useTheme()
+  const { theme } = useAppearance()
   if (isLoading) {
     return (
       <div className={className} style={{ padding: theme.spacing?.lg || '20px', textAlign: 'center' }}>

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { RichTextEditor } from './RichTextEditor'
 import { hasContent, extractImages } from '../utils/html'
 import { useApi } from '../useApi'
-import { useTheme } from '../theme/useTheme'
+import { useAppearance } from '../appearance'
 import type { ApiResponse } from '../types/api'
 
 interface CardData {
@@ -13,6 +13,14 @@ interface CardData {
   priority: 'LOW' | 'MEDIUM' | 'HIGH'
   position: number
   assignee: {
+    id: string
+    name: string
+    email: string
+  } | null
+  // M&A specific fields
+  deadline?: string | null
+  riskLevel?: 'LOW' | 'MEDIUM' | 'HIGH' | null
+  owner?: {
     id: string
     name: string
     email: string
@@ -45,7 +53,7 @@ const priorityColors = {
 }
 
 export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDetailModalProps) {
-  const { theme } = useTheme()
+  const { theme } = useAppearance()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(false)
   // Local visibility state to enable entry transition without parent rAF
@@ -54,7 +62,11 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
     title: card.title,
     description: card.description || '',
     priority: card.priority,
-    assigneeId: card.assignee?.id || ''
+    assigneeId: card.assignee?.id || '',
+    // M&A fields
+    deadline: card.deadline || '',
+    riskLevel: card.riskLevel || '',
+    ownerId: card.owner?.id || ''
   })
   const modalRef = useRef<HTMLDivElement>(null)
   const titleInputRef = useRef<HTMLInputElement>(null)
@@ -78,7 +90,10 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
         title: card.title,
         description: card.description || '',
         priority: card.priority,
-        assigneeId: card.assignee?.id || ''
+        assigneeId: card.assignee?.id || '',
+        deadline: card.deadline || '',
+        riskLevel: card.riskLevel || '',
+        ownerId: card.owner?.id || ''
       })
       
       // Focus title input
@@ -143,7 +158,11 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
           title: formData.title.trim(),
           description: hasContent(formData.description) ? formData.description : null,
           priority: formData.priority,
-          assigneeId: formData.assigneeId || null
+          assigneeId: formData.assigneeId || null,
+          // M&A fields
+          deadline: formData.deadline || null,
+          riskLevel: formData.riskLevel || null,
+          ownerId: formData.ownerId || null
         })
       })
 
@@ -166,7 +185,11 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
       formData.title.trim() !== card.title ||
       formData.description.trim() !== (card.description || '') ||
       formData.priority !== card.priority ||
-      formData.assigneeId !== (card.assignee?.id || '')
+      formData.assigneeId !== (card.assignee?.id || '') ||
+      // M&A fields changes
+      formData.deadline !== (card.deadline || '') ||
+      formData.riskLevel !== (card.riskLevel || '') ||
+      formData.ownerId !== (card.owner?.id || '')
     )
   }
 
@@ -356,6 +379,135 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
                 <option key={user.id} value={user.id}>{user.name}</option>
               ))}
             </select>
+          </div>
+
+          {/* M&A Fields Section */}
+          <div style={{ 
+            marginBottom: theme.spacing?.lg || '20px',
+            padding: theme.spacing?.md || '16px',
+            backgroundColor: theme.surfaceAlt + '30',
+            borderRadius: theme.radius?.sm || '6px',
+            border: `1px solid ${theme.border}`
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: theme.spacing?.sm || '12px',
+              marginBottom: theme.spacing?.md || '16px'
+            }}>
+              <div style={{
+                width: '16px',
+                height: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '12px',
+                color: '#666'
+              }}>🏢</div>
+              <span style={{
+                fontSize: '16px',
+                fontWeight: '600',
+                color: theme.textPrimary
+              }}>M&A Fields</span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: theme.spacing?.md || '16px', marginBottom: theme.spacing?.sm || '12px' }}>
+              {/* Owner */}
+              <div>
+                <label style={{
+                  display: 'block',
+                  marginBottom: theme.spacing?.xs || '6px',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  color: '#374151'
+                }}>
+                  Owner
+                </label>
+                <select
+                  value={formData.ownerId}
+                  onChange={(e) => setFormData(prev => ({ ...prev, ownerId: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: `${theme.spacing?.xs || '8px'} ${theme.spacing?.sm || '12px'}`,
+                    border: '1px solid #cbd5e1',
+                    borderRadius: theme.radius?.sm || '6px',
+                    fontSize: '14px',
+                    backgroundColor: 'white',
+                    color: '#111827',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="">Sem owner</option>
+                  {users.map(user => (
+                    <option key={user.id} value={user.id}>{user.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Risk Level */}
+              <div>
+                <label style={{
+                  display: 'block',
+                  marginBottom: theme.spacing?.xs || '6px',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  color: '#374151'
+                }}>
+                  Risk Level
+                </label>
+                <select
+                  value={formData.riskLevel}
+                  onChange={(e) => setFormData(prev => ({ ...prev, riskLevel: e.target.value as '' | 'LOW' | 'MEDIUM' | 'HIGH' }))}
+                  style={{
+                    width: '100%',
+                    padding: `${theme.spacing?.xs || '8px'} ${theme.spacing?.sm || '12px'}`,
+                    border: '1px solid #cbd5e1',
+                    borderRadius: theme.radius?.sm || '6px',
+                    fontSize: '14px',
+                    backgroundColor: 'white',
+                    color: '#111827',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="">Sem risco</option>
+                  <option value="LOW">Baixo Risco</option>
+                  <option value="MEDIUM">Médio Risco</option>
+                  <option value="HIGH">Alto Risco</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: theme.spacing?.md || '16px' }}>
+              {/* Deadline */}
+              <div>
+                <label style={{
+                  display: 'block',
+                  marginBottom: theme.spacing?.xs || '6px',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  color: '#374151'
+                }}>
+                  Deadline
+                </label>
+                <input
+                  type="date"
+                  value={formData.deadline}
+                  onChange={(e) => setFormData(prev => ({ ...prev, deadline: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: `${theme.spacing?.xs || '8px'} ${theme.spacing?.sm || '12px'}`,
+                    border: '1px solid #cbd5e1',
+                    borderRadius: theme.radius?.sm || '6px',
+                    fontSize: '14px',
+                    backgroundColor: 'white',
+                    color: '#111827',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              
+            </div>
           </div>
 
           {/* Description Section */}

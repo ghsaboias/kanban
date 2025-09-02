@@ -1,5 +1,5 @@
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable'
-import { useTheme } from '../theme/useTheme'
+import { useAppearance } from '../appearance'
 import { SortableColumn } from './SortableColumn'
 
 interface CardData {
@@ -49,7 +49,7 @@ export function KanbanColumns({
   onCreateColumn,
   createLoading = false
 }: KanbanColumnsProps) {
-  const { theme } = useTheme()
+  const { theme } = useAppearance()
 
   const containerStyle = {
     display: 'flex',

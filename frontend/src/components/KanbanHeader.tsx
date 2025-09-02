@@ -1,5 +1,5 @@
 import type { User } from '../../../shared/realtime'
-import { useTheme } from '../theme/useTheme'
+import { useAppearance } from '../appearance'
 
 interface KanbanHeaderProps {
   title: string
@@ -18,7 +18,7 @@ export function KanbanHeader({
   onTitleChange,
   editable = false 
 }: KanbanHeaderProps) {
-  const { theme } = useTheme()
+  const { theme } = useAppearance()
 
   const headerStyle = {
     padding: `${theme.spacing?.xl || '24px'} ${theme.spacing?.xl || '24px'} ${theme.spacing?.md || '16px'} ${theme.spacing?.xl || '24px'}`,

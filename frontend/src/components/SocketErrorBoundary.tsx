@@ -1,5 +1,5 @@
 import React, { Component, type ReactNode } from 'react';
-import { ThemeContext } from '../theme/ThemeProvider'
+import { AppearanceContext } from '../appearance/AppearanceProvider'
 
 interface SocketErrorBoundaryState {
   hasError: boolean;
@@ -16,8 +16,8 @@ interface SocketErrorBoundaryProps {
 }
 
 export class SocketErrorBoundary extends Component<SocketErrorBoundaryProps, SocketErrorBoundaryState> {
-  static contextType = ThemeContext
-  declare context: React.ContextType<typeof ThemeContext>
+  static contextType = AppearanceContext
+  declare context: React.ContextType<typeof AppearanceContext>
   private retryTimeoutId: number | null = null;
 
   constructor(props: SocketErrorBoundaryProps) {

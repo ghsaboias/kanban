@@ -6,13 +6,13 @@ import { Board, type BoardData } from './Board';
 import { useApi } from '../useApi';
 import { useRealtimeBoard } from '../hooks/useRealtimeBoard';
 import type { Activity, ActivityFeedData, ApiResponse } from '../types/api';
-import { useTheme } from '../theme/useTheme';
+import { useAppearance } from '../appearance';
 import { useAsyncOperation } from '../hooks/useAsyncOperation';
 
 export function BoardPage() {
   const { id } = useParams<{ id: string }>();
   const { apiFetch } = useApi();
-  const { theme } = useTheme();
+  const { theme } = useAppearance();
 
   const [showActivityFeed, setShowActivityFeed] = useState(false);
   const [board, setBoard] = useState<BoardData | null>(null);
@@ -116,7 +116,7 @@ export function BoardPage() {
         <button
           onClick={() => setShowActivityFeed(!showActivityFeed)}
           style={{
-            backgroundColor: showActivityFeed ? '#007bff' : '#6c757d',
+            backgroundColor: showActivityFeed ? theme.accent : theme.textSecondary,
             color: 'white',
             border: 'none',
             borderRadius: theme.radius?.sm || '6px',

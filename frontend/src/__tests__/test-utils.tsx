@@ -1,20 +1,17 @@
 import { render, type RenderOptions } from '@testing-library/react'
 import type { ReactNode } from 'react'
-import { ThemeProvider } from '../theme/ThemeProvider'
 import { ToastProvider } from '../ui/ToastProvider'
-import { UIProvider } from '../ui/UIProvider'
+import { AppearanceProvider } from '../appearance'
 
 // Wrapper component with all necessary providers
 export const AllTheProviders = ({ children }: { children: ReactNode }) => {
     return (
         <div data-testid="clerk-provider">
-            <ThemeProvider>
-                <UIProvider>
-                    <ToastProvider>
-                        {children}
-                    </ToastProvider>
-                </UIProvider>
-            </ThemeProvider>
+            <AppearanceProvider>
+                <ToastProvider>
+                    {children}
+                </ToastProvider>
+            </AppearanceProvider>
         </div>
     )
 }

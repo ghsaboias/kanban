@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useApi } from '../useApi'
 import type { ApiResponse } from '../types/api'
-import { useTheme } from '../theme/useTheme'
+import { useAppearance } from '../appearance'
 import { useAsyncOperation } from '../hooks/useAsyncOperation'
 
 interface Board {
@@ -17,13 +17,14 @@ interface Board {
 }
 
 export function BoardsList() {
-  const { theme } = useTheme()
+  const { theme } = useAppearance()
   const [boards, setBoards] = useState<Board[]>([])
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [formData, setFormData] = useState({ title: '', description: '', template: 'none' })
   const [editingBoard, setEditingBoard] = useState<Board | null>(null)
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
   const [showCreateDropdown, setShowCreateDropdown] = useState(false)
+  const [showTemplateModal, setShowTemplateModal] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const { apiFetch } = useApi()
@@ -40,6 +41,7 @@ export function BoardsList() {
   // Use async operation hook for creating boards
   const {
     loading: createLoading,
+    error: createError,
     execute: executeCreateBoard
   } = useAsyncOperation<Board>()
 
@@ -287,7 +289,7 @@ export function BoardsList() {
               </button>
               <button
                 onClick={() => {
-                  setShowCreateForm(true)
+                  setShowTemplateModal(true)
                   setShowCreateDropdown(false)
                 }}
                 style={{
@@ -404,6 +406,18 @@ export function BoardsList() {
                     {templates.find(t => t.key === formData.template)?.description}
                   </div>
                 )}
+              </div>
+            )}
+            {createError && (
+              <div style={{
+                marginBottom: theme.spacing?.md || '16px',
+                padding: `${theme.spacing?.sm || '8px'} ${theme.spacing?.md || '12px'}`,
+                backgroundColor: theme.danger || '#dc3545',
+                color: theme.accentText,
+                borderRadius: theme.radius?.sm || '4px',
+                fontSize: '14px'
+              }}>
+                {createError}
               </div>
             )}
             <div style={{ display: 'flex', gap: theme.spacing?.md || '12px' }}>
@@ -524,6 +538,94 @@ export function BoardsList() {
               </Link>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Template Selection Modal */}
+      {showTemplateModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }} onClick={(e) => { if (e.target === e.currentTarget) setShowTemplateModal(false) }}>
+          <div style={{
+            backgroundColor: theme.surface,
+            border: `1px solid ${theme.border}`,
+            borderRadius: theme.radius?.lg || '12px',
+            padding: theme.spacing?.lg || '20px',
+            width: '92%',
+            maxWidth: '520px',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            boxShadow: theme.shadow?.lg || '0 4px 12px rgba(0,0,0,0.15)'
+          }} onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ margin: `0 0 ${theme.spacing?.sm || '12px'}`, color: theme.textPrimary, fontSize: '18px' }}>Create Board from Template</h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing?.sm || '10px', marginBottom: theme.spacing?.lg || '18px' }}>
+              {templates.map(template => (
+                <div key={template.key} style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: theme.spacing?.sm || '10px',
+                  padding: theme.spacing?.sm || '10px',
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: theme.radius?.md || '8px',
+                  background: theme.surfaceAlt,
+                }}>
+                  <div style={{ fontWeight: 600, color: theme.textPrimary }}>{template.name}</div>
+                  {template.description && (
+                    <div style={{ color: theme.textSecondary, fontSize: '13px' }}>{template.description}</div>
+                  )}
+                  <div style={{ color: theme.textMuted, fontSize: '12px' }}>
+                    {template.columns.length} columns will be created
+                  </div>
+                  <button
+                    onClick={() => {
+                      setFormData({ title: '', description: '', template: template.key })
+                      setShowCreateForm(true)
+                      setShowTemplateModal(false)
+                    }}
+                    style={{
+                      padding: `${theme.spacing?.sm || '8px'} ${theme.spacing?.md || '12px'}`,
+                      borderRadius: theme.radius?.sm || '6px',
+                      border: `1px solid ${theme.border}`,
+                      background: theme.accent,
+                      color: theme.accentText,
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      alignSelf: 'flex-start'
+                    }}
+                  >
+                    Use This Template
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: theme.spacing?.sm || '8px' }}>
+              <button
+                onClick={() => setShowTemplateModal(false)}
+                style={{
+                  padding: `${theme.spacing?.sm || '8px'} ${theme.spacing?.sm || '12px'}`,
+                  border: `1px solid ${theme.border}`,
+                  background: theme.card,
+                  color: theme.textPrimary,
+                  borderRadius: theme.radius?.sm || '6px',
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

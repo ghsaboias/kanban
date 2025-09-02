@@ -1,7 +1,7 @@
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useEffect, useState } from 'react'
-import { useTheme } from '../theme/useTheme'
+import { useAppearance } from '../appearance'
 import type { ApiResponse } from '../types/api'
 import { useApi } from '../useApi'
 import { SortableCard } from './SortableCard'
@@ -63,7 +63,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
   const [deleteLoading, setDeleteLoading] = useState(false)
   const { setNodeRef: setDroppableNodeRef } = useDroppable({ id: `column-${column.id}` })
   const { apiFetch } = useApi()
-  const { theme } = useTheme()
+  const { theme } = useAppearance()
 
   useEffect(() => {
     // Fetch users for assignment

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useTheme } from '../theme/useTheme';
+import { useAppearance } from '../appearance';
 import { useApi } from '../useApi';
 
 type ExistingColumn = { id: string; title: string; position: number; cardCount: number }
@@ -20,7 +20,7 @@ type Template = {
 }
 
 export function TemplateImportModal({ isOpen, onClose, boardId, existingColumns, onAfterApply }: TemplateImportModalProps) {
-  const { theme } = useTheme()
+  const { theme } = useAppearance()
   const { apiFetch } = useApi()
   const [selectedKey, setSelectedKey] = useState<string>('ma-pipeline-en')
   const [isSubmitting, setIsSubmitting] = useState(false)

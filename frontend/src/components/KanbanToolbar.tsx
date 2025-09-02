@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useTheme } from '../theme/useTheme'
+import { useAppearance } from '../appearance'
 import { useApi } from '../useApi'
 import { NewCardModal } from './NewCardModal'
 import { TemplateImportModal } from './TemplateImportModal'
@@ -55,7 +55,7 @@ export function KanbanToolbar({
   isCompact,
   boardId,
 }: KanbanToolbarProps & { isCompact?: boolean, boardId?: string }) {
-  const { theme } = useTheme()
+  const { theme } = useAppearance()
   const { apiFetch } = useApi()
   const [searchQuery, setSearchQuery] = useState('')
   const rightRef = useRef<HTMLDivElement>(null)

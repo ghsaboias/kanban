@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useTheme } from '../theme/useTheme'
+import { useAppearance } from '../appearance'
 import { useApi } from '../useApi'
 import { extractImages, toPlainText, truncate } from '../utils/html'
 
@@ -25,7 +25,7 @@ interface ModernCardProps {
 
 export function ModernCard({ card, onCardUpdated, onCardDeleted, onCardClick }: ModernCardProps) {
   const { apiFetch } = useApi()
-  const { theme } = useTheme()
+  const { theme } = useAppearance()
   const [hovering, setHovering] = useState(false)
 
   // Mark onCardUpdated as used for now (edit feature later)

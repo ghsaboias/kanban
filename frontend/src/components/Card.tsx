@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useTheme } from '../theme/useTheme'
+import { useAppearance } from '../appearance'
 import { useApi } from '../useApi'
 import { extractImages, toPlainText, truncate } from '../utils/html'
 
@@ -14,6 +14,14 @@ interface CardData {
     name: string
     email: string
   } | null
+  // M&A specific fields
+  deadline?: string | null
+  riskLevel?: 'LOW' | 'MEDIUM' | 'HIGH' | null
+  owner?: {
+    id: string
+    name: string
+    email: string
+  } | null
 }
 
 interface CardProps {
@@ -24,15 +32,45 @@ interface CardProps {
 }
 
 
-const priorityLabels = {
-  HIGH: 'Alta',
-  MEDIUM: 'Média',
-  LOW: 'Baixa'
+const riskLabels = {
+  HIGH: 'Alto Risco',
+  MEDIUM: 'Médio Risco', 
+  LOW: 'Baixo Risco'
+}
+
+// Helper function to format deadline
+function formatDeadline(deadline: string): string {
+  try {
+    const date = new Date(deadline)
+    const now = new Date()
+    const diffDays = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+    
+    if (diffDays < 0) return `${Math.abs(diffDays)}d atrasado`
+    if (diffDays === 0) return 'Hoje'
+    if (diffDays === 1) return 'Amanhã'
+    if (diffDays <= 7) return `${diffDays}d`
+    
+    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+  } catch {
+    return deadline
+  }
+}
+
+// Helper function to check if deadline is urgent
+function isDeadlineUrgent(deadline: string): boolean {
+  try {
+    const date = new Date(deadline)
+    const now = new Date()
+    const diffDays = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+    return diffDays <= 3 // Urgent if 3 days or less
+  } catch {
+    return false
+  }
 }
 
 export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardProps) {
   const { apiFetch } = useApi()
-  const { theme } = useTheme()
+  const { theme } = useAppearance()
   // mark onCardUpdated as used for now (edit feature later)
   void onCardUpdated
   const [hovering, setHovering] = useState(false)
@@ -236,38 +274,105 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
         )
       })()}
 
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: theme.spacing?.sm || '8px'
-      }}>
-        <span style={{
-          backgroundColor: theme.priority[card.priority],
-          color: 'white',
-          fontSize: '10px',
-          fontWeight: '600',
-          padding: '2px 6px',
-          borderRadius: theme.radius?.md || '10px',
-          textTransform: 'uppercase'
-        }}>
-          {/* Split into separate spans so tests can match exact priority text (e.g., 'HIGH') */}
-          <span>{priorityLabels[card.priority]}</span>
-          <span style={{ marginLeft: theme.spacing?.xs || '4px' }}>{card.priority}</span>
-        </span>
+      {/* Unified metadata row: priority, owner/assignee, deadline, risk */}
+      {(card.priority || card.owner || card.assignee || card.deadline || card.riskLevel) && (
+        <div style={{ marginTop: theme.spacing?.sm || '8px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: theme.spacing?.xs || '4px' }}>
+            {/* Priority */}
+            {card.priority && (
+              <div style={{
+                fontSize: '10px',
+                color: '#fff',
+                backgroundColor: theme.priority[card.priority],
+                padding: '2px 6px',
+                borderRadius: theme.radius?.md || '10px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                textTransform: 'uppercase',
+                border: '1px solid transparent'
+              }}>
+                <span>⏱</span>
+                <span>{card.priority}</span>
+              </div>
+            )}
 
-        {card.assignee && (
-          <div style={{
-            fontSize: '10px',
-            color: theme.textSecondary,
-            backgroundColor: theme.surfaceAlt,
-            padding: '2px 6px',
-            borderRadius: theme.radius?.md || '10px'
-          }}>
-            {card.assignee.name}
+            {/* Owner (fallback to assignee for legacy) */}
+            {(card.owner || card.assignee) && (
+              <div style={{
+                fontSize: '10px',
+                color: theme.emphasis?.owner || theme.textSecondary,
+                backgroundColor: theme.surfaceAlt + '80',
+                padding: '2px 6px',
+                borderRadius: theme.radius?.sm || '3px',
+                border: `1px solid ${theme.border}`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
+                <span>👤</span>
+                <span>{card.owner?.name || card.assignee?.name}</span>
+              </div>
+            )}
+
+            {/* Deadline */}
+            {card.deadline && (
+              <div style={{
+                fontSize: '10px',
+                color: isDeadlineUrgent(card.deadline) 
+                  ? theme.emphasis?.deadline || theme.danger 
+                  : theme.emphasis?.deadline || theme.textSecondary,
+                backgroundColor: isDeadlineUrgent(card.deadline) 
+                  ? (theme.danger || '#dc3545') + '10' 
+                  : theme.surfaceAlt + '80',
+                padding: '2px 6px',
+                borderRadius: theme.radius?.sm || '3px',
+                border: `1px solid ${isDeadlineUrgent(card.deadline) ? theme.danger : theme.border}`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontWeight: isDeadlineUrgent(card.deadline) ? 600 : 400
+              }}>
+                <span>📅</span>
+                <span>{formatDeadline(card.deadline)}</span>
+              </div>
+            )}
+
+            {/* Risk Level */}
+            {card.riskLevel && (
+              <div style={{
+                fontSize: '10px',
+                color: theme.emphasis?.riskFlag || (
+                  card.riskLevel === 'HIGH' ? theme.danger :
+                  card.riskLevel === 'MEDIUM' ? theme.warning :
+                  theme.textSecondary
+                ),
+                backgroundColor: card.riskLevel === 'HIGH' 
+                  ? (theme.danger || '#dc3545') + '10'
+                  : card.riskLevel === 'MEDIUM'
+                  ? (theme.warning || '#ffc107') + '10'
+                  : theme.surfaceAlt + '80',
+                padding: '2px 6px',
+                borderRadius: theme.radius?.sm || '3px',
+                border: `1px solid ${
+                  card.riskLevel === 'HIGH' ? theme.danger :
+                  card.riskLevel === 'MEDIUM' ? theme.warning :
+                  theme.border
+                }`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontWeight: card.riskLevel !== 'LOW' ? 600 : 400
+              }}>
+                <span>⚠️</span>
+                <span>{riskLabels[card.riskLevel]}</span>
+              </div>
+            )}
+
+            
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

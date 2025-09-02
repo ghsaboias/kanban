@@ -1,7 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { ThemeProvider } from '../../theme/ThemeProvider'
-import { UIProvider } from '../../ui/UIProvider'
+import { AppearanceProvider } from '../../appearance'
 import { ModernCard } from '../ModernCard'
 
 // Mock API hook
@@ -25,11 +24,9 @@ const mockCard = {
 }
 
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
-  <ThemeProvider>
-    <UIProvider>
-      {children}
-    </UIProvider>
-  </ThemeProvider>
+  <AppearanceProvider>
+    {children}
+  </AppearanceProvider>
 )
 
 describe('ModernCard', () => {

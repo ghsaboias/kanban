@@ -4,7 +4,7 @@ import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import Image from '@tiptap/extension-image'
-import { useTheme } from '../theme/useTheme'
+import { useAppearance } from '../appearance'
 
 interface RichTextEditorProps {
   value: string
@@ -13,7 +13,7 @@ interface RichTextEditorProps {
 }
 
 export function RichTextEditor({ value, onChange, readOnly }: RichTextEditorProps) {
-  const { theme } = useTheme()
+  const { theme } = useAppearance()
   const editor = useEditor({
     editable: !readOnly,
     extensions: [

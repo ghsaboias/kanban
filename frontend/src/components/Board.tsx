@@ -3,7 +3,7 @@ import { DndContext, DragOverlay, PointerSensor, closestCenter, useSensor, useSe
 import { arrayMove } from '@dnd-kit/sortable'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { User } from '../../../shared/realtime'
-import { useTheme } from '../theme/useTheme'
+import { useAppearance } from '../appearance'
 import type { ApiResponse } from '../types/api'
 import { useToast } from '../ui/useToast'
 import { useApi } from '../useApi'
@@ -54,7 +54,7 @@ interface BoardProps {
 
 export function Board({ board, setBoard, isConnected, onlineUsers, isCompact }: BoardProps) {
   const { apiFetch } = useApi()
-  const { theme } = useTheme()
+  const { theme } = useAppearance()
   const [showCreateColumn, setShowCreateColumn] = useState(false)
   const [createLoading, setCreateLoading] = useState(false)
   const [activeCard, setActiveCard] = useState<Card | null>(null)

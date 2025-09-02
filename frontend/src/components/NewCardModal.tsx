@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useTheme } from '../theme/useTheme'
+import { useAppearance } from '../appearance'
 import type { ApiResponse } from '../types/api'
 import { useApi } from '../useApi'
 
@@ -34,6 +34,14 @@ interface CardData {
     name: string
     email: string
   } | null
+  // M&A specific fields
+  deadline?: string | null
+  riskLevel?: 'LOW' | 'MEDIUM' | 'HIGH' | null
+  owner?: {
+    id: string
+    name: string
+    email: string
+  } | null
 }
 
 export function NewCardModal({ isOpen, onClose, columns, onCardCreated }: NewCardModalProps) {
@@ -44,10 +52,14 @@ export function NewCardModal({ isOpen, onClose, columns, onCardCreated }: NewCar
     description: '',
     priority: 'MEDIUM' as 'LOW' | 'MEDIUM' | 'HIGH',
     assigneeId: '',
-    columnId: columns.length > 0 ? columns[0].id : ''
+    columnId: columns.length > 0 ? columns[0].id : '',
+    // M&A fields
+    deadline: '',
+    riskLevel: '' as '' | 'LOW' | 'MEDIUM' | 'HIGH',
+    ownerId: ''
   })
   const { apiFetch } = useApi()
-  const { theme } = useTheme()
+  const { theme } = useAppearance()
 
   useEffect(() => {
     if (isOpen) {
@@ -57,7 +69,10 @@ export function NewCardModal({ isOpen, onClose, columns, onCardCreated }: NewCar
         description: '',
         priority: 'MEDIUM',
         assigneeId: '',
-        columnId: columns.length > 0 ? columns[0].id : ''
+        columnId: columns.length > 0 ? columns[0].id : '',
+        deadline: '',
+        riskLevel: '',
+        ownerId: ''
       })
 
       // Fetch users for assignment
@@ -87,7 +102,11 @@ export function NewCardModal({ isOpen, onClose, columns, onCardCreated }: NewCar
           title: formData.title.trim(),
           description: formData.description.trim() || null,
           priority: formData.priority,
-          assigneeId: formData.assigneeId || null
+          assigneeId: formData.assigneeId || null,
+          // M&A fields
+          deadline: formData.deadline || null,
+          riskLevel: formData.riskLevel || null,
+          ownerId: formData.ownerId || null
         })
       })
 
@@ -347,6 +366,107 @@ export function NewCardModal({ isOpen, onClose, columns, onCardCreated }: NewCar
                   <option key={user.id} value={user.id}>{user.name}</option>
                 ))}
               </select>
+            </div>
+          </div>
+
+          {/* M&A Fields Section */}
+          <div style={{ 
+            marginBottom: theme.spacing?.lg || '20px',
+            padding: theme.spacing?.md || '16px',
+            backgroundColor: theme.surfaceAlt + '50',
+            borderRadius: theme.radius?.sm || '4px',
+            border: `1px solid ${theme.border}`
+          }}>
+            <h3 style={{
+              margin: `0 0 ${theme.spacing?.md || '16px'} 0`,
+              fontSize: '16px',
+              fontWeight: '600',
+              color: theme.textPrimary
+            }}>
+              M&A Fields
+            </h3>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: theme.spacing?.sm || '12px', marginBottom: theme.spacing?.sm || '12px' }}>
+              {/* Owner */}
+              <div>
+                <label 
+                  htmlFor="card-owner"
+                  style={{
+                    display: 'block',
+                    marginBottom: theme.spacing?.xs || '6px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: theme.textSecondary
+                  }}
+                >
+                  Owner
+                </label>
+                <select
+                  id="card-owner"
+                  value={formData.ownerId}
+                  onChange={(e) => setFormData(prev => ({ ...prev, ownerId: e.target.value }))}
+                  style={selectStyle}
+                >
+                  <option value="">Sem owner</option>
+                  {users.map(user => (
+                    <option key={user.id} value={user.id}>{user.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Risk Level */}
+              <div>
+                <label 
+                  htmlFor="card-risk"
+                  style={{
+                    display: 'block',
+                    marginBottom: theme.spacing?.xs || '6px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: theme.textSecondary
+                  }}
+                >
+                  Risk Level
+                </label>
+                <select
+                  id="card-risk"
+                  value={formData.riskLevel}
+                  onChange={(e) => setFormData(prev => ({ ...prev, riskLevel: e.target.value as '' | 'LOW' | 'MEDIUM' | 'HIGH' }))}
+                  style={selectStyle}
+                >
+                  <option value="">Sem risco</option>
+                  <option value="LOW">Baixo Risco</option>
+                  <option value="MEDIUM">Médio Risco</option>
+                  <option value="HIGH">Alto Risco</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: theme.spacing?.sm || '12px' }}>
+              {/* Deadline */}
+              <div>
+                <label 
+                  htmlFor="card-deadline"
+                  style={{
+                    display: 'block',
+                    marginBottom: theme.spacing?.xs || '6px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: theme.textSecondary
+                  }}
+                >
+                  Deadline
+                </label>
+                <input
+                  id="card-deadline"
+                  type="date"
+                  value={formData.deadline}
+                  onChange={(e) => setFormData(prev => ({ ...prev, deadline: e.target.value }))}
+                  style={inputStyle}
+                />
+              </div>
+
+              
             </div>
           </div>
 

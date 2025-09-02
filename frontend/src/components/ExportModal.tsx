@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useTheme } from '../theme/useTheme'
+import { useAppearance } from '../appearance'
 
 export type ExportOptions = {
   exportJson: boolean
@@ -16,7 +16,7 @@ interface ExportModalProps {
 }
 
 export function ExportModal({ isOpen, onClose, onConfirm, defaultHonorFilters = true }: ExportModalProps) {
-  const { theme } = useTheme()
+  const { theme } = useAppearance()
   const [exportJson, setExportJson] = useState(true)
   const [exportCardsCsv, setExportCardsCsv] = useState(false)
   const [exportColumnsCsv, setExportColumnsCsv] = useState(false)
