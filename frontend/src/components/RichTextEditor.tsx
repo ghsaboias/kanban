@@ -4,6 +4,7 @@ import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import Image from '@tiptap/extension-image'
+import { useTheme } from '../theme/useTheme'
 
 interface RichTextEditorProps {
   value: string
@@ -12,6 +13,7 @@ interface RichTextEditorProps {
 }
 
 export function RichTextEditor({ value, onChange, readOnly }: RichTextEditorProps) {
+  const { theme } = useTheme()
   const editor = useEditor({
     editable: !readOnly,
     extensions: [
@@ -51,15 +53,15 @@ export function RichTextEditor({ value, onChange, readOnly }: RichTextEditorProp
   }, [value, editor])
 
   const btnBase = useMemo(() => ({
-    padding: '6px 8px',
+    padding: `${theme.spacing?.xs || '6px'} ${theme.spacing?.sm || '8px'}`,
     border: '1px solid #cbd5e1',
     backgroundColor: '#ffffff',
     color: '#111827',
-    borderRadius: '6px',
+    borderRadius: theme.radius?.sm || '6px',
     cursor: 'pointer',
     fontSize: '12px',
     lineHeight: 1.2 as const
-  } as const), [])
+  } as const), [theme])
 
   const getBtnStyle = (active?: boolean) => ({
     ...btnBase,
@@ -117,7 +119,7 @@ export function RichTextEditor({ value, onChange, readOnly }: RichTextEditorProp
       </style>
       {/* Toolbar */}
       {!readOnly && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: theme.spacing?.sm || '8px', marginBottom: theme.spacing?.sm || '10px' }}>
           <button
             type="button"
             aria-pressed={editor.isActive('bold')}
@@ -163,7 +165,7 @@ export function RichTextEditor({ value, onChange, readOnly }: RichTextEditorProp
             onBlur={(e) => { e.currentTarget.style.outline = 'none' }}
           >{'</>'}</button>
 
-          <span style={{ width: '1px', background: '#e1e1e1', margin: '0 4px' }} />
+          <span style={{ width: '1px', background: '#e1e1e1', margin: `0 ${theme.spacing?.xs || '4px'}` }} />
 
           <button
             type="button"
@@ -306,8 +308,8 @@ export function RichTextEditor({ value, onChange, readOnly }: RichTextEditorProp
 
       <div style={{
         border: '1px solid #cbd5e1',
-        borderRadius: '6px',
-        padding: '12px',
+        borderRadius: theme.radius?.sm || '6px',
+        padding: theme.spacing?.md || '12px',
         minHeight: '120px',
         background: '#ffffff'
       }}>

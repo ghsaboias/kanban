@@ -21,7 +21,7 @@ export function KanbanHeader({
   const { theme } = useTheme()
 
   const headerStyle = {
-    padding: '24px 24px 16px 24px',
+    padding: `${theme.spacing?.xl || '24px'} ${theme.spacing?.xl || '24px'} ${theme.spacing?.md || '16px'} ${theme.spacing?.xl || '24px'}`,
     backgroundColor: theme.background,
     borderBottom: `1px solid ${theme.border}`
   }
@@ -30,7 +30,7 @@ export function KanbanHeader({
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: '8px'
+    marginBottom: theme.spacing?.sm || '8px'
   }
 
   const titleStyle = {
@@ -44,21 +44,21 @@ export function KanbanHeader({
   const descriptionStyle = {
     fontSize: '16px',
     color: theme.textSecondary,
-    margin: '4px 0 0 0',
+    margin: `${theme.spacing?.xs || '4px'} 0 0 0`,
     lineHeight: '1.4'
   }
 
   const statusContainerStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '16px',
+    gap: theme.spacing?.md || '16px',
     fontSize: '14px'
   }
 
   const connectionStatusStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '6px',
+    gap: theme.spacing?.xs || '6px',
     color: isConnected ? theme.success || '#28a745' : theme.danger || '#dc3545',
     fontWeight: '500'
   }
@@ -73,14 +73,14 @@ export function KanbanHeader({
   const onlineUsersStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
+    gap: theme.spacing?.sm || '8px',
     color: theme.textMuted
   }
 
   const avatarContainerStyle = {
     display: 'flex',
-    gap: '4px',
-    marginLeft: '8px'
+    gap: theme.spacing?.xs || '4px',
+    marginLeft: theme.spacing?.sm || '8px'
   }
 
   const avatarStyle = {

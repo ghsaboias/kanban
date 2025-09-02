@@ -52,8 +52,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [persist])
 
   const safeSetTransform = useCallback((fn: ((t: Theme | null) => Theme) | null) => {
-    if (fn === null || typeof fn === 'function') {
-      setTransform(fn)
+    if (fn === null) {
+      setTransform(null)
+    } else if (typeof fn === 'function') {
+      // Important: wrap in function to avoid React treating it as an updater
+      setTransform(() => fn)
     } else {
       console.warn('setTransform called with invalid value:', fn)
     }

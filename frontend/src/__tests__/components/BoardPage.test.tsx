@@ -1,8 +1,6 @@
-import { describe, expect, it, vi } from 'vitest'
-import { BoardPage } from '../../components/BoardPage'
-import { SocketProvider } from '../../contexts/SocketContext'
-import { render, screen } from '../test-utils'
+import { describe, expect, it, vi } from 'vitest';
 
+// Place mocks BEFORE importing the module under test to avoid loading heavy dependencies
 // Mock the Board component used inside BoardPage to avoid deep rendering
 vi.mock('../../components/Board', () => ({
   Board: ({ board }: { board?: { id: string } | null }) => <div>Board Component (id: {board?.id})</div>
@@ -18,37 +16,38 @@ vi.mock('react-router-dom', async () => {
   };
 })
 
-// Mock useApi hook
-vi.mock('../../useApi', () => ({
-  useApi: () => ({
-    apiFetch: vi.fn().mockImplementation((url: string) => {
-      if (url.includes('/activities')) {
-        // Mock activities response
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            success: true,
-            data: []
-          })
-        });
-      } else {
-        // Mock board response
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            success: true,
-            data: {
-              id: 'abc123',
-              title: 'Test Board',
-              description: 'Test Description',
-              columns: []
-            }
-          })
-        });
-      }
-    })
-  })
-}))
+// Mock useApi hook with STABLE apiFetch reference across renders to avoid effect loops
+vi.mock('../../useApi', () => {
+  const apiFetch = vi.fn((url: string) => {
+    if (url.includes('/activities')) {
+      // Mock activities response
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          success: true,
+          data: []
+        })
+      });
+    } else {
+      // Mock board response
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          success: true,
+          data: {
+            id: 'abc123',
+            title: 'Test Board',
+            description: 'Test Description',
+            columns: []
+          }
+        })
+      });
+    }
+  });
+  return {
+    useApi: () => ({ apiFetch })
+  };
+})
 
 // Mock useSocket hook
 vi.mock('../../hooks/useSocket', () => ({
@@ -79,6 +78,12 @@ vi.mock('../../hooks/useRealtimeBoard', () => ({
     activities: []
   })
 }))
+
+// Now import after mocks are defined
+import { BoardPage } from '../../components/BoardPage';
+import { SocketProvider } from '../../contexts/SocketContext';
+import { render, screen } from '../test-utils';
+
 
 describe('BoardPage', () => {
   it('renders loading state initially', () => {

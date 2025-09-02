@@ -5,6 +5,7 @@ import { useTheme } from '../theme/useTheme'
 import type { ApiResponse } from '../types/api'
 import { useApi } from '../useApi'
 import { SortableCard } from './SortableCard'
+import { useAsyncOperation } from '../hooks/useAsyncOperation'
 
 interface CardData {
   id: string
@@ -44,7 +45,6 @@ interface User {
 
 export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted, onCardUpdated, onCardDeleted, onCardClick }: ColumnProps) {
   const [showCreateCard, setShowCreateCard] = useState(false)
-  const [createLoading, setCreateLoading] = useState(false)
   const [users, setUsers] = useState<User[]>([])
   const [formData, setFormData] = useState({
     title: '',
@@ -52,6 +52,12 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
     priority: 'MEDIUM' as 'LOW' | 'MEDIUM' | 'HIGH',
     assigneeId: ''
   })
+  
+  // Use async operation hook for creating cards
+  const {
+    loading: createLoading,
+    execute: executeCreateCard
+  } = useAsyncOperation<CardData>()
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleValue, setTitleValue] = useState(column.title)
   const [deleteLoading, setDeleteLoading] = useState(false)
@@ -75,8 +81,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
     e.preventDefault()
     if (!formData.title.trim()) return
 
-    setCreateLoading(true)
-    try {
+    const createCardOperation = async () => {
       const response = await apiFetch(`/api/columns/${column.id}/cards`, {
         method: 'POST',
         headers: {
@@ -95,13 +100,16 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
         onCardCreated?.(result.data)
         setFormData({ title: '', description: '', priority: 'MEDIUM', assigneeId: '' })
         setShowCreateCard(false)
+        return result.data
       } else {
-        console.error('Failed to create card:', result.error)
+        throw new Error(result.error || 'Failed to create card')
       }
+    }
+
+    try {
+      await executeCreateCard(createCardOperation)
     } catch (err) {
       console.error('Error creating card:', err)
-    } finally {
-      setCreateLoading(false)
     }
   }
 
@@ -174,17 +182,17 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
       style={{
         minWidth: '300px',
         backgroundColor: theme.surfaceAlt,
-        borderRadius: '8px',
-        padding: '16px',
+        borderRadius: theme.radius?.md || '8px',
+        padding: theme.spacing?.md || '16px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '12px'
+        gap: theme.spacing?.sm || '12px'
       }}
     >
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        marginBottom: '8px'
+        marginBottom: theme.spacing?.sm || '8px'
       }}>
         {editingTitle ? (
           <input
@@ -202,9 +210,9 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
             onPointerDown={(e) => e.stopPropagation()}
             style={{
               border: `1px solid ${theme.accent}`,
-              borderRadius: '4px',
+              borderRadius: theme.radius?.sm || '4px',
               boxSizing: 'border-box',
-              padding: '0 8px',
+              padding: `0 ${theme.spacing?.xs || '8px'}`,
               fontSize: '16px',
               fontWeight: 600,
               lineHeight: '24px',
@@ -212,7 +220,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
               color: theme.textPrimary,
               background: theme.surface,
               flex: 1,
-              marginRight: '8px',
+              marginRight: theme.spacing?.xs || '8px',
               minWidth: 0,
               outline: 'none'
             }}
@@ -240,7 +248,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
             {column.title}
           </h3>
         )}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing?.md || '12px' }}>
           <div
             aria-label="Card count"
             style={{
@@ -248,7 +256,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
               color: theme.textSecondary,
               height: '24px',
               minWidth: '24px',
-              padding: '0 8px',
+              padding: `0 ${theme.spacing?.xs || '8px'}`,
               boxSizing: 'border-box',
               borderRadius: '9999px',
               display: 'flex',
@@ -279,7 +287,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
               minWidth: '24px',
               padding: 0,
               boxSizing: 'border-box',
-              borderRadius: '6px',
+              borderRadius: theme.radius?.sm || '6px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -329,7 +337,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
         </div>
       </div>
 
-      <div ref={setDroppableNodeRef} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div ref={setDroppableNodeRef} style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing?.sm || '8px' }}>
         <SortableContext items={column.cards.map(c => `card-${c.id}`)} strategy={verticalListSortingStrategy}>
           {column.cards.map(card => (
               <SortableCard
@@ -344,7 +352,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
 
         {column.cards.length === 0 && !showCreateCard && (
           <div style={{
-            padding: '20px',
+            padding: theme.spacing?.lg || '20px',
             textAlign: 'center',
             color: theme.textSecondary,
             fontStyle: 'italic'
@@ -353,19 +361,19 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
           </div>
         )}
 
-        <div style={{ marginTop: '8px', minHeight: showCreateCard ? 'auto' : '48px' }}>
+        <div style={{ marginTop: theme.spacing?.xs || '8px', minHeight: showCreateCard ? 'auto' : '48px' }}>
           {showCreateCard && (
             <div
               style={{
                 backgroundColor: theme.card,
                 border: `1px solid ${theme.border}`,
-                borderRadius: '6px',
-                padding: '12px'
+                borderRadius: theme.radius?.sm || '6px',
+                padding: theme.spacing?.md || '12px'
               }}
               onPointerDown={(e) => e.stopPropagation()}
             >
             <form onSubmit={handleCreateCard}>
-              <div style={{ marginBottom: '12px' }}>
+              <div style={{ marginBottom: theme.spacing?.sm || '12px' }}>
                 <input
                   type="text"
                   value={formData.title}
@@ -374,9 +382,9 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                   style={{
                     width: '100%',
                     boxSizing: 'border-box',
-                    padding: '8px 12px',
+                    padding: `${theme.spacing?.xs || '8px'} ${theme.spacing?.sm || '12px'}`,
                     border: `1px solid ${theme.border}`,
-                    borderRadius: '4px',
+                    borderRadius: theme.radius?.sm || '4px',
                     backgroundColor: theme.inputBg,
                     fontSize: '14px',
                     fontFamily: 'inherit',
@@ -387,7 +395,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                 />
               </div>
 
-              <div style={{ marginBottom: '12px' }}>
+              <div style={{ marginBottom: theme.spacing?.sm || '12px' }}>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -396,9 +404,9 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                   style={{
                     width: '100%',
                     boxSizing: 'border-box',
-                    padding: '8px 12px',
+                    padding: `${theme.spacing?.xs || '8px'} ${theme.spacing?.sm || '12px'}`,
                     border: `1px solid ${theme.border}`,
-                    borderRadius: '4px',
+                    borderRadius: theme.radius?.sm || '4px',
                     backgroundColor: theme.inputBg,
                     fontSize: '14px',
                     fontFamily: 'inherit',
@@ -408,17 +416,17 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                 />
               </div>
 
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', gap: theme.spacing?.xs || '8px', marginBottom: theme.spacing?.sm || '12px' }}>
                 <select
                   value={formData.priority}
                   onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value as 'LOW' | 'MEDIUM' | 'HIGH' }))}
                   style={{
                     flex: 1,
                     boxSizing: 'border-box',
-                    padding: '8px 12px',
-                    paddingRight: '36px',
+                    padding: `${theme.spacing?.xs || '8px'} ${theme.spacing?.sm || '12px'}`,
+                    paddingRight: theme.spacing?.xl || '36px',
                     border: `1px solid ${theme.border}`,
-                    borderRadius: '4px',
+                    borderRadius: theme.radius?.sm || '4px',
                     backgroundColor: theme.inputBg,
                     fontSize: '14px',
                     fontFamily: 'inherit',
@@ -444,10 +452,10 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                   style={{
                     flex: 1,
                     boxSizing: 'border-box',
-                    padding: '8px 12px',
-                    paddingRight: '36px',
+                    padding: `${theme.spacing?.xs || '8px'} ${theme.spacing?.sm || '12px'}`,
+                    paddingRight: theme.spacing?.xl || '36px',
                     border: `1px solid ${theme.border}`,
-                    borderRadius: '4px',
+                    borderRadius: theme.radius?.sm || '4px',
                     backgroundColor: theme.inputBg,
                     fontSize: '14px',
                     fontFamily: 'inherit',
@@ -469,7 +477,7 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                 </select>
               </div>
 
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: theme.spacing?.xs || '8px' }}>
                 <button
                   type="submit"
                   disabled={createLoading || !formData.title.trim()}
@@ -477,8 +485,8 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                     backgroundColor: createLoading ? theme.muted : theme.accent,
                     color: theme.accentText,
                     border: 'none',
-                    borderRadius: '4px',
-                    padding: '6px 12px',
+                    borderRadius: theme.radius?.sm || '4px',
+                    padding: `${theme.spacing?.xs || '6px'} ${theme.spacing?.sm || '12px'}`,
                     cursor: createLoading ? 'not-allowed' : 'pointer',
                     fontSize: '12px',
                     flex: 1
@@ -496,8 +504,8 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
                     backgroundColor: theme.muted,
                     color: theme.accentText,
                     border: 'none',
-                    borderRadius: '4px',
-                    padding: '6px 12px',
+                    borderRadius: theme.radius?.sm || '4px',
+                    padding: `${theme.spacing?.xs || '6px'} ${theme.spacing?.sm || '12px'}`,
                     cursor: 'pointer',
                     fontSize: '12px'
                   }}
@@ -515,10 +523,10 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
             onClick={() => setShowCreateCard(true)}
             style={{
               width: '100%',
-              padding: '16px',
+              padding: theme.spacing?.md || '16px',
               backgroundColor: theme.surfaceAlt,
               border: `2px dashed ${theme.border}`,
-              borderRadius: '8px',
+              borderRadius: theme.radius?.md || '8px',
               cursor: 'pointer',
               fontSize: '14px',
               color: theme.textMuted,

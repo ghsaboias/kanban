@@ -54,11 +54,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   const containerStyle = {
     position: 'fixed' as const,
-    right: '16px',
-    bottom: '16px',
+    right: theme.spacing?.md || '16px',
+    bottom: theme.spacing?.md || '16px',
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '8px',
+    gap: theme.spacing?.sm || '8px',
     zIndex: 2000
   }
 
@@ -69,14 +69,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       : type === 'success' ? (theme.success || '#28a745')
         : theme.brand || theme.accent,
     color: theme.accentText,
-    padding: '10px 12px',
+    padding: `${theme.spacing?.sm || '10px'} ${theme.spacing?.md || '12px'}`,
     borderRadius: theme.radius?.sm || '6px',
     boxShadow: theme.shadow?.md || '0 2px 8px rgba(0,0,0,0.15)',
     fontSize: '14px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: '10px'
+    gap: theme.spacing?.md || '10px'
   })
 
   const closeBtnStyle = {
@@ -94,7 +94,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       <div style={containerStyle}>
         {toasts.map(t => (
           <div key={t.id} style={cardStyle(t.type)}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing?.sm || '8px' }}>
               <span aria-hidden>
                 {t.type === 'success' ? '✔️' : t.type === 'error' ? '⚠️' : 'ℹ️'}
               </span>
@@ -107,4 +107,3 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     </ToastContext.Provider>
   )
 }
-

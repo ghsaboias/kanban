@@ -138,7 +138,7 @@ export function KanbanToolbar({
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '16px 24px',
+    padding: `${theme.spacing?.md || '16px'} ${theme.spacing?.lg || '24px'}`,
     backgroundColor: theme.surface,
     borderBottom: `1px solid ${theme.border}`,
     boxShadow: theme.shadow?.sm || 'none'
@@ -147,13 +147,13 @@ export function KanbanToolbar({
   const leftSectionStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px'
+    gap: theme.spacing?.sm || '12px'
   }
 
   const rightSectionStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
+    gap: theme.spacing?.sm || '8px',
     flexShrink: 0
   }
 
@@ -210,7 +210,7 @@ export function KanbanToolbar({
     position: 'absolute' as const,
     top: '100%',
     left: '0',
-    marginTop: '4px',
+    marginTop: theme.spacing?.xs || '4px',
     backgroundColor: theme.surface,
     border: `1px solid ${theme.border}`,
     borderRadius: theme.radius?.md || '6px',
@@ -220,7 +220,7 @@ export function KanbanToolbar({
   }
 
   const dropdownItemStyle = {
-    padding: '8px 12px',
+    padding: `${theme.spacing?.sm || '8px'} ${theme.spacing?.md || '12px'}`,
     fontSize: '14px',
     color: theme.textSecondary,
     cursor: 'pointer',
@@ -235,7 +235,7 @@ export function KanbanToolbar({
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '4px',
+          gap: theme.spacing?.xs || '4px',
           padding: isCompact ? '8px 8px' : '8px 16px',
           backgroundColor: theme.accent,
           color: theme.accentText,

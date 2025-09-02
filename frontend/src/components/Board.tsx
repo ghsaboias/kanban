@@ -9,8 +9,10 @@ import { useToast } from '../ui/useToast'
 import { useApi } from '../useApi'
 import { hasContent, toPlainText } from '../utils/html'
 import { Card as CardView } from './Card'
-import { CardDetailModal } from './CardDetailModal'
-import { ExportModal, type ExportOptions } from './ExportModal'
+import { Suspense, lazy } from 'react'
+const CardDetailModal = lazy(() => import('./CardDetailModal').then(m => ({ default: m.CardDetailModal })))
+const ExportModal = lazy(() => import('./ExportModal').then(m => ({ default: m.ExportModal })))
+import type { ExportOptions } from './ExportModal'
 import { KanbanColumns } from './KanbanColumns'
 import { KanbanHeader } from './KanbanHeader'
 import { KanbanToolbar } from './KanbanToolbar'
@@ -445,20 +447,23 @@ export function Board({ board, setBoard, isConnected, onlineUsers, isCompact }: 
         </DragOverlay>
       </DndContext>
 
-      {selectedCard && (
-        <CardDetailModal
-          card={selectedCard}
-          isOpen={isModalOpen}
-          onClose={handleModalClose}
-          onCardUpdated={handleCardUpdated}
-        />
-      )}
+      <Suspense fallback={null}>
+        {selectedCard && (
+          <CardDetailModal
+            card={selectedCard}
+            isOpen={isModalOpen}
+            onClose={handleModalClose}
+            onCardUpdated={handleCardUpdated}
+          />
+        )}
+      </Suspense>
 
       {/* Export Modal */}
-      <ExportModal
-        isOpen={showExportModal}
-        onClose={() => setShowExportModal(false)}
-        onConfirm={(options: ExportOptions) => {
+      <Suspense fallback={null}>
+        <ExportModal
+          isOpen={showExportModal}
+          onClose={() => setShowExportModal(false)}
+          onConfirm={(options: ExportOptions) => {
           setShowExportModal(false)
           try {
             const slugify = (s: string) => s
@@ -612,6 +617,7 @@ export function Board({ board, setBoard, isConnected, onlineUsers, isCompact }: 
           }
         }}
       />
+      </Suspense>
     </div>
   )
 }

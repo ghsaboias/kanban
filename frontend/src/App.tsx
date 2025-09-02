@@ -1,10 +1,10 @@
 import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/clerk-react'
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom'
 import './App.css'
-import { BoardPage } from './components/BoardPage'
-import { BoardsList } from './components/BoardsList'
-import { ThemeSwitcher } from './components/ThemeSwitcher'
-import { UISwitcher } from './components/UISwitcher'
+import { Suspense, lazy } from 'react'
+const BoardsList = lazy(() => import('./components/BoardsList').then(m => ({ default: m.BoardsList })))
+const BoardPage = lazy(() => import('./components/BoardPage').then(m => ({ default: m.BoardPage })))
+import { StyleSwitcher } from './components/StyleSwitcher'
 import { SocketProvider } from './contexts/SocketContext'
 import { useTheme } from './theme/useTheme'
 
@@ -17,14 +17,14 @@ function App() {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          padding: '10px 16px',
+          padding: `${theme.spacing?.sm || '10px'} ${theme.spacing?.md || '16px'}`,
           borderBottom: `1px solid ${theme.border}`,
           backgroundColor: theme.surface
         }}>
           <h1 style={{ margin: 0, fontSize: '16px', color: theme.textPrimary }}>Kanban</h1>
           <div>
             <SignedOut>
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: theme.spacing?.sm || '8px' }}>
                 <SignInButton />
                 <SignUpButton />
               </div>
@@ -36,21 +36,22 @@ function App() {
         </header>
 
         <SignedOut>
-          <div style={{ padding: '24px' }}>
+          <div style={{ padding: theme.spacing?.xl || '24px' }}>
             <p style={{ color: theme.textPrimary }}>Please sign in to continue.</p>
           </div>
         </SignedOut>
 
         <SignedIn>
           <SocketProvider>
-            <Routes>
-              <Route path="/" element={<BoardsList />} />
-              <Route path="/board/:id" element={<BoardPage />} />
-            </Routes>
+            <Suspense fallback={<div style={{ padding: (theme.spacing?.md || '16px') }}>Loading…</div>}>
+              <Routes>
+                <Route path="/" element={<BoardsList />} />
+                <Route path="/board/:id" element={<BoardPage />} />
+              </Routes>
+            </Suspense>
           </SocketProvider>
         </SignedIn>
-        <ThemeSwitcher />
-        <UISwitcher />
+        <StyleSwitcher />
       </div>
     </Router>
   )

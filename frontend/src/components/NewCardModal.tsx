@@ -130,7 +130,7 @@ export function NewCardModal({ isOpen, onClose, columns, onCardCreated }: NewCar
     backgroundColor: theme.surface,
     border: `1px solid ${theme.border}`,
     borderRadius: theme.radius?.lg || '12px',
-    padding: '24px',
+    padding: theme.spacing?.lg || '24px',
     width: '90%',
     maxWidth: '500px',
     maxHeight: '90vh',
@@ -141,14 +141,14 @@ export function NewCardModal({ isOpen, onClose, columns, onCardCreated }: NewCar
   const inputStyle = {
     width: '100%',
     boxSizing: 'border-box' as const,
-    padding: '8px 12px',
+    padding: `${theme.spacing?.sm || '8px'} ${theme.spacing?.sm || '12px'}`,
     border: `1px solid ${theme.border}`,
-    borderRadius: '4px',
+    borderRadius: theme.radius?.sm || '4px',
     backgroundColor: theme.inputBg,
     fontSize: '14px',
     fontFamily: 'inherit',
     color: theme.textPrimary,
-    marginBottom: '12px',
+    marginBottom: theme.spacing?.sm || '12px',
     outline: 'none'
   }
 
@@ -166,8 +166,8 @@ export function NewCardModal({ isOpen, onClose, columns, onCardCreated }: NewCar
   }
 
   const buttonStyle = {
-    padding: '8px 16px',
-    borderRadius: '4px',
+    padding: `${theme.spacing?.sm || '8px'} ${theme.spacing?.md || '16px'}`,
+    borderRadius: theme.radius?.sm || '4px',
     fontSize: '14px',
     fontWeight: '600',
     cursor: 'pointer',
@@ -179,7 +179,7 @@ export function NewCardModal({ isOpen, onClose, columns, onCardCreated }: NewCar
     ...buttonStyle,
     backgroundColor: createLoading ? theme.muted : theme.accent,
     color: theme.accentText,
-    marginRight: '12px'
+    marginRight: theme.spacing?.sm || '12px'
   }
 
   const secondaryButtonStyle = {
@@ -201,7 +201,7 @@ export function NewCardModal({ isOpen, onClose, columns, onCardCreated }: NewCar
         <h2 
           id="modal-title"
           style={{
-            margin: '0 0 20px 0',
+            margin: `0 0 ${theme.spacing?.lg || '20px'} 0`,
             fontSize: '20px',
             fontWeight: '600',
             color: theme.textPrimary
@@ -212,12 +212,12 @@ export function NewCardModal({ isOpen, onClose, columns, onCardCreated }: NewCar
 
         <form onSubmit={handleCreateCard}>
           {/* Column Selector */}
-          <div style={{ marginBottom: '12px' }}>
+          <div style={{ marginBottom: theme.spacing?.sm || '12px' }}>
             <label 
               htmlFor="column-select"
               style={{
                 display: 'block',
-                marginBottom: '6px',
+                marginBottom: theme.spacing?.xs || '6px',
                 fontSize: '14px',
                 fontWeight: '500',
                 color: theme.textSecondary
@@ -243,12 +243,12 @@ export function NewCardModal({ isOpen, onClose, columns, onCardCreated }: NewCar
           </div>
 
           {/* Title */}
-          <div style={{ marginBottom: '12px' }}>
+          <div style={{ marginBottom: theme.spacing?.sm || '12px' }}>
             <label 
               htmlFor="card-title"
               style={{
                 display: 'block',
-                marginBottom: '6px',
+                marginBottom: theme.spacing?.xs || '6px',
                 fontSize: '14px',
                 fontWeight: '500',
                 color: theme.textSecondary
@@ -269,12 +269,12 @@ export function NewCardModal({ isOpen, onClose, columns, onCardCreated }: NewCar
           </div>
 
           {/* Description */}
-          <div style={{ marginBottom: '12px' }}>
+          <div style={{ marginBottom: theme.spacing?.sm || '12px' }}>
             <label 
               htmlFor="card-description"
               style={{
                 display: 'block',
-                marginBottom: '6px',
+                marginBottom: theme.spacing?.xs || '6px',
                 fontSize: '14px',
                 fontWeight: '500',
                 color: theme.textSecondary
@@ -295,14 +295,14 @@ export function NewCardModal({ isOpen, onClose, columns, onCardCreated }: NewCar
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', gap: theme.spacing?.sm || '12px', marginBottom: theme.spacing?.lg || '20px' }}>
             {/* Priority */}
             <div style={{ flex: 1 }}>
               <label 
                 htmlFor="card-priority"
                 style={{
                   display: 'block',
-                  marginBottom: '6px',
+                  marginBottom: theme.spacing?.xs || '6px',
                   fontSize: '14px',
                   fontWeight: '500',
                   color: theme.textSecondary
@@ -328,7 +328,7 @@ export function NewCardModal({ isOpen, onClose, columns, onCardCreated }: NewCar
                 htmlFor="card-assignee"
                 style={{
                   display: 'block',
-                  marginBottom: '6px',
+                  marginBottom: theme.spacing?.xs || '6px',
                   fontSize: '14px',
                   fontWeight: '500',
                   color: theme.textSecondary

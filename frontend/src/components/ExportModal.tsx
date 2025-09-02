@@ -43,7 +43,7 @@ export function ExportModal({ isOpen, onClose, onConfirm, defaultHonorFilters = 
     backgroundColor: theme.surface,
     border: `1px solid ${theme.border}`,
     borderRadius: theme.radius?.lg || '12px',
-    padding: '20px',
+    padding: theme.spacing?.lg || '20px',
     width: '90%',
     maxWidth: '480px',
     maxHeight: '90vh',
@@ -52,14 +52,14 @@ export function ExportModal({ isOpen, onClose, onConfirm, defaultHonorFilters = 
   }
 
   const sectionStyle = {
-    marginBottom: '16px'
+    marginBottom: theme.spacing?.md || '16px'
   }
 
   const rowStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
-    margin: '8px 0'
+    gap: theme.spacing?.sm || '10px',
+    margin: `${theme.spacing?.sm || '8px'} 0`
   }
 
   const labelStyle = {
@@ -68,8 +68,8 @@ export function ExportModal({ isOpen, onClose, onConfirm, defaultHonorFilters = 
   }
 
   const buttonStyle = {
-    padding: '8px 16px',
-    borderRadius: '6px',
+    padding: `${theme.spacing?.sm || '8px'} ${theme.spacing?.md || '16px'}`,
+    borderRadius: theme.radius?.sm || '6px',
     fontSize: '14px',
     fontWeight: 600,
     cursor: 'pointer',
@@ -79,10 +79,10 @@ export function ExportModal({ isOpen, onClose, onConfirm, defaultHonorFilters = 
   return (
     <div style={modalBackdropStyle} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
-        <h2 style={{ margin: 0, marginBottom: '16px', color: theme.textPrimary }}>Export Board</h2>
+        <h2 style={{ margin: 0, marginBottom: theme.spacing?.md || '16px', color: theme.textPrimary }}>Export Board</h2>
 
         <div style={sectionStyle}>
-          <div style={{ ...labelStyle, marginBottom: '6px', fontWeight: 600 }}>What to export</div>
+          <div style={{ ...labelStyle, marginBottom: theme.spacing?.xs || '6px', fontWeight: 600 }}>What to export</div>
           <div style={rowStyle}>
             <input id="export-json" type="checkbox" checked={exportJson} onChange={(e) => setExportJson(e.target.checked)} />
             <label htmlFor="export-json" style={labelStyle}>Full board (JSON)</label>
@@ -98,14 +98,14 @@ export function ExportModal({ isOpen, onClose, onConfirm, defaultHonorFilters = 
         </div>
 
         <div style={sectionStyle}>
-          <div style={{ ...labelStyle, marginBottom: '6px', fontWeight: 600 }}>Scope</div>
+          <div style={{ ...labelStyle, marginBottom: theme.spacing?.xs || '6px', fontWeight: 600 }}>Scope</div>
           <div style={rowStyle}>
             <input id="honor-filters" type="checkbox" checked={honorFilters} onChange={(e) => setHonorFilters(e.target.checked)} />
             <label htmlFor="honor-filters" style={labelStyle}>Honor current search/filter/sort</label>
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: theme.spacing?.sm || '8px' }}>
           <button
             onClick={onClose}
             style={{
@@ -134,4 +134,3 @@ export function ExportModal({ isOpen, onClose, onConfirm, defaultHonorFilters = 
     </div>
   )
 }
-

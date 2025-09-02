@@ -64,7 +64,7 @@ export function ModernCard({ card, onCardUpdated, onCardDeleted, onCardClick }: 
     backgroundColor: theme.card,
     border: `1px solid ${theme.border}`,
     borderRadius: theme.radius?.md || '8px',
-    padding: '16px',
+    padding: theme.spacing?.sm || '16px',
     cursor: 'pointer',
     boxShadow: theme.shadow?.sm || '0 1px 3px rgba(0,0,0,0.08)',
     transition: 'all 0.2s ease',
@@ -92,7 +92,7 @@ export function ModernCard({ card, onCardUpdated, onCardDeleted, onCardClick }: 
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: '12px'
+    marginTop: theme.spacing?.xs || '12px'
   }
 
   const priorityBadgeStyle = {
@@ -128,7 +128,7 @@ export function ModernCard({ card, onCardUpdated, onCardDeleted, onCardClick }: 
     opacity: hovering ? 1 : 0,
     transition: 'opacity 0.2s ease',
     cursor: 'grab',
-    padding: '4px',
+    padding: theme.spacing?.sm || '4px',
     borderRadius: theme.radius?.sm || '4px',
     backgroundColor: 'transparent',
     border: 'none',
@@ -142,7 +142,7 @@ export function ModernCard({ card, onCardUpdated, onCardDeleted, onCardClick }: 
     opacity: hovering ? 1 : 0,
     transition: 'opacity 0.2s ease',
     cursor: 'pointer',
-    padding: '6px',
+    padding: theme.spacing?.sm || '6px',
     borderRadius: theme.radius?.sm || '4px',
     backgroundColor: 'transparent',
     border: `1px solid ${theme.border}`,
@@ -209,10 +209,10 @@ export function ModernCard({ card, onCardUpdated, onCardDeleted, onCardClick }: 
           if (images.length === 0) return null
 
           return (
-            <div style={{ marginBottom: '12px' }}>
+            <div style={{ marginBottom: theme.spacing?.xs || '12px' }}>
               <div style={{
                 display: 'flex',
-                gap: '6px',
+                gap: theme.spacing?.xs || '6px',
                 flexWrap: 'wrap' as const
               }}>
                 {images.slice(0, 2).map((src, index) => (

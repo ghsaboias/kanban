@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ActivityFeed } from './ActivityFeed';
+import { Suspense, lazy } from 'react';
+const ActivityFeed = lazy(() => import('./ActivityFeed').then(m => ({ default: m.ActivityFeed })))
 import { Board, type BoardData } from './Board';
 import { useApi } from '../useApi';
 import { useRealtimeBoard } from '../hooks/useRealtimeBoard';
 import type { Activity, ActivityFeedData, ApiResponse } from '../types/api';
 import { useTheme } from '../theme/useTheme';
+import { useAsyncOperation } from '../hooks/useAsyncOperation';
 
 export function BoardPage() {
   const { id } = useParams<{ id: string }>();
@@ -15,8 +17,13 @@ export function BoardPage() {
   const [showActivityFeed, setShowActivityFeed] = useState(false);
   const [board, setBoard] = useState<BoardData | null>(null);
   const [initialActivities, setInitialActivities] = useState<Activity[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  
+  // Use async operation hook for loading board data
+  const {
+    loading,
+    error,
+    execute: loadBoardData
+  } = useAsyncOperation<{ board: BoardData; activities: Activity[] }>();
 
   // Real-time data hook
   const { isConnected, onlineUsers, activities } = useRealtimeBoard(
@@ -30,41 +37,36 @@ export function BoardPage() {
     if (!id) return;
 
     const fetchInitialData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        // Fetch board and activities in parallel
-        const [boardRes, activitiesRes] = await Promise.all([
-          apiFetch(`/api/boards/${id}`),
-          apiFetch(`/api/boards/${id}/activities?page=1&limit=50`) // Fetch more initially
-        ]);
+      // Fetch board and activities in parallel
+      const [boardRes, activitiesRes] = await Promise.all([
+        apiFetch(`/api/boards/${id}`),
+        apiFetch(`/api/boards/${id}/activities?page=1&limit=50`) // Fetch more initially
+      ]);
 
-        const boardResult: ApiResponse<BoardData> = await boardRes.json();
-        const activitiesResult: ApiResponse<ActivityFeedData> = await activitiesRes.json();
+      const boardResult: ApiResponse<BoardData> = await boardRes.json();
+      const activitiesResult: ApiResponse<ActivityFeedData> = await activitiesRes.json();
 
-        if (boardResult.success) {
-          setBoard(boardResult.data);
-        } else {
-          throw new Error(boardResult.error || 'Failed to load board');
-        }
-
-        if (activitiesResult.success) {
-          setInitialActivities(activitiesResult.data.activities);
-        } else {
-          // Non-fatal, the board can still render
-          console.error('Failed to load initial activities');
-        }
-
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        setError('Error connecting to API: ' + msg);
-      } finally {
-        setLoading(false);
+      if (!boardResult.success) {
+        throw new Error(boardResult.error || 'Failed to load board');
       }
+
+      let activities: Activity[] = [];
+      if (activitiesResult.success) {
+        activities = activitiesResult.data.activities;
+      } else {
+        // Non-fatal, the board can still render
+        console.error('Failed to load initial activities');
+      }
+
+      // Set the state after successful fetch
+      setBoard(boardResult.data);
+      setInitialActivities(activities);
+      
+      return { board: boardResult.data, activities };
     };
 
-    fetchInitialData();
-  }, [id, apiFetch]);
+    loadBoardData(fetchInitialData);
+  }, [id, apiFetch, loadBoardData]);
   if (!id) {
     return <div>Board ID not found</div>;
   }
@@ -85,7 +87,7 @@ export function BoardPage() {
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <div style={{
-        padding: '10px 20px',
+        padding: `${theme.spacing?.sm || '10px'} ${theme.spacing?.lg || '20px'}`,
         backgroundColor: theme.surfaceAlt,
         borderBottom: `1px solid ${theme.border}`,
         display: 'flex',
@@ -110,13 +112,13 @@ export function BoardPage() {
             backgroundColor: showActivityFeed ? '#007bff' : '#6c757d',
             color: 'white',
             border: 'none',
-            borderRadius: '6px',
-            padding: '8px 16px',
+            borderRadius: theme.radius?.sm || '6px',
+            padding: `${theme.spacing?.sm || '8px'} ${theme.spacing?.md || '16px'}`,
             cursor: 'pointer',
             fontSize: '14px',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: theme.spacing?.sm || '6px',
             transition: 'background-color 0.2s',
             width: '180px',
             justifyContent: 'center'
@@ -151,13 +153,15 @@ export function BoardPage() {
           overflow: 'hidden',
           transition: 'width 0.3s ease'
         }}>
-          {showActivityFeed && (
-            <ActivityFeed
-              activities={activities}
-              boardTitle={board.title}
-              isLoading={false} // Loading is handled by the page
-            />
-          )}
+          <Suspense fallback={<div style={{ padding: (theme.spacing?.md || '12px') }}>Loading…</div>}>
+            {showActivityFeed && (
+              <ActivityFeed
+                activities={activities}
+                boardTitle={board.title}
+                isLoading={false} // Loading is handled by the page
+              />
+            )}
+          </Suspense>
         </div>
       </div>
     </div>

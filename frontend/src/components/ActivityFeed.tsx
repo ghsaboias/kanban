@@ -1,5 +1,6 @@
 // React import removed - not needed with new JSX transform
 import type { Activity } from '../../../shared/realtime';
+import { useTheme } from '../theme/useTheme'
 
 interface ActivityFeedProps {
   activities: Activity[];
@@ -13,6 +14,7 @@ interface ActivityItemProps {
 }
 
 function ActivityItem({ activity }: ActivityItemProps) {
+  const { theme } = useTheme()
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -137,17 +139,17 @@ function ActivityItem({ activity }: ActivityItemProps) {
   };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '12px 0', borderBottom: '1px solid #f3f4f6' }}>
-      <div style={{ fontSize: '16px', lineHeight: '1', marginTop: '2px' }}>
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: theme.spacing?.md || '12px', padding: `${theme.spacing?.md || '12px'} 0`, borderBottom: `1px solid ${theme.border}` }}>
+      <div style={{ fontSize: '16px', lineHeight: '1', marginTop: theme.spacing?.xs || '2px' }}>
         {getEntityIcon()}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: '14px', color: '#374151', lineHeight: '1.4', marginBottom: '4px' }}>
+        <div style={{ fontSize: '14px', color: '#374151', lineHeight: '1.4', marginBottom: theme.spacing?.xs || '4px' }}>
           {getActionText()}
         </div>
-        <div style={{ fontSize: '12px', color: '#9ca3af', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ fontSize: '12px', color: '#9ca3af', display: 'flex', alignItems: 'center', gap: theme.spacing?.sm || '8px' }}>
           <span>{formatDate(activity.createdAt)}</span>
-          <div style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: getActionColor() }}></div>
+          <div style={{ width: theme.spacing?.xs || '4px', height: theme.spacing?.xs || '4px', borderRadius: '50%', backgroundColor: getActionColor() }}></div>
           <span style={{ textTransform: 'uppercase', fontSize: '11px', fontWeight: '500', color: getActionColor() }}>
             {activity.action}
           </span>
@@ -158,9 +160,10 @@ function ActivityItem({ activity }: ActivityItemProps) {
 }
 
 export function ActivityFeed({ activities, boardTitle, isLoading, className }: ActivityFeedProps) {
+  const { theme } = useTheme()
   if (isLoading) {
     return (
-      <div className={className} style={{ padding: '20px', textAlign: 'center' }}>
+      <div className={className} style={{ padding: theme.spacing?.lg || '20px', textAlign: 'center' }}>
         <div style={{ color: '#6b7280' }}>Carregando atividades...</div>
       </div>
     );
@@ -168,23 +171,23 @@ export function ActivityFeed({ activities, boardTitle, isLoading, className }: A
 
   return (
     <div className={className} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb', backgroundColor: '#f9fafb', flexShrink: 0 }}>
-        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div style={{ padding: `${theme.spacing?.md || '16px'} ${theme.spacing?.lg || '20px'}`, borderBottom: `1px solid ${theme.border}`, backgroundColor: theme.surfaceAlt, flexShrink: 0 }}>
+        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: theme.textPrimary, display: 'flex', alignItems: 'center', gap: theme.spacing?.sm || '8px' }}>
           <span>📊</span>
           Atividades do Quadro
         </h3>
         {boardTitle && (
-          <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#6b7280' }}>
+          <p style={{ margin: `${theme.spacing?.xs || '4px'} 0 0 0`, fontSize: '14px', color: theme.textSecondary }}>
             {boardTitle}
           </p>
         )}
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: `0 ${theme.spacing?.lg || '20px'}` }}>
         {activities.length === 0 ? (
-          <div style={{ padding: '40px 20px', textAlign: 'center', color: '#6b7280' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📝</div>
-            <div style={{ fontSize: '16px', marginBottom: '8px' }}>Nenhuma atividade encontrada</div>
+          <div style={{ padding: `${theme.spacing?.xl || '40px'} ${theme.spacing?.lg || '20px'}`, textAlign: 'center', color: '#6b7280' }}>
+            <div style={{ fontSize: '48px', marginBottom: theme.spacing?.md || '16px' }}>📝</div>
+            <div style={{ fontSize: '16px', marginBottom: theme.spacing?.xs || '8px' }}>Nenhuma atividade encontrada</div>
             <div style={{ fontSize: '14px' }}>As atividades aparecerão aqui conforme você usar o quadro.</div>
           </div>
         ) : (

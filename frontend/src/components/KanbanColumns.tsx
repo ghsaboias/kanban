@@ -53,11 +53,11 @@ export function KanbanColumns({
 
   const containerStyle = {
     display: 'flex',
-    gap: '20px',
+    gap: theme.spacing?.lg || '20px',
     overflowX: 'auto' as const,
     minHeight: '500px',
-    padding: '24px',
-    paddingBottom: '40px',
+    padding: theme.spacing?.xl || '24px',
+    paddingBottom: theme.spacing?.xl || '40px',
     backgroundColor: theme.background,
     // Perf: create its own compositing layer to make horizontal scroll smoother
     willChange: 'transform',
@@ -74,14 +74,14 @@ export function KanbanColumns({
     backgroundColor: theme.surface,
     border: `1px solid ${theme.border}`,
     borderRadius: theme.radius?.lg || '12px',
-    padding: '20px',
+    padding: theme.spacing?.lg || '20px',
     width: '100%',
     boxShadow: theme.shadow?.sm || 'none'
   }
 
   const createColumnButtonStyle = {
     width: '100%',
-    padding: '20px',
+    padding: theme.spacing?.lg || '20px',
     backgroundColor: 'transparent',
     border: `2px dashed ${theme.border}`,
     borderRadius: theme.radius?.lg || '12px',
@@ -92,24 +92,24 @@ export function KanbanColumns({
     display: 'flex',
     flexDirection: 'column' as const,
     alignItems: 'center',
-    gap: '8px'
+    gap: theme.spacing?.sm || '8px'
   }
 
   const inputStyle = {
     width: '100%',
     boxSizing: 'border-box' as const,
-    padding: '12px 16px',
+    padding: `${theme.spacing?.md || '12px'} ${theme.spacing?.md || '16px'}`,
     border: `1px solid ${theme.border}`,
     borderRadius: theme.radius?.sm || '6px',
     fontSize: '16px',
     color: theme.textPrimary,
     backgroundColor: theme.inputBg,
-    marginBottom: '16px',
+    marginBottom: theme.spacing?.md || '16px',
     outline: 'none'
   }
 
   const buttonStyle = {
-    padding: '10px 20px',
+    padding: `${theme.spacing?.sm || '10px'} ${theme.spacing?.lg || '20px'}`,
     borderRadius: theme.radius?.sm || '6px',
     fontSize: '14px',
     fontWeight: '600',
@@ -122,7 +122,7 @@ export function KanbanColumns({
     ...buttonStyle,
     backgroundColor: theme.accent,
     color: theme.accentText,
-    marginRight: '12px'
+    marginRight: theme.spacing?.md || '12px'
   }
 
   const secondaryButtonStyle = {

@@ -69,8 +69,8 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
       style={{
         backgroundColor: theme.card,
         border: `1px solid ${theme.border}`,
-        borderRadius: '6px',
-        padding: '12px',
+        borderRadius: theme.radius?.md || '6px',
+        padding: theme.spacing?.md || '12px',
         cursor: 'pointer',
         boxShadow: theme.shadow?.sm || '0 1px 3px rgba(0,0,0,0.1)',
         transition: 'box-shadow 0.2s',
@@ -81,7 +81,7 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
       onClick={handleCardClick}
       onMouseEnter={(e) => {
         setHovering(true)
-        e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)'
+        e.currentTarget.style.boxShadow = theme.shadow?.md || '0 2px 6px rgba(0,0,0,0.15)'
       }}
       onMouseLeave={(e) => {
         setHovering(false)
@@ -108,7 +108,7 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
           minWidth: '20px',
           padding: 0,
           boxSizing: 'border-box',
-          borderRadius: '6px',
+          borderRadius: theme.radius?.sm || '6px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -149,7 +149,7 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
         </svg>
       </button>
 
-      <div style={{ marginBottom: '8px' }}>
+      <div style={{ marginBottom: theme.spacing?.sm || '8px' }}>
         <h4 style={{
           margin: 0,
           fontSize: '14px',
@@ -163,7 +163,7 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
 
       {card.description && (
         <p style={{
-          margin: '0 0 8px 0',
+          margin: `0 0 ${theme.spacing?.sm || '8px'} 0`,
           fontSize: '12px',
           color: theme.textSecondary,
           lineHeight: '1.4'
@@ -178,16 +178,16 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
         if (images.length === 0) return null
 
         return (
-          <div style={{ marginBottom: '8px' }}>
+          <div style={{ marginBottom: theme.spacing?.sm || '8px' }}>
             <span style={{
               fontSize: '10px',
               color: theme.textMuted,
               display: 'block',
-              marginBottom: '4px'
+              marginBottom: theme.spacing?.xs || '4px'
             }}>Images ({images.length})</span>
             <div style={{
               display: 'flex',
-              gap: '4px',
+              gap: theme.spacing?.xs || '4px',
               flexWrap: 'wrap'
             }}>
               {images.slice(0, 3).map((src, index) => (
@@ -197,7 +197,7 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
                     width: '32px',
                     height: '24px',
                     border: `1px solid ${theme.border}`,
-                    borderRadius: '3px',
+                    borderRadius: theme.radius?.sm || '3px',
                     overflow: 'hidden',
                     backgroundColor: theme.surfaceAlt
                   }}
@@ -220,7 +220,7 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
                   width: '32px',
                   height: '24px',
                   border: `1px solid ${theme.border}`,
-                  borderRadius: '3px',
+                  borderRadius: theme.radius?.sm || '3px',
                   backgroundColor: theme.surfaceAlt,
                   display: 'flex',
                   alignItems: 'center',
@@ -240,7 +240,7 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginTop: '8px'
+        marginTop: theme.spacing?.sm || '8px'
       }}>
         <span style={{
           backgroundColor: theme.priority[card.priority],
@@ -248,12 +248,12 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
           fontSize: '10px',
           fontWeight: '600',
           padding: '2px 6px',
-          borderRadius: '10px',
+          borderRadius: theme.radius?.md || '10px',
           textTransform: 'uppercase'
         }}>
           {/* Split into separate spans so tests can match exact priority text (e.g., 'HIGH') */}
           <span>{priorityLabels[card.priority]}</span>
-          <span style={{ marginLeft: '4px' }}>{card.priority}</span>
+          <span style={{ marginLeft: theme.spacing?.xs || '4px' }}>{card.priority}</span>
         </span>
 
         {card.assignee && (
@@ -262,7 +262,7 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
             color: theme.textSecondary,
             backgroundColor: theme.surfaceAlt,
             padding: '2px 6px',
-            borderRadius: '10px'
+            borderRadius: theme.radius?.md || '10px'
           }}>
             {card.assignee.name}
           </div>

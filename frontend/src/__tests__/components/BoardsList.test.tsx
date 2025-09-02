@@ -64,8 +64,11 @@ describe('BoardsList', () => {
       expect(screen.getByText('Kanban Boards')).toBeInTheDocument()
     })
 
-    // Open form
+    // Open dropdown first
     fireEvent.click(screen.getByText('+ Create Board'))
+    
+    // Then click "Create Empty Board"
+    fireEvent.click(screen.getByText('Create Empty Board'))
 
     // Next call should be the POST
     const created = { id: 'new', title: 'New Board', description: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), _count: { columns: 0 } }

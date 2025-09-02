@@ -28,6 +28,9 @@ export interface Theme {
   overlay?: string
   radius?: { sm: string, md: string, lg: string }
   shadow?: { sm: string, md: string, lg: string }
+  // Layout spacing & density
+  spacing?: { xs: string, sm: string, md: string, lg: string, xl: string }
+  density?: 'compact' | 'cozy' | 'comfortable'
   // Priority badges
   priority: {
     HIGH: string
@@ -65,6 +68,8 @@ export const lightTheme: Theme = {
     md: '0 2px 8px rgba(0,0,0,0.12)',
     lg: '0 12px 32px rgba(0,0,0,0.2)'
   },
+  spacing: { xs: '4px', sm: '8px', md: '12px', lg: '16px', xl: '24px' },
+  density: 'cozy',
   priority: {
     HIGH: '#ff6b6b',
     MEDIUM: '#ffd93d',
@@ -101,6 +106,8 @@ export const darkTheme: Theme = {
     md: '0 2px 8px rgba(0,0,0,0.35)',
     lg: '0 12px 32px rgba(0,0,0,0.45)'
   },
+  spacing: { xs: '4px', sm: '8px', md: '12px', lg: '16px', xl: '24px' },
+  density: 'cozy',
   priority: {
     HIGH: '#f87171',
     MEDIUM: '#f59e0b',
@@ -137,6 +144,8 @@ export const warmTheme: Theme = {
     md: '0 2px 8px rgba(0,0,0,0.12)',
     lg: '0 12px 32px rgba(0,0,0,0.2)'
   },
+  spacing: { xs: '4px', sm: '8px', md: '12px', lg: '16px', xl: '24px' },
+  density: 'cozy',
   priority: {
     HIGH: '#e85d5d',
     MEDIUM: '#eebc40',
@@ -174,6 +183,8 @@ export const igcTheme: Theme = {
     md: '0 2px 8px rgba(0,0,0,0.12)',
     lg: '0 12px 32px rgba(0,0,0,0.2)'
   },
+  spacing: { xs: '4px', sm: '8px', md: '12px', lg: '16px', xl: '24px' },
+  density: 'cozy',
   priority: {
     HIGH: '#ea384c',
     MEDIUM: '#d3a93d',

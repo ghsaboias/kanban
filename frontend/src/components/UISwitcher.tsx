@@ -26,7 +26,7 @@ export function UISwitcher() {
             backgroundColor: theme.accent,
             color: theme.accentText,
             border: `1px solid ${theme.border}`,
-            borderRadius: 8,
+            borderRadius: theme.radius?.md || '8px',
             padding: '8px 12px',
             boxShadow: theme.shadow?.md || '0 2px 8px rgba(0,0,0,0.12)',
             cursor: 'pointer'
@@ -43,7 +43,7 @@ export function UISwitcher() {
           backgroundColor: theme.surface,
           color: theme.textPrimary,
           border: `1px solid ${theme.border}`,
-          borderRadius: 10,
+          borderRadius: theme.radius?.md || '10px',
           boxShadow: theme.shadow?.lg || '0 12px 32px rgba(0,0,0,0.2)',
           padding: 12
         }}>
@@ -53,7 +53,7 @@ export function UISwitcher() {
               background: 'transparent',
               color: theme.textMuted,
               border: `1px solid ${theme.border}`,
-              borderRadius: 6,
+              borderRadius: theme.radius?.sm || '6px',
               padding: '4px 8px',
               cursor: 'pointer'
             }}>Close</button>
@@ -63,7 +63,7 @@ export function UISwitcher() {
               <div key={p.key} style={{
                 border: `1px solid ${theme.border}`,
                 backgroundColor: theme.card,
-                borderRadius: 8,
+                borderRadius: theme.radius?.md || '8px',
                 padding: 10,
                 display: 'flex',
                 alignItems: 'center',
@@ -78,7 +78,7 @@ export function UISwitcher() {
                     backgroundColor: p.key === profile.key ? theme.accent : theme.surfaceAlt,
                     color: p.key === profile.key ? theme.accentText : theme.textSecondary,
                     border: `1px solid ${theme.border}`,
-                    borderRadius: 6,
+                    borderRadius: theme.radius?.sm || '6px',
                     padding: '6px 8px',
                     cursor: 'pointer'
                   }}>{p.key === profile.key ? 'Applied' : 'Apply'}</button>
@@ -94,4 +94,3 @@ export function UISwitcher() {
     </div>
   )
 }
-

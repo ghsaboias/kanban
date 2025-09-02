@@ -22,7 +22,7 @@ type Template = {
 export function TemplateImportModal({ isOpen, onClose, boardId, existingColumns, onAfterApply }: TemplateImportModalProps) {
   const { theme } = useTheme()
   const { apiFetch } = useApi()
-  const [selectedKey, setSelectedKey] = useState<string>('ma-pipeline')
+  const [selectedKey, setSelectedKey] = useState<string>('ma-pipeline-en')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [progress, setProgress] = useState<{ total: number; done: number }>({ total: 0, done: 0 })
   // Keep UI simple: we always skip existing titles when adding
@@ -30,19 +30,18 @@ export function TemplateImportModal({ isOpen, onClose, boardId, existingColumns,
 
   const templates = useMemo<Template[]>(() => ([
     {
-      key: 'ma-pipeline',
-      name: 'M&A Pipeline',
-      description: 'Sourcing → NDA → CIM → MGMT → IOI → LOI → Diligence → IC → SPA → Closing',
+      key: 'ma-pipeline-en',
+      name: 'M&A Pipeline (EN)',
+      description: 'Prospecting → Screening → Materials Preparation (CIM/Info Pack) → NDA/Teaser (GTM) → Management Presentation → LOI → Due Diligence → SPA/SHA → Closing',
       columns: [
-        'Sourcing',
-        'NDA/Teaser',
-        'CIM',
-        'Management Calls',
-        'IOI',
+        'Prospecting',
+        'Screening',
+        'Materials Preparation (CIM/Info Pack)',
+        'NDA/Teaser (GTM)',
+        'Management Presentation',
         'LOI',
-        'Diligence',
-        'Investment Committee',
-        'SPA/Negotiation',
+        'Due Diligence',
+        'SPA/SHA',
         'Closing',
       ],
     },
@@ -67,7 +66,7 @@ export function TemplateImportModal({ isOpen, onClose, boardId, existingColumns,
     backgroundColor: theme.surface,
     border: `1px solid ${theme.border}`,
     borderRadius: theme.radius?.lg || '12px',
-    padding: '20px',
+    padding: theme.spacing?.lg || '20px',
     width: '92%',
     maxWidth: '520px',
     maxHeight: '90vh',
@@ -161,16 +160,16 @@ export function TemplateImportModal({ isOpen, onClose, boardId, existingColumns,
   return (
     <div style={modalBackdropStyle} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
-        <h2 style={{ margin: '0 0 12px', color: theme.textPrimary, fontSize: '18px' }}>Import From Template</h2>
+        <h2 style={{ margin: `0 0 ${theme.spacing?.sm || '12px'}`, color: theme.textPrimary, fontSize: '18px' }}>Import From Template</h2>
 
         {/* Simple choice: Keep or Replace */}
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+        <div style={{ display: 'flex', gap: theme.spacing?.sm || '10px', marginBottom: theme.spacing?.sm || '10px' }}>
           <button
             onClick={() => handleImport('add')}
             disabled={isSubmitting}
             style={{
-              padding: '10px 12px',
-              borderRadius: '8px',
+              padding: `${theme.spacing?.sm || '10px'} ${theme.spacing?.sm || '12px'}`,
+              borderRadius: theme.radius?.md || '8px',
               border: `1px solid ${theme.border}`,
               background: isSubmitting ? theme.muted : theme.surfaceAlt,
               color: theme.textPrimary,
@@ -185,8 +184,8 @@ export function TemplateImportModal({ isOpen, onClose, boardId, existingColumns,
             onClick={() => handleImport('replace')}
             disabled={isSubmitting}
             style={{
-              padding: '10px 12px',
-              borderRadius: '8px',
+              padding: `${theme.spacing?.sm || '10px'} ${theme.spacing?.sm || '12px'}`,
+              borderRadius: theme.radius?.md || '8px',
               border: `1px solid ${theme.border}`,
               background: isSubmitting ? theme.muted : (theme.danger || '#ea384c'),
               color: theme.accentText,
@@ -199,15 +198,15 @@ export function TemplateImportModal({ isOpen, onClose, boardId, existingColumns,
           </button>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing?.sm || '10px' }}>
           {templates.map(t => (
             <label key={t.key} style={{
               display: 'flex',
-              gap: '10px',
+              gap: theme.spacing?.sm || '10px',
               alignItems: 'flex-start',
-              padding: '10px',
+              padding: theme.spacing?.sm || '10px',
               border: `1px solid ${theme.border}`,
-              borderRadius: '8px',
+              borderRadius: theme.radius?.md || '8px',
               background: theme.surfaceAlt,
               cursor: 'pointer',
             }}>
@@ -216,14 +215,14 @@ export function TemplateImportModal({ isOpen, onClose, boardId, existingColumns,
                 name="template"
                 checked={selectedKey === t.key}
                 onChange={() => setSelectedKey(t.key)}
-                style={{ marginTop: '3px' }}
+                style={{ marginTop: theme.spacing?.xs || '3px' }}
               />
               <div>
                 <div style={{ fontWeight: 600, color: theme.textPrimary }}>{t.name}</div>
                 {t.description && (
-                  <div style={{ color: theme.textSecondary, fontSize: '13px', marginTop: '4px' }}>{t.description}</div>
+                  <div style={{ color: theme.textSecondary, fontSize: '13px', marginTop: theme.spacing?.xs || '4px' }}>{t.description}</div>
                 )}
-                <div style={{ color: theme.textMuted, fontSize: '12px', marginTop: '6px' }}>
+                <div style={{ color: theme.textMuted, fontSize: '12px', marginTop: theme.spacing?.xs || '6px' }}>
                   {t.columns.length} columns will be created
                 </div>
               </div>
@@ -233,23 +232,23 @@ export function TemplateImportModal({ isOpen, onClose, boardId, existingColumns,
 
         {/* No additional options; add-mode implicitly skips existing titles */}
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '18px' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: theme.spacing?.sm || '8px', marginTop: theme.spacing?.lg || '18px' }}>
           <button
             onClick={onClose}
             disabled={isSubmitting}
             style={{
-              padding: '8px 12px',
+              padding: `${theme.spacing?.sm || '8px'} ${theme.spacing?.sm || '12px'}`,
               border: `1px solid ${theme.border}`,
               background: theme.card,
               color: theme.textPrimary,
-              borderRadius: '6px',
+              borderRadius: theme.radius?.sm || '6px',
               cursor: isSubmitting ? 'not-allowed' : 'pointer',
             }}
           >
             Cancel
           </button>
           <div style={{
-            padding: '8px 12px',
+            padding: `${theme.spacing?.sm || '8px'} ${theme.spacing?.sm || '12px'}`,
             color: theme.textMuted,
             fontSize: '12px'
           }}>

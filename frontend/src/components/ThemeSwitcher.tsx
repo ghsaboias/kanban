@@ -8,19 +8,19 @@ type Level = {
   variants: Variant[]
 }
 
-function Swatch({ color }: { color: string }) {
-  return <div style={{ width: 16, height: 16, borderRadius: 3, backgroundColor: color, border: '1px solid rgba(0,0,0,0.08)' }} />
+function Swatch({ color, radius }: { color: string, radius: string }) {
+  return <div style={{ width: 16, height: 16, borderRadius: radius, backgroundColor: color, border: '1px solid rgba(0,0,0,0.08)' }} />
 }
 
-function ThemePreview({ theme }: { theme: Theme }) {
+function ThemePreview({ theme, radius }: { theme: Theme, radius: string }) {
   return (
     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-      <Swatch color={theme.background} />
-      <Swatch color={theme.surface} />
-      <Swatch color={theme.card} />
-      <Swatch color={theme.border} />
-      <Swatch color={theme.accent} />
-      <Swatch color={theme.textPrimary} />
+      <Swatch color={theme.background} radius={radius} />
+      <Swatch color={theme.surface} radius={radius} />
+      <Swatch color={theme.card} radius={radius} />
+      <Swatch color={theme.border} radius={radius} />
+      <Swatch color={theme.accent} radius={radius} />
+      <Swatch color={theme.textPrimary} radius={radius} />
     </div>
   )
 }
@@ -60,9 +60,9 @@ export function ThemeSwitcher() {
             backgroundColor: theme.accent,
             color: theme.accentText,
             border: `1px solid ${theme.border}`,
-            borderRadius: 8,
+            borderRadius: theme.radius?.md || '8px',
             padding: '8px 12px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+            boxShadow: theme.shadow?.md || '0 2px 8px rgba(0,0,0,0.12)',
             cursor: 'pointer'
           }}
         >
@@ -77,8 +77,8 @@ export function ThemeSwitcher() {
           backgroundColor: theme.surface,
           color: theme.textPrimary,
           border: `1px solid ${theme.border}`,
-          borderRadius: 10,
-          boxShadow: '0 12px 32px rgba(0,0,0,0.2)',
+          borderRadius: theme.radius?.md || '10px',
+          boxShadow: theme.shadow?.lg || '0 12px 32px rgba(0,0,0,0.2)',
           padding: 12
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -92,7 +92,7 @@ export function ThemeSwitcher() {
                 background: 'transparent',
                 color: theme.textMuted,
                 border: `1px solid ${theme.border}`,
-                borderRadius: 6,
+                borderRadius: theme.radius?.sm || '6px',
                 padding: '4px 8px',
                 cursor: 'pointer'
               }}>Close</button>
@@ -105,7 +105,7 @@ export function ThemeSwitcher() {
                 backgroundColor: theme.surfaceAlt,
                 color: theme.textSecondary,
                 border: `1px solid ${theme.border}`,
-                borderRadius: 6,
+                borderRadius: theme.radius?.sm || '6px',
                 padding: '4px 8px',
                 cursor: 'pointer'
               }}>← Back</button>
@@ -118,7 +118,7 @@ export function ThemeSwitcher() {
                 <div key={key} style={{
                   border: `1px solid ${theme.border}`,
                   backgroundColor: theme.card,
-                  borderRadius: 8,
+                  borderRadius: theme.radius?.md || '8px',
                   padding: 10,
                   display: 'flex',
                   alignItems: 'center',
@@ -129,12 +129,12 @@ export function ThemeSwitcher() {
                     <div style={{ fontSize: 12, color: theme.textMuted }}>key: {t.key ?? key}</div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <ThemePreview theme={t} />
+                    <ThemePreview theme={t} radius={theme.radius?.sm || '6px'} />
                     <button onClick={() => setTheme(t)} style={{
                       backgroundColor: theme.accent,
                       color: theme.accentText,
                       border: `1px solid ${theme.border}`,
-                      borderRadius: 6,
+                      borderRadius: theme.radius?.sm || '6px',
                       padding: '6px 8px',
                       cursor: 'pointer'
                     }}>Apply</button>
@@ -142,7 +142,7 @@ export function ThemeSwitcher() {
                       backgroundColor: theme.surfaceAlt,
                       color: theme.textSecondary,
                       border: `1px solid ${theme.border}`,
-                      borderRadius: 6,
+                      borderRadius: theme.radius?.sm || '6px',
                       padding: '6px 8px',
                       cursor: 'pointer'
                     }}>Explore</button>
@@ -158,7 +158,7 @@ export function ThemeSwitcher() {
                 <div key={idx} style={{
                   border: `1px solid ${theme.border}`,
                   backgroundColor: theme.card,
-                  borderRadius: 8,
+                  borderRadius: theme.radius?.md || '8px',
                   padding: 10,
                   display: 'flex',
                   alignItems: 'center',
@@ -169,12 +169,12 @@ export function ThemeSwitcher() {
                     <div style={{ fontSize: 12, color: theme.textMuted }}>{v.name}</div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <ThemePreview theme={v.theme} />
+                    <ThemePreview theme={v.theme} radius={theme.radius?.sm || '6px'} />
                     <button onClick={() => setTheme(v.theme)} style={{
                       backgroundColor: theme.accent,
                       color: theme.accentText,
                       border: `1px solid ${theme.border}`,
-                      borderRadius: 6,
+                      borderRadius: theme.radius?.sm || '6px',
                       padding: '6px 8px',
                       cursor: 'pointer'
                     }}>Apply</button>
@@ -182,7 +182,7 @@ export function ThemeSwitcher() {
                       backgroundColor: theme.surfaceAlt,
                       color: theme.textSecondary,
                       border: `1px solid ${theme.border}`,
-                      borderRadius: 6,
+                      borderRadius: theme.radius?.sm || '6px',
                       padding: '6px 8px',
                       cursor: 'pointer'
                     }}>Explore</button>
@@ -198,7 +198,7 @@ export function ThemeSwitcher() {
               backgroundColor: theme.surfaceAlt,
               color: theme.textSecondary,
               border: `1px solid ${theme.border}`,
-              borderRadius: 6,
+              borderRadius: theme.radius?.sm || '6px',
               padding: '6px 8px',
               cursor: 'pointer'
             }}>Reset</button>
@@ -208,4 +208,3 @@ export function ThemeSwitcher() {
     </div>
   )
 }
-
