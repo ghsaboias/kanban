@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useAppearance } from '../appearance'
 import { useApi } from '../useApi'
 import { NewCardModal } from './NewCardModal'
@@ -63,10 +64,12 @@ export function KanbanToolbar({
   const [showFilters, setShowFilters] = useState(false)
   const [showNewDropdown, setShowNewDropdown] = useState(false)
   const [showMoreOptions, setShowMoreOptions] = useState(false)
+  const [moreMenuPos, setMoreMenuPos] = useState<{ top: number; left: number; width: number } | null>(null)
   const [showNewCardModal, setShowNewCardModal] = useState(false)
   const [showTemplateModal, setShowTemplateModal] = useState(false)
   const [deletingAll, setDeletingAll] = useState(false)
   const moreOptionsRef = useRef<HTMLDivElement>(null)
+  const moreDropdownRef = useRef<HTMLDivElement>(null)
   const filterRef = useRef<HTMLDivElement>(null)
   const newDropdownRef = useRef<HTMLDivElement>(null)
 
@@ -116,7 +119,14 @@ export function KanbanToolbar({
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (moreOptionsRef.current && !moreOptionsRef.current.contains(event.target as Node)) {
+      const target = event.target as Node
+      // Close More menu if click is outside both the button wrapper and the portal dropdown
+      if (
+        showMoreOptions &&
+        moreOptionsRef.current &&
+        !moreOptionsRef.current.contains(target) &&
+        (!moreDropdownRef.current || !moreDropdownRef.current.contains(target))
+      ) {
         setShowMoreOptions(false)
       }
       if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
@@ -180,7 +190,8 @@ export function KanbanToolbar({
     flex: 1,
     minWidth: 0,
     overflowX: 'auto' as const,
-    overflowY: 'hidden' as const,
+    // Allow dropdowns (Filter/More) to render outside the row height without being clipped
+    overflowY: 'visible' as const,
     whiteSpace: 'nowrap' as const,
     WebkitOverflowScrolling: 'touch' as const,
     maxWidth: `calc(100% - ${rightWidth}px)`
@@ -425,7 +436,16 @@ export function KanbanToolbar({
         {/* More Options */}
         <div ref={moreOptionsRef} style={{ position: 'relative', flexShrink: 0 }}>
           <button
-            onClick={() => setShowMoreOptions(!showMoreOptions)}
+            onClick={() => {
+              if (!showMoreOptions) {
+                const el = moreOptionsRef.current
+                if (el) {
+                  const rect = el.getBoundingClientRect()
+                  setMoreMenuPos({ top: rect.bottom + window.scrollY, left: rect.left + window.scrollX, width: rect.width })
+                }
+              }
+              setShowMoreOptions(prev => !prev)
+            }}
             style={{
               ...buttonStyle,
               flexShrink: 0
@@ -441,8 +461,22 @@ export function KanbanToolbar({
             <span>⋯</span>
           </button>
 
-          {showMoreOptions && (
-            <div style={dropdownStyle}>
+          {showMoreOptions && moreMenuPos && createPortal(
+            <div
+              ref={moreDropdownRef}
+              style={{
+                position: 'fixed',
+                top: `${moreMenuPos.top}px`,
+                left: `${moreMenuPos.left}px`,
+                marginTop: theme.spacing?.xs || '4px',
+                backgroundColor: theme.surface,
+                border: `1px solid ${theme.border}`,
+                borderRadius: theme.radius?.md || '6px',
+                boxShadow: theme.shadow?.lg || '0 4px 12px rgba(0,0,0,0.15)',
+                minWidth: '200px',
+                zIndex: 9999
+              }}
+            >
               <div
                 style={dropdownItemStyle}
                 onClick={() => {
@@ -488,7 +522,8 @@ export function KanbanToolbar({
               >
                 📊 View Activity
               </div>
-            </div>
+            </div>,
+            document.body
           )}
         </div>
       </div>
