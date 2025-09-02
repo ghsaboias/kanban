@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { ensureUser } from '../../auth/clerk';
 import { testPrisma } from '../setup';
 
@@ -70,22 +70,23 @@ describe('ensureUser middleware', () => {
     expect(dbUser).not.toBeNull();
   });
 
-  it('should update existing user with fresh data', async () => {
+  it('should use existing user data (fast path optimization)', async () => {
     const mockUserId = 'clerk_existing_user_id';
-    
+
     // Create existing user in database
     await testPrisma.user.create({
       data: {
         clerkId: mockUserId,
-        email: 'old@example.com',
-        name: 'Old Name',
+        email: 'existing@example.com',
+        name: 'Existing User',
       },
     });
 
+    // Mock Clerk API (but it should NOT be called due to fast path)
     const mockClerkUser = {
-      primaryEmailAddress: { emailAddress: 'new@example.com' },
-      firstName: 'New',
-      lastName: 'Name',
+      primaryEmailAddress: { emailAddress: 'fresh@example.com' },
+      firstName: 'Fresh',
+      lastName: 'Data',
       username: null,
       emailAddresses: [],
     };
@@ -95,16 +96,20 @@ describe('ensureUser middleware', () => {
 
     await ensureUser(req as Request, res as Response, next);
 
-    expect(res.locals?.user?.email).toBe('new@example.com');
-    expect(res.locals?.user?.name).toBe('New Name');
+    // Should use existing user data (fast path - no Clerk API call)
+    expect(res.locals?.user?.email).toBe('existing@example.com');
+    expect(res.locals?.user?.name).toBe('Existing User');
     expect(next).toHaveBeenCalledWith();
 
-    // Verify user was updated in database
+    // Clerk API should NOT be called (fast path optimization)
+    expect(clerkClient.users.getUser).not.toHaveBeenCalled();
+
+    // Verify user data was NOT updated in database
     const dbUser = await testPrisma.user.findUnique({
       where: { clerkId: mockUserId },
     });
-    expect(dbUser?.email).toBe('new@example.com');
-    expect(dbUser?.name).toBe('New Name');
+    expect(dbUser?.email).toBe('existing@example.com');
+    expect(dbUser?.name).toBe('Existing User');
   });
 
   it('should handle missing email gracefully', async () => {
@@ -165,7 +170,7 @@ describe('ensureUser middleware', () => {
     expect(next).toHaveBeenCalledWith();
   });
 
-  it('should handle Clerk API errors', async () => {
+  it('should handle Clerk API errors gracefully with fallback', async () => {
     const mockUserId = 'clerk_error_user_id';
     const error = new Error('Clerk API error');
 
@@ -174,14 +179,25 @@ describe('ensureUser middleware', () => {
 
     await ensureUser(req as Request, res as Response, next);
 
-    expect(next).toHaveBeenCalledWith(error);
-    expect(res.locals?.user).toBeUndefined();
+    // Should handle Clerk API errors gracefully by falling back to placeholder values
+    expect(next).toHaveBeenCalledWith();
+    expect(res.locals?.user).toBeDefined();
+    expect(res.locals?.user?.clerkId).toBe(mockUserId);
+    expect(res.locals?.user?.email).toBe(`${mockUserId}@example.local`);
+    expect(res.locals?.user?.name).toBe('User');
+
+    // Verify user was created in database with fallback values
+    const dbUser = await testPrisma.user.findUnique({
+      where: { clerkId: mockUserId },
+    });
+    expect(dbUser?.email).toBe(`${mockUserId}@example.local`);
+    expect(dbUser?.name).toBe('User');
   });
 
   it('should handle database errors', async () => {
     const mockUserId = 'clerk_db_error_user_id';
     const mockClerkUser = {
-      primaryEmailAddress: { emailAddress: 'test@example.com' },
+      primaryEmailAddress: { emailAddress: 'unique@example.com' },
       firstName: 'John',
       lastName: 'Doe',
       username: null,
@@ -191,27 +207,19 @@ describe('ensureUser middleware', () => {
     (getAuth as jest.Mock).mockReturnValue({ userId: mockUserId });
     (clerkClient.users.getUser as jest.Mock).mockResolvedValue(mockClerkUser);
 
-    // Create a user with the same clerkId to force a constraint violation
-    await testPrisma.user.create({
-      data: {
-        clerkId: mockUserId,
-        email: 'existing@example.com',
-        name: 'Existing User',
-      },
-    });
-
-    // Force a unique constraint violation by creating another user with same email
+    // Create a user with the same email to force a unique constraint violation on upsert
     await testPrisma.user.create({
       data: {
         clerkId: 'different-clerk-id',
-        email: 'test@example.com',
-        name: 'Different User',
+        email: 'unique@example.com', // Same email that Clerk API returns
+        name: 'Existing User',
       },
     });
 
     await ensureUser(req as Request, res as Response, next);
 
-    // Should handle the database error gracefully
+    // Should handle the database unique constraint error gracefully
     expect(next).toHaveBeenCalledWith(expect.any(Error));
+    expect(res.locals?.user).toBeUndefined();
   });
 });
