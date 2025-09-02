@@ -32,7 +32,7 @@ const createTestApp = (userId: string) => {
 describe('Columns Routes - Activity Logging', () => {
   let testUser: { id: string; email: string; name: string; clerkId: string | null; };
   let testBoard: { id: string; title: string; description?: string | null; };
-  let testApp: any;
+  let testApp: express.Application;
 
   beforeAll(() => {
     const fakeBroadcaster: { emit: jest.Mock; except: jest.Mock } = {

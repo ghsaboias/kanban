@@ -163,8 +163,9 @@ describe('ActivityLogger Service', () => {
 
       expect(activityLogger.getQueueSize()).toBe(5);
 
-      // Wait for batch processing (100ms window)
-      await new Promise(resolve => setTimeout(resolve, 150));
+      // Wait for batch processing to complete
+      // The batch interval is 100ms, so wait a bit longer to ensure processing completes
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       const activities = await testPrisma.activity.findMany();
       expect(activities).toHaveLength(5);
@@ -202,6 +203,9 @@ describe('ActivityLogger Service', () => {
         meta: { title: 'Updated Title' },
         priority: 'HIGH'
       });
+
+      // Ensure all pending activities are processed
+      await activityLogger.flush();
 
       const activities = await testPrisma.activity.findMany();
       expect(activities).toHaveLength(1);

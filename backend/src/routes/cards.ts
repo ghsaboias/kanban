@@ -15,7 +15,7 @@ const activityLogger = new ActivityLogger(prisma);
 
 router.post('/columns/:columnId/cards', asyncHandler(async (req: Request, res: Response) => {
   const columnId = req.params.columnId;
-  const { title, description, priority, assigneeId, position }: CreateCardRequest = req.body;
+  const { title, description, priority, assigneeId, position, deadline, riskLevel, ownerId }: CreateCardRequest = req.body;
 
   if (!title) {
     throw new AppError('Título é obrigatório', 400);
@@ -42,6 +42,16 @@ router.post('/columns/:columnId/cards', asyncHandler(async (req: Request, res: R
 
     if (!assigneeExists) {
       throw new AppError('Usuário responsável não encontrado', 404);
+    }
+  }
+
+  if (ownerId) {
+    const ownerExists = await prisma.user.findUnique({
+      where: { id: ownerId }
+    });
+
+    if (!ownerExists) {
+      throw new AppError('Owner não encontrado', 404);
     }
   }
 
@@ -72,10 +82,17 @@ router.post('/columns/:columnId/cards', asyncHandler(async (req: Request, res: R
       position: finalPosition,
       columnId,
       createdById: currentUser.id,
-      ...(assigneeId && { assigneeId })
+      ...(assigneeId && { assigneeId }),
+      // M&A fields
+      ...(deadline && { deadline }),
+      ...(riskLevel && { riskLevel }),
+      ...(ownerId && { ownerId })
     },
     include: {
       assignee: {
+        select: { id: true, name: true, email: true }
+      },
+      owner: {
         select: { id: true, name: true, email: true }
       },
       column: {
@@ -167,7 +184,7 @@ router.get('/cards/:id', asyncHandler(async (req: Request, res: Response) => {
 
 router.put('/cards/:id', asyncHandler(async (req: Request, res: Response) => {
   const id = req.params.id;
-  const { title, description, priority, assigneeId, position }: UpdateCardRequest = req.body;
+  const { title, description, priority, assigneeId, position, deadline, riskLevel, ownerId }: UpdateCardRequest = req.body;
 
   const existingCard = await prisma.card.findUnique({
     where: { id },
@@ -200,6 +217,18 @@ router.put('/cards/:id', asyncHandler(async (req: Request, res: Response) => {
 
     if (!assigneeUser) {
       throw new AppError('Usuário responsável não encontrado', 404);
+    }
+  }
+
+  let ownerUser = null;
+  if (ownerId) {
+    ownerUser = await prisma.user.findUnique({
+      where: { id: ownerId },
+      select: { id: true, name: true }
+    });
+
+    if (!ownerUser) {
+      throw new AppError('Owner não encontrado', 404);
     }
   }
 
@@ -266,6 +295,27 @@ router.put('/cards/:id', asyncHandler(async (req: Request, res: Response) => {
     newValues.assigneeId = assigneeId;
   }
 
+  // Track M&A field changes
+  if (deadline !== undefined && deadline !== existingCard.deadline) {
+    changes.push('deadline');
+    oldValues.deadline = existingCard.deadline;
+    newValues.deadline = deadline;
+  }
+
+  if (riskLevel !== undefined && riskLevel !== existingCard.riskLevel) {
+    changes.push('riskLevel');
+    oldValues.riskLevel = existingCard.riskLevel;
+    newValues.riskLevel = riskLevel;
+  }
+
+  
+
+  if (ownerId !== undefined && ownerId !== existingCard.ownerId) {
+    changes.push('ownerId');
+    oldValues.ownerId = existingCard.ownerId;
+    newValues.ownerId = ownerId;
+  }
+
   // Handle position changes separately (for reorder detection)
   const isPositionChange = position !== undefined && position !== existingCard.position;
 
@@ -275,12 +325,19 @@ router.put('/cards/:id', asyncHandler(async (req: Request, res: Response) => {
   if (priority) updateData.priority = priority;
   if (assigneeId !== undefined) updateData.assigneeId = assigneeId;
   if (position !== undefined) updateData.position = position;
+  // M&A fields
+  if (deadline !== undefined) updateData.deadline = deadline;
+  if (riskLevel !== undefined) updateData.riskLevel = riskLevel;
+  if (ownerId !== undefined) updateData.ownerId = ownerId;
 
   const card = await prisma.card.update({
     where: { id },
     data: updateData,
     include: {
       assignee: {
+        select: { id: true, name: true, email: true }
+      },
+      owner: {
         select: { id: true, name: true, email: true }
       },
       column: {
