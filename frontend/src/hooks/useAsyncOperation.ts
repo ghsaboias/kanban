@@ -27,6 +27,7 @@ export function useAsyncOperation<T = unknown>(): UseAsyncOperationReturn<T> {
   const lastOpIdRef = useRef(0);
 
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
     };

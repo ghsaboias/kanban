@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react'
-import { useTheme } from '../theme/useTheme'
+import { useAppearance } from '../appearance'
 
 type ToastType = 'success' | 'error' | 'info'
 
@@ -26,7 +26,7 @@ export function useToast() {
 }
 
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const { theme } = useTheme()
+  const { theme } = useAppearance()
   const [toasts, setToasts] = useState<Toast[]>([])
   const timeouts = useRef<Record<string, number>>({})
 

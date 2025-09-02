@@ -4,12 +4,12 @@ import './App.css'
 import { Suspense, lazy } from 'react'
 const BoardsList = lazy(() => import('./components/BoardsList').then(m => ({ default: m.BoardsList })))
 const BoardPage = lazy(() => import('./components/BoardPage').then(m => ({ default: m.BoardPage })))
-import { StyleSwitcher } from './components/StyleSwitcher'
+import { AppearanceControl } from './appearance'
 import { SocketProvider } from './contexts/SocketContext'
-import { useTheme } from './theme/useTheme'
+import { useAppearance } from './appearance'
 
 function App() {
-  const { theme } = useTheme()
+  const { theme } = useAppearance()
   return (
     <Router>
       <div style={{ minHeight: '100vh', backgroundColor: theme.background }}>
@@ -51,7 +51,7 @@ function App() {
             </Suspense>
           </SocketProvider>
         </SignedIn>
-        <StyleSwitcher />
+        <AppearanceControl />
       </div>
     </Router>
   )
