@@ -24,7 +24,6 @@ jest.mock('../../auth/clerk', () => ({
 
 describe('Cards Routes - Rate Limiting Activity Logging', () => {
     let testUser: { id: string; email: string; name: string; clerkId: string | null; };
-    let testBoard: { id: string; title: string; description?: string | null; };
     let testColumn: { id: string; title: string; position: number; boardId: string; };
 
     beforeAll(() => {
@@ -34,7 +33,6 @@ describe('Cards Routes - Rate Limiting Activity Logging', () => {
     beforeEach(async () => {
         const data = await setupTestData();
         testUser = data.testUser;
-        testBoard = data.testBoard;
         testColumn = data.testColumn;
     });
 
