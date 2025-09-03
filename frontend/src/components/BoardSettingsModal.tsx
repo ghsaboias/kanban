@@ -48,7 +48,7 @@ export function BoardSettingsModal({
                 })
             })
 
-            const result: ApiResponse<any> = await response.json()
+            const result: ApiResponse = await response.json()
 
             if (result.success) {
                 onBoardUpdated(title.trim(), description.trim() || null)
