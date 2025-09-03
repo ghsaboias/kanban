@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Board } from '../../components/Board';
+import { render, screen } from '../test-utils';
 
 interface MockBoardData {
   id: string;

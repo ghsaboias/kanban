@@ -10,12 +10,12 @@
   ],
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:frontend": "cd frontend && npm run dev",
-    "dev:backend": "cd backend && npm run dev",
-    "build": "npm run build:shared && npm run build:frontend && npm run build:backend",
-    "build:frontend": "cd frontend && npm run build",
-    "build:backend": "cd backend && npm run build",
-    "build:shared": "cd shared && npm run build",
+    "dev:frontend": "npm run -w frontend dev",
+    "dev:backend": "npm run -w kanban-backend dev",
+    "build": "npm run --workspaces --if-present build",
+    "build:frontend": "npm run -w frontend build",
+    "build:backend": "npm run -w kanban-backend build",
+    "build:shared": "npm run -w @kanban/shared build",
     "postinstall": "npm run db:generate",
     "lint": "npm run lint:frontend && npm run lint:backend",
     "lint:frontend": "cd frontend && npm run lint",
@@ -32,7 +32,11 @@
     "test:watch": "concurrently \"cd backend && npx jest --watch --passWithNoTests\" \"cd frontend && npx vitest\"",
     "test:db": "cd backend && npx ts-node test-db.ts",
     "db:push": "npx prisma db push",
-    "db:generate": "npx prisma generate"
+    "db:generate": "npx prisma generate",
+    "start:backend:prod": "node backend/dist/index.js",
+    "preview:frontend": "npm run -w frontend preview -- --port 5173 --strictPort",
+    "preserve:prod": "npm run build",
+    "serve:prod": "concurrently \"npm run start:backend:prod\" \"npm run preview:frontend\""
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
@@ -40,5 +44,9 @@
   "dependencies": {
     "@prisma/client": "^6.15.0",
     "prisma": "^6.15.0"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
   }
 }

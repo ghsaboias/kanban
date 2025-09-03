@@ -1,29 +1,38 @@
 import type { NextFunction, Request, Response } from 'express';
+import express from 'express';
 import request from 'supertest';
-import app from '../../app';
+import columnsRouter from '../../routes/columns';
 import { testPrisma } from '../setup';
 
 // Restore real ActivityLogger for activity logging tests
 jest.unmock('../../services/activityLogger');
 
-// Mock authentication middleware
-jest.mock('../../auth/clerk', () => ({
-  withAuth: (req: Request, res: Response, next: NextFunction) => next(),
-  requireAuthMw: (req: Request, res: Response, next: NextFunction) => next(),
-  ensureUser: (req: Request, res: Response, next: NextFunction) => {
+// Create a minimal test app with just the columns routes
+const createTestApp = (userId: string) => {
+  const app = express();
+  app.use(express.json());
+
+  // Mock authentication middleware
+  app.use((req: Request, res: Response, next: NextFunction) => {
     res.locals.user = {
-      id: 'test-user-id',
+      id: userId,
       name: 'Test User',
       email: 'test@example.com',
       clerkId: 'test-clerk-id'
     };
     next();
-  }
-}));
+  });
+
+  // Mount the columns router
+  app.use('/api', columnsRouter);
+
+  return app;
+};
 
 describe('Columns Routes - Activity Logging', () => {
   let testUser: { id: string; email: string; name: string; clerkId: string | null; };
   let testBoard: { id: string; title: string; description?: string | null; };
+  let testApp: express.Application;
 
   beforeAll(() => {
     const fakeBroadcaster: { emit: jest.Mock; except: jest.Mock } = {
@@ -34,13 +43,14 @@ describe('Columns Routes - Activity Logging', () => {
   });
 
   beforeEach(async () => {
-    // Create test user for authentication
+    // Create test user for authentication with unique data
+    const timestamp = Date.now();
     testUser = await testPrisma.user.create({
       data: {
-        id: 'test-user-id',
-        email: 'test@example.com',
+        id: `test-user-id-${timestamp}`,
+        email: `test-${timestamp}@example.com`,
         name: 'Test User',
-        clerkId: 'test-clerk-id'
+        clerkId: `test-clerk-id-${timestamp}`
       }
     });
 
@@ -51,6 +61,22 @@ describe('Columns Routes - Activity Logging', () => {
         description: 'Test board for columns'
       }
     });
+
+    // Create test app with proper authentication
+    testApp = createTestApp(testUser.id);
+
+    // Verify both were created successfully
+    if (!testUser || !testBoard) {
+      throw new Error('Failed to create test data');
+    }
+
+    // Double-check they exist in the database
+    const userExists = await testPrisma.user.findUnique({ where: { id: testUser.id } });
+    const boardExists = await testPrisma.board.findUnique({ where: { id: testBoard.id } });
+
+    if (!userExists || !boardExists) {
+      throw new Error('Test data not found in database after creation');
+    }
   });
 
   afterEach(async () => {
@@ -65,7 +91,7 @@ describe('Columns Routes - Activity Logging', () => {
         position: 0
       };
 
-      const response = await request(app)
+      const response = await request(testApp)
         .post(`/api/boards/${testBoard.id}/columns`)
         .send(columnData)
         .expect(201);
@@ -96,7 +122,7 @@ describe('Columns Routes - Activity Logging', () => {
         title: 'Auto Position Column'
       };
 
-      const response = await request(app)
+      const response = await request(testApp)
         .post(`/api/boards/${testBoard.id}/columns`)
         .send(columnData)
         .expect(201);
@@ -127,7 +153,7 @@ describe('Columns Routes - Activity Logging', () => {
         position: 0
       };
 
-      await request(app)
+      await request(testApp)
         .post(`/api/boards/${nonExistentBoardId}/columns`)
         .send(columnData)
         .expect(404);
@@ -162,7 +188,7 @@ describe('Columns Routes - Activity Logging', () => {
         title: 'Updated Column Title'
       };
 
-      const response = await request(app)
+      const response = await request(testApp)
         .put(`/api/columns/${testColumn.id}`)
         .send(updateData)
         .expect(200);
@@ -207,7 +233,7 @@ describe('Columns Routes - Activity Logging', () => {
         position: 1
       };
 
-      await request(app)
+      await request(testApp)
         .put(`/api/columns/${testColumn.id}`)
         .send(updateData)
         .expect(200);
@@ -239,7 +265,7 @@ describe('Columns Routes - Activity Logging', () => {
         position: 1
       };
 
-      await request(app)
+      await request(testApp)
         .put(`/api/columns/${testColumn.id}`)
         .send(updateData)
         .expect(200);
@@ -286,7 +312,7 @@ describe('Columns Routes - Activity Logging', () => {
         position: 0 // Same position
       };
 
-      await request(app)
+      await request(testApp)
         .put(`/api/columns/${testColumn.id}`)
         .send(updateData)
         .expect(200);
@@ -312,7 +338,7 @@ describe('Columns Routes - Activity Logging', () => {
         title: 'Failed Update'
       };
 
-      await request(app)
+      await request(testApp)
         .put(`/api/columns/${nonExistentId}`)
         .send(updateData)
         .expect(404);
@@ -343,7 +369,7 @@ describe('Columns Routes - Activity Logging', () => {
     });
 
     it('should log column deletion activity', async () => {
-      await request(app)
+      await request(testApp)
         .delete(`/api/columns/${testColumn.id}`)
         .expect(200);
 
@@ -368,7 +394,7 @@ describe('Columns Routes - Activity Logging', () => {
     it('should not log activity when column deletion fails', async () => {
       const nonExistentId = 'non-existent-column-id';
 
-      await request(app)
+      await request(testApp)
         .delete(`/api/columns/${nonExistentId}`)
         .expect(404);
 
@@ -419,7 +445,7 @@ describe('Columns Routes - Activity Logging', () => {
         position: 2
       };
 
-      await request(app)
+      await request(testApp)
         .post(`/api/columns/${testColumn.id}/reorder`)
         .send(reorderData)
         .expect(200);
@@ -450,7 +476,7 @@ describe('Columns Routes - Activity Logging', () => {
         position: 0 // Same position
       };
 
-      await request(app)
+      await request(testApp)
         .post(`/api/columns/${testColumn.id}/reorder`)
         .send(reorderData)
         .expect(200);
@@ -473,7 +499,7 @@ describe('Columns Routes - Activity Logging', () => {
         position: 1
       };
 
-      await request(app)
+      await request(testApp)
         .post(`/api/columns/${nonExistentId}/reorder`)
         .send(reorderData)
         .expect(404);
@@ -515,7 +541,7 @@ describe('Columns Routes - Activity Logging', () => {
       const promises = [];
       for (let i = 1; i <= 5; i++) {
         promises.push(
-          request(app)
+          request(testApp)
             .put(`/api/columns/${column.id}`)
             .send({ position: i })
         );
@@ -553,7 +579,7 @@ describe('Columns Routes - Activity Logging', () => {
       console.error = jest.fn();
 
       // This should still succeed even if activity logging fails
-      const response = await request(app)
+      const response = await request(testApp)
         .post(`/api/boards/${testBoard.id}/columns`)
         .send(columnData)
         .expect(201);
@@ -572,7 +598,7 @@ describe('Columns Routes - Activity Logging', () => {
       };
 
       // In a real scenario, this would be a 401, but our mock allows it through
-      await request(app)
+      await request(testApp)
         .post(`/api/boards/${testBoard.id}/columns`)
         .send(columnData)
         .expect(201);

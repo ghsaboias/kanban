@@ -1,3 +1,5 @@
+import { TIMEOUTS } from '../constants/timeouts'
+
 export function toPlainText(html: string): string {
   if (!html) return ''
   // Use a detached DOM element to decode entities and strip tags safely in browser
@@ -10,7 +12,7 @@ export function toPlainText(html: string): string {
   return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()
 }
 
-export function truncate(text: string, max = 100): string {
+export function truncate(text: string, max = TIMEOUTS.DEFAULT_TRUNCATE_LENGTH): string {
   if (text.length <= max) return text
   // Avoid breaking surrogate pairs
   let end = max

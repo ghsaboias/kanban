@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { toPlainText, truncate, extractImages } from '../utils/html'
+import { useAppearance } from '../appearance'
 import { useApi } from '../useApi'
+import { extractImages, toPlainText, truncate } from '../utils/html'
 
 interface CardData {
   id: string
@@ -9,6 +10,14 @@ interface CardData {
   priority: 'LOW' | 'MEDIUM' | 'HIGH'
   position: number
   assignee: {
+    id: string
+    name: string
+    email: string
+  } | null
+  // M&A specific fields
+  deadline?: string | null
+  riskLevel?: 'LOW' | 'MEDIUM' | 'HIGH' | null
+  owner?: {
     id: string
     name: string
     email: string
@@ -22,20 +31,46 @@ interface CardProps {
   onCardClick?: (card: CardData) => void
 }
 
-const priorityColors = {
-  HIGH: '#ff6b6b',
-  MEDIUM: '#ffd93d',
-  LOW: '#6bcf7f'
+
+const riskLabels = {
+  HIGH: 'Alto Risco',
+  MEDIUM: 'Médio Risco', 
+  LOW: 'Baixo Risco'
 }
 
-const priorityLabels = {
-  HIGH: 'Alta',
-  MEDIUM: 'Média', 
-  LOW: 'Baixa'
+// Helper function to format deadline
+function formatDeadline(deadline: string): string {
+  try {
+    const date = new Date(deadline)
+    const now = new Date()
+    const diffDays = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+    
+    if (diffDays < 0) return `${Math.abs(diffDays)}d atrasado`
+    if (diffDays === 0) return 'Hoje'
+    if (diffDays === 1) return 'Amanhã'
+    if (diffDays <= 7) return `${diffDays}d`
+    
+    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+  } catch {
+    return deadline
+  }
+}
+
+// Helper function to check if deadline is urgent
+function isDeadlineUrgent(deadline: string): boolean {
+  try {
+    const date = new Date(deadline)
+    const now = new Date()
+    const diffDays = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+    return diffDays <= 3 // Urgent if 3 days or less
+  } catch {
+    return false
+  }
 }
 
 export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardProps) {
   const { apiFetch } = useApi()
+  const { theme } = useAppearance()
   // mark onCardUpdated as used for now (edit feature later)
   void onCardUpdated
   const [hovering, setHovering] = useState(false)
@@ -68,25 +103,27 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
   }
 
   return (
-    <div 
+    <div
       style={{
-        backgroundColor: 'white',
-        border: '1px solid #e1e1e1',
-        borderRadius: '6px',
-        padding: '12px',
+        backgroundColor: theme.card,
+        border: `1px solid ${theme.border}`,
+        borderRadius: theme.radius?.md || '6px',
+        padding: theme.spacing?.md || '12px',
         cursor: 'pointer',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        boxShadow: theme.shadow?.sm || '0 1px 3px rgba(0,0,0,0.1)',
         transition: 'box-shadow 0.2s',
-        position: 'relative'
+        position: 'relative',
+        // Perf: keep paint work scoped to the card box
+        contain: 'paint'
       }}
       onClick={handleCardClick}
       onMouseEnter={(e) => {
         setHovering(true)
-        e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)'
+        e.currentTarget.style.boxShadow = theme.shadow?.md || '0 2px 6px rgba(0,0,0,0.15)'
       }}
       onMouseLeave={(e) => {
         setHovering(false)
-        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'
+        e.currentTarget.style.boxShadow = theme.shadow?.sm || '0 1px 3px rgba(0,0,0,0.1)'
       }}
     >
       <button
@@ -101,15 +138,15 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
           position: 'absolute',
           top: '4px',
           right: '4px',
-          backgroundColor: 'white',
-          color: '#dc3545',
-          border: '1px solid #e5e7eb',
+          backgroundColor: theme.card,
+          color: theme.danger || '#dc3545',
+          border: `1px solid ${theme.border}`,
           width: '20px',
           height: '20px',
           minWidth: '20px',
           padding: 0,
           boxSizing: 'border-box',
-          borderRadius: '6px',
+          borderRadius: theme.radius?.sm || '6px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -120,14 +157,14 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
           transition: 'opacity 150ms ease'
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = '#dc3545'
-          e.currentTarget.style.borderColor = '#dc3545'
+          e.currentTarget.style.backgroundColor = (theme.danger || '#dc3545')
+          e.currentTarget.style.borderColor = (theme.danger || '#dc3545')
           e.currentTarget.style.color = 'white'
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'white'
-          e.currentTarget.style.borderColor = '#e5e7eb'
-          e.currentTarget.style.color = '#dc3545'
+          e.currentTarget.style.backgroundColor = theme.card
+          e.currentTarget.style.borderColor = theme.border
+          e.currentTarget.style.color = (theme.danger || '#dc3545')
         }}
       >
         <svg
@@ -150,46 +187,46 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
         </svg>
       </button>
 
-      <div style={{ marginBottom: '8px' }}>
-        <h4 style={{ 
-          margin: 0, 
-          fontSize: '14px', 
+      <div style={{ marginBottom: theme.spacing?.sm || '8px' }}>
+        <h4 style={{
+          margin: 0,
+          fontSize: '14px',
           fontWeight: '600',
-          color: '#333',
+          color: theme.textSecondary,
           paddingRight: '20px'
         }}>
           {card.title}
         </h4>
       </div>
-      
+
       {card.description && (
-        <p style={{ 
-          margin: '0 0 8px 0', 
-          fontSize: '12px', 
-          color: '#333',
+        <p style={{
+          margin: `0 0 ${theme.spacing?.sm || '8px'} 0`,
+          fontSize: '12px',
+          color: theme.textSecondary,
           lineHeight: '1.4'
         }}>
           {truncate(toPlainText(card.description || ''), 100)}
         </p>
       )}
-      
+
       {/* Images Section in Card */}
       {(() => {
         const images = extractImages(card.description || '')
         if (images.length === 0) return null
-        
+
         return (
-          <div style={{ marginBottom: '8px' }}>
-            <span style={{ 
-              fontSize: '10px', 
-              color: '#666', 
-              display: 'block', 
-              marginBottom: '4px' 
+          <div style={{ marginBottom: theme.spacing?.sm || '8px' }}>
+            <span style={{
+              fontSize: '10px',
+              color: theme.textMuted,
+              display: 'block',
+              marginBottom: theme.spacing?.xs || '4px'
             }}>Images ({images.length})</span>
-            <div style={{ 
-              display: 'flex', 
-              gap: '4px', 
-              flexWrap: 'wrap' 
+            <div style={{
+              display: 'flex',
+              gap: theme.spacing?.xs || '4px',
+              flexWrap: 'wrap'
             }}>
               {images.slice(0, 3).map((src, index) => (
                 <div
@@ -197,15 +234,17 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
                   style={{
                     width: '32px',
                     height: '24px',
-                    border: '1px solid #e1e1e1',
-                    borderRadius: '3px',
+                    border: `1px solid ${theme.border}`,
+                    borderRadius: theme.radius?.sm || '3px',
                     overflow: 'hidden',
-                    backgroundColor: '#f8f9fa'
+                    backgroundColor: theme.surfaceAlt
                   }}
                 >
                   <img
                     src={src}
                     alt={`Preview ${index + 1}`}
+                    loading="lazy"
+                    decoding="async"
                     style={{
                       width: '100%',
                       height: '100%',
@@ -218,14 +257,14 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
                 <div style={{
                   width: '32px',
                   height: '24px',
-                  border: '1px solid #e1e1e1',
-                  borderRadius: '3px',
-                  backgroundColor: '#f8f9fa',
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: theme.radius?.sm || '3px',
+                  backgroundColor: theme.surfaceAlt,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '8px',
-                  color: '#666'
+                  color: theme.textMuted
                 }}>
                   +{images.length - 3}
                 </div>
@@ -234,39 +273,106 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
           </div>
         )
       })()}
-      
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        marginTop: '8px'
-      }}>
-        <span style={{
-          backgroundColor: priorityColors[card.priority],
-          color: 'white',
-          fontSize: '10px',
-          fontWeight: '600',
-          padding: '2px 6px',
-          borderRadius: '10px',
-          textTransform: 'uppercase'
-        }}>
-          {/* Split into separate spans so tests can match exact priority text (e.g., 'HIGH') */}
-          <span>{priorityLabels[card.priority]}</span>
-          <span style={{ marginLeft: '4px' }}>{card.priority}</span>
-        </span>
-        
-        {card.assignee && (
-          <div style={{ 
-            fontSize: '10px', 
-            color: '#333',
-            backgroundColor: '#f0f0f0',
-            padding: '2px 6px',
-            borderRadius: '10px'
-          }}>
-            {card.assignee.name}
+
+      {/* Unified metadata row: priority, owner/assignee, deadline, risk */}
+      {(card.priority || card.owner || card.assignee || card.deadline || card.riskLevel) && (
+        <div style={{ marginTop: theme.spacing?.sm || '8px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: theme.spacing?.xs || '4px' }}>
+            {/* Priority */}
+            {card.priority && (
+              <div style={{
+                fontSize: '10px',
+                color: '#fff',
+                backgroundColor: theme.priority[card.priority],
+                padding: '2px 6px',
+                borderRadius: theme.radius?.md || '10px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                textTransform: 'uppercase',
+                border: '1px solid transparent'
+              }}>
+                <span>⏱</span>
+                <span>{card.priority}</span>
+              </div>
+            )}
+
+            {/* Owner (fallback to assignee for legacy) */}
+            {(card.owner || card.assignee) && (
+              <div style={{
+                fontSize: '10px',
+                color: theme.emphasis?.owner || theme.textSecondary,
+                backgroundColor: theme.surfaceAlt + '80',
+                padding: '2px 6px',
+                borderRadius: theme.radius?.sm || '3px',
+                border: `1px solid ${theme.border}`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
+                <span>👤</span>
+                <span>{card.owner?.name || card.assignee?.name}</span>
+              </div>
+            )}
+
+            {/* Deadline */}
+            {card.deadline && (
+              <div style={{
+                fontSize: '10px',
+                color: isDeadlineUrgent(card.deadline) 
+                  ? theme.emphasis?.deadline || theme.danger 
+                  : theme.emphasis?.deadline || theme.textSecondary,
+                backgroundColor: isDeadlineUrgent(card.deadline) 
+                  ? (theme.danger || '#dc3545') + '10' 
+                  : theme.surfaceAlt + '80',
+                padding: '2px 6px',
+                borderRadius: theme.radius?.sm || '3px',
+                border: `1px solid ${isDeadlineUrgent(card.deadline) ? theme.danger : theme.border}`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontWeight: isDeadlineUrgent(card.deadline) ? 600 : 400
+              }}>
+                <span>📅</span>
+                <span>{formatDeadline(card.deadline)}</span>
+              </div>
+            )}
+
+            {/* Risk Level */}
+            {card.riskLevel && (
+              <div style={{
+                fontSize: '10px',
+                color: theme.emphasis?.riskFlag || (
+                  card.riskLevel === 'HIGH' ? theme.danger :
+                  card.riskLevel === 'MEDIUM' ? theme.warning :
+                  theme.textSecondary
+                ),
+                backgroundColor: card.riskLevel === 'HIGH' 
+                  ? (theme.danger || '#dc3545') + '10'
+                  : card.riskLevel === 'MEDIUM'
+                  ? (theme.warning || '#ffc107') + '10'
+                  : theme.surfaceAlt + '80',
+                padding: '2px 6px',
+                borderRadius: theme.radius?.sm || '3px',
+                border: `1px solid ${
+                  card.riskLevel === 'HIGH' ? theme.danger :
+                  card.riskLevel === 'MEDIUM' ? theme.warning :
+                  theme.border
+                }`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontWeight: card.riskLevel !== 'LOW' ? 600 : 400
+              }}>
+                <span>⚠️</span>
+                <span>{riskLabels[card.riskLevel]}</span>
+              </div>
+            )}
+
+            
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

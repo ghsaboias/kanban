@@ -1,7 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
-import { BrowserRouter } from 'react-router-dom'
-import { BoardsList } from '../../components/BoardsList'
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { BoardsList } from '../../components/BoardsList';
+import { fireEvent, render, screen, waitFor } from '../test-utils';
+
+// Mock React Router components and hooks
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    Link: ({ children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => <a {...props}>{children}</a>,
+  };
+})
 
 type TestBoard = {
   id: string
@@ -28,13 +36,12 @@ describe('BoardsList', () => {
       { id: 'b1', title: 'Board 1', description: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), _count: { columns: 0 } },
       { id: 'b2', title: 'Board 2', description: 'desc', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), _count: { columns: 2 } },
     ]
-    mockApiFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ success: true, data: boards }) })
+    mockApiFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ success: true, data: boards })
+    })
 
-    render(
-      <BrowserRouter>
-        <BoardsList />
-      </BrowserRouter>
-    )
+    render(<BoardsList />)
 
     expect(screen.getByText('Loading boards...')).toBeInTheDocument()
 
@@ -46,24 +53,29 @@ describe('BoardsList', () => {
 
   it('creates a board from the form', async () => {
     const boards: TestBoard[] = []
-    mockApiFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ success: true, data: boards }) })
+    mockApiFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ success: true, data: boards })
+    })
 
-    render(
-      <BrowserRouter>
-        <BoardsList />
-      </BrowserRouter>
-    )
+    render(<BoardsList />)
 
     await waitFor(() => {
       expect(screen.getByText('Kanban Boards')).toBeInTheDocument()
     })
 
-    // Open form
+    // Open dropdown first
     fireEvent.click(screen.getByText('+ Create Board'))
+    
+    // Then click "Create Empty Board"
+    fireEvent.click(screen.getByText('Create Empty Board'))
 
     // Next call should be the POST
     const created = { id: 'new', title: 'New Board', description: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), _count: { columns: 0 } }
-    mockApiFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ success: true, data: created }) })
+    mockApiFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ success: true, data: created })
+    })
 
     fireEvent.change(screen.getByPlaceholderText('Enter board title'), { target: { value: 'New Board' } })
     fireEvent.click(screen.getByText('Create Board'))

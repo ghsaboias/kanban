@@ -1,4 +1,6 @@
 import React, { Component, type ReactNode } from 'react';
+import { AppearanceContext } from '../appearance/AppearanceProvider'
+import { TIMEOUTS } from '../constants/timeouts'
 
 interface SocketErrorBoundaryState {
   hasError: boolean;
@@ -15,6 +17,8 @@ interface SocketErrorBoundaryProps {
 }
 
 export class SocketErrorBoundary extends Component<SocketErrorBoundaryProps, SocketErrorBoundaryState> {
+  static contextType = AppearanceContext
+  declare context: React.ContextType<typeof AppearanceContext>
   private retryTimeoutId: number | null = null;
 
   constructor(props: SocketErrorBoundaryProps) {
@@ -86,7 +90,7 @@ export class SocketErrorBoundary extends Component<SocketErrorBoundaryProps, Soc
   }
 
   private scheduleRetry = () => {
-    const delay = Math.min(1000 * Math.pow(2, this.state.retryCount), 10000); // Exponential backoff, max 10s
+    const delay = Math.min(TIMEOUTS.SOCKET_RETRY_BASE * Math.pow(2, this.state.retryCount), TIMEOUTS.SOCKET_RETRY_MAX); // Exponential backoff
     
     this.retryTimeoutId = window.setTimeout(() => {
       this.handleRetry();
@@ -114,6 +118,7 @@ export class SocketErrorBoundary extends Component<SocketErrorBoundaryProps, Soc
   };
 
   render() {
+    const theme = this.context?.theme
     if (this.state.hasError && this.state.error) {
       if (this.props.fallback) {
         return this.props.fallback(this.state.error, this.handleManualRetry);
@@ -122,11 +127,11 @@ export class SocketErrorBoundary extends Component<SocketErrorBoundaryProps, Soc
       if (this.isSocketError(this.state.error)) {
         return (
           <div style={{
-            padding: '16px',
+            padding: theme?.spacing?.md || '16px',
             backgroundColor: '#fff3cd',
             border: '1px solid #ffeaa7',
-            borderRadius: '8px',
-            margin: '16px',
+            borderRadius: theme?.radius?.md || '8px',
+            margin: theme?.spacing?.md || '16px',
             textAlign: 'center'
           }}>
             <h3 style={{ color: '#856404', margin: '0 0 8px 0' }}>
@@ -135,22 +140,22 @@ export class SocketErrorBoundary extends Component<SocketErrorBoundaryProps, Soc
             <p style={{ color: '#856404', margin: '0 0 12px 0', fontSize: '14px' }}>
               Having trouble connecting to real-time updates. The app will continue to work, but you may not see live changes from other users.
             </p>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: theme?.spacing?.sm || '8px', justifyContent: 'center', alignItems: 'center' }}>
               <button
                 onClick={this.handleManualRetry}
                 style={{
-                  backgroundColor: '#ffc107',
-                  color: '#212529',
-                  border: 'none',
-                  borderRadius: '4px',
-                  padding: '6px 12px',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                  fontWeight: 'bold'
-                }}
-              >
-                Retry Connection
-              </button>
+              backgroundColor: '#ffc107',
+              color: '#212529',
+              border: 'none',
+              borderRadius: theme?.radius?.sm || '4px',
+              padding: `${theme?.spacing?.xs || '6px'} ${theme?.spacing?.md || '12px'}`,
+              cursor: 'pointer',
+              fontSize: '12px',
+              fontWeight: 'bold'
+            }}
+          >
+            Retry Connection
+          </button>
               {this.state.retryCount > 0 && (
                 <span style={{ fontSize: '12px', color: '#6c757d' }}>
                   (Attempt {this.state.retryCount + 1})
@@ -163,11 +168,11 @@ export class SocketErrorBoundary extends Component<SocketErrorBoundaryProps, Soc
 
       return (
         <div style={{
-          padding: '16px',
+          padding: theme?.spacing?.md || '16px',
           backgroundColor: '#f8d7da',
           border: '1px solid #f5c6cb',
-          borderRadius: '8px',
-          margin: '16px',
+          borderRadius: theme?.radius?.md || '8px',
+          margin: theme?.spacing?.md || '16px',
           textAlign: 'center'
         }}>
           <h3 style={{ color: '#721c24', margin: '0 0 8px 0' }}>
@@ -182,8 +187,8 @@ export class SocketErrorBoundary extends Component<SocketErrorBoundaryProps, Soc
               backgroundColor: '#dc3545',
               color: 'white',
               border: 'none',
-              borderRadius: '4px',
-              padding: '6px 12px',
+              borderRadius: theme?.radius?.sm || '4px',
+              padding: `${theme?.spacing?.xs || '6px'} ${theme?.spacing?.md || '12px'}`,
               cursor: 'pointer',
               fontSize: '12px',
               fontWeight: 'bold'

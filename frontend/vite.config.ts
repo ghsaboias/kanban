@@ -18,5 +18,19 @@ export default defineConfig({
         ws: true,
       }
     }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-clerk': ['@clerk/clerk-react'],
+          'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable'],
+          'vendor-tiptap': ['@tiptap/react', '@tiptap/starter-kit', '@tiptap/extension-link', '@tiptap/extension-placeholder', '@tiptap/extension-image'],
+          'vendor-socket': ['socket.io-client'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 900,
   }
 })

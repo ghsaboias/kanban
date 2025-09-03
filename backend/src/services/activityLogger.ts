@@ -92,10 +92,12 @@ export class ActivityLogger {
       .filter(([k]) => k.startsWith(`${request.entityId}:`))
       .length;
 
+    // Only rate limit if we're already at the maximum
     if (recentCount >= this.RATE_LIMIT_MAX) {
       return true;
     }
 
+    // Add this activity to the rate limit map
     this.rateLimitMap.set(`${key}:${now}`, now);
     return false;
   }

@@ -1,0 +1,11 @@
+{
+  "name": "@kanban/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared types and utilities for Kanban",
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json"
+  },
+  "types": "dist/realtime.d.ts"
+}

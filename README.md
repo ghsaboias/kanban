@@ -56,7 +56,8 @@ npm install
 VITE_CLERK_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
 VITE_API_URL=http://localhost:3001
 
-# backend/.env.local
+# backend/.env (ou use o .env da raiz ao rodar a partir dela)
+DATABASE_URL=file:../prisma/dev.db
 CLERK_SECRET_KEY=YOUR_SECRET_KEY
 CORS_ORIGIN=http://localhost:5173
 ```
@@ -85,6 +86,62 @@ Isso irá iniciar:
 - Frontend: http://localhost:5173
 - Backend: http://localhost:3001
 
+## Build de Produção
+
+Quer testar a performance com o bundle otimizado? Use o fluxo abaixo.
+
+1) Variáveis de ambiente (recomendado)
+
+- Backend (carregado a partir da raiz): crie/edite `.env` na raiz com:
+  - `DATABASE_URL=file:./prisma/dev.db`
+  - `CLERK_SECRET_KEY=<seu_secret_key>`
+  - `CLERK_PUBLISHABLE_KEY=<seu_publishable_key>`
+  - `CORS_ORIGIN=http://localhost:5173`
+- Frontend (lidas no build pela Vite): `frontend/.env.local`
+  - `VITE_CLERK_PUBLISHABLE_KEY=<seu_publishable_key>`
+  - `VITE_API_URL=http://localhost:3001`
+
+2) Gerar os artefatos de produção (monorepo inteiro)
+
+```bash
+npm run build
+```
+
+3) Subir o backend (produção)
+
+```bash
+NODE_ENV=production PORT=3001 node backend/dist/index.js
+```
+
+4) Servir o frontend gerado e abrir no navegador
+
+Opção A (recomendado):
+
+```bash
+npm run serve:prod
+# Acesse: http://localhost:5173
+```
+
+Opção B (alternativa estática):
+
+```bash
+cd frontend/dist
+python3 -m http.server 5173
+# Acesse: http://localhost:5173
+```
+
+Observações importantes:
+- `npm run dev` usa servidores com HMR/watchers (rápido para desenvolvimento).
+- `npm run build` gera artefatos otimizados: `frontend/dist` (Vite) e `backend/dist` (TypeScript compilado).
+- Para o frontend em produção funcionar, o `VITE_API_URL` precisa apontar para o backend em execução.
+- Se aparecer erro de CORS no navegador, confira `CORS_ORIGIN=http://localhost:5173` no `.env` e reinicie o backend.
+
+### Sobre variáveis de ambiente (evitando duplicação)
+
+- Backend: como o servidor carrega `dotenv` a partir do diretório atual, recomenda-se manter o arquivo `.env` apenas na raiz e iniciar o backend a partir dela (ex.: `node backend/dist/index.js`). Isso evita ter de manter `backend/.env.local` duplicado.
+- Frontend: mantenha as variáveis `VITE_*` em `frontend/.env.local` (ou `.env` dentro de `frontend/`). Vite lê apenas arquivos do próprio pacote e somente variáveis que começam com `VITE_` entram no bundle.
+- Opcional: se preferir rodar o backend estando dentro de `backend/`, crie `backend/.env` (não `.env.local`) com as mesmas chaves do `.env` da raiz.
+
 ### Desenvolvimento Individual
 
 Para executar frontend e backend separadamente:
@@ -95,6 +152,20 @@ npm run dev:frontend
 
 # Apenas backend
 npm run dev:backend
+```
+
+### Executar Pacotes Individualmente (a partir da raiz)
+
+```bash
+# Frontend
+npm run -w frontend dev
+npm run -w frontend build
+npm run -w frontend preview -- --port 5173
+
+# Backend
+npm run -w kanban-backend dev
+npm run -w kanban-backend build
+NODE_ENV=production node backend/dist/index.js
 ```
 
 ## Estrutura do Projeto

@@ -2,7 +2,8 @@ import { Server, Socket } from 'socket.io';
 import { Server as HTTPServer } from 'http';
 import { verifyToken } from '@clerk/backend';
 import { prisma } from '../database';
-import { UserJoinedEvent, UserLeftEvent, BoardJoinedEvent, ErrorEvent } from '../../../shared/realtime';
+import { logger } from '../utils/logger';
+import type { UserJoinedEvent, UserLeftEvent, BoardJoinedEvent, ErrorEvent } from '@kanban/shared/realtime';
 
 export interface AuthenticatedSocket extends Socket {
   userId: string;
@@ -70,14 +71,14 @@ export const setupSocket = (httpServer: HTTPServer) => {
       
       next();
     } catch (error) {
-      console.error('Socket authentication failed:', error);
+      logger.error('Socket authentication failed', { error });
       next(new Error('Authentication failed'));
     }
   });
 
   io.on('connection', (socket) => {
     const authSocket = socket as AuthenticatedSocket;
-    console.log(`User ${authSocket.user.name} connected`);
+    logger.debug(`User connected`, { userId: authSocket.user.id });
 
     // Join board room
     authSocket.on('join:board', async (boardId: string) => {
@@ -135,9 +136,9 @@ export const setupSocket = (httpServer: HTTPServer) => {
           roster 
         } as BoardJoinedEvent);
         
-        console.log(`User ${authSocket.user.name} joined board ${boardId} with ${roster.length} other users`);
+        logger.debug(`User joined board`, { userId: authSocket.user.id, boardId, others: roster.length });
       } catch (error) {
-        console.error('Error joining board:', error);
+        logger.error('Error joining board', { error });
         authSocket.emit('error', { message: 'Failed to join board' } as ErrorEvent);
       }
     });
@@ -153,13 +154,13 @@ export const setupSocket = (httpServer: HTTPServer) => {
         user: authSocket.user,
       } as UserLeftEvent);
 
-      console.log(`User ${authSocket.user.name} left board ${boardId}`);
+      logger.debug(`User left board`, { userId: authSocket.user.id, boardId });
     });
 
 
     // Handle disconnect
     authSocket.on('disconnect', () => {
-      console.log(`User ${authSocket.user.name} disconnected`);
+      logger.debug(`User disconnected`, { userId: authSocket.user.id });
       
       // Notify all rooms this user was in
       const rooms = Array.from(authSocket.rooms);

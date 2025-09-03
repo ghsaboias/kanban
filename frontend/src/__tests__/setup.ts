@@ -42,7 +42,7 @@ vi.mock('socket.io-client', () => ({
   })),
 }));
 
-// Mock Clerk
+// Mock Clerk (including provider)
 vi.mock('@clerk/clerk-react', () => ({
   ClerkProvider: ({ children }: { children: React.ReactNode }) => children,
   useAuth: () => ({
@@ -63,3 +63,18 @@ vi.mock('@clerk/clerk-react', () => ({
   SignUp: () => null,
   UserButton: () => null,
 }));
+
+// Mock window.matchMedia for theme detection
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(), // deprecated
+    removeListener: vi.fn(), // deprecated
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});

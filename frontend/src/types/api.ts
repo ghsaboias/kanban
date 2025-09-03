@@ -40,4 +40,3 @@ export interface ActivityFeedData {
     prevPage: number | null
   }
 }
-

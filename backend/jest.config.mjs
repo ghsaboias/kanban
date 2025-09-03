@@ -4,8 +4,8 @@ export default {
   testEnvironment: "node",
   roots: ["<rootDir>/src"],
   testMatch: ["**/__tests__/**/*.test.ts"],
-  // Run tests sequentially to avoid cross-file DB cleanup races
-  maxWorkers: 1,
+  // Enable parallel execution for faster test runs
+  maxWorkers: "50%",
   transform: {
     "^.+\\.ts$": [
       "ts-jest",
@@ -26,4 +26,7 @@ export default {
   collectCoverageFrom: ["src/**/*.ts", "!src/**/*.d.ts", "!src/index.ts"],
   setupFilesAfterEnv: ["<rootDir>/src/__tests__/setup.ts"],
   testTimeout: 10000,
+  // Enable isolated database per worker
+  globalSetup: "<rootDir>/src/__tests__/globalSetup.ts",
+  globalTeardown: "<rootDir>/src/__tests__/globalTeardown.ts",
 };

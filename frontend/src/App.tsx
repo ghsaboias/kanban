@@ -1,26 +1,30 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { BoardsList } from './components/BoardsList'
-import { BoardPage } from './components/BoardPage'
-import { SocketProvider } from './contexts/SocketContext'
-import './App.css'
 import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/clerk-react'
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom'
+import './App.css'
+import { Suspense, lazy } from 'react'
+const BoardsList = lazy(() => import('./components/BoardsList').then(m => ({ default: m.BoardsList })))
+const BoardPage = lazy(() => import('./components/BoardPage').then(m => ({ default: m.BoardPage })))
+import { AppearanceControl } from './appearance'
+import { SocketProvider } from './contexts/SocketContext'
+import { useAppearance } from './appearance'
 
 function App() {
+  const { theme } = useAppearance()
   return (
     <Router>
-      <div style={{ minHeight: '100vh', backgroundColor: '#fafbfc' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: theme.background }}>
         <header style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          padding: '10px 16px',
-          borderBottom: '1px solid #e1e5e9',
-          backgroundColor: '#fff'
+          padding: `${theme.spacing?.sm || '10px'} ${theme.spacing?.md || '16px'}`,
+          borderBottom: `1px solid ${theme.border}`,
+          backgroundColor: theme.surface
         }}>
-          <h1 style={{ margin: 0, fontSize: '16px', color: '#111' }}>Kanban</h1>
+          <h1 style={{ margin: 0, fontSize: '16px', color: theme.textPrimary }}>Kanban</h1>
           <div>
             <SignedOut>
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: theme.spacing?.sm || '8px' }}>
                 <SignInButton />
                 <SignUpButton />
               </div>
@@ -30,21 +34,24 @@ function App() {
             </SignedIn>
           </div>
         </header>
-        
+
         <SignedOut>
-          <div style={{ padding: '24px' }}>
-            <p style={{ color: '#111' }}>Please sign in to continue.</p>
+          <div style={{ padding: theme.spacing?.xl || '24px' }}>
+            <p style={{ color: theme.textPrimary }}>Please sign in to continue.</p>
           </div>
         </SignedOut>
 
         <SignedIn>
           <SocketProvider>
-            <Routes>
-              <Route path="/" element={<BoardsList />} />
-              <Route path="/board/:id" element={<BoardPage />} />
-            </Routes>
+            <Suspense fallback={<div style={{ padding: (theme.spacing?.md || '16px') }}>Loading…</div>}>
+              <Routes>
+                <Route path="/" element={<BoardsList />} />
+                <Route path="/board/:id" element={<BoardPage />} />
+              </Routes>
+            </Suspense>
           </SocketProvider>
         </SignedIn>
+        <AppearanceControl />
       </div>
     </Router>
   )

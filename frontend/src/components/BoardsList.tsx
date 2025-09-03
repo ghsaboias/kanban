@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useApi } from '../useApi'
 import type { ApiResponse } from '../types/api'
+import { useAppearance } from '../appearance'
+import { useAsyncOperation } from '../hooks/useAsyncOperation'
 
 interface Board {
   id: string
@@ -15,42 +17,107 @@ interface Board {
 }
 
 export function BoardsList() {
+  const { theme } = useAppearance()
   const [boards, setBoards] = useState<Board[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [showCreateForm, setShowCreateForm] = useState(false)
-  const [createLoading, setCreateLoading] = useState(false)
-  const [formData, setFormData] = useState({ title: '', description: '' })
+  const [formData, setFormData] = useState({ title: '', description: '', template: 'none' })
   const [editingBoard, setEditingBoard] = useState<Board | null>(null)
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
+  const [showCreateDropdown, setShowCreateDropdown] = useState(false)
+  const [showTemplateModal, setShowTemplateModal] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   const { apiFetch } = useApi()
+  
+  // Use async operation hook for loading boards
+  const {
+    loading,
+    error,
+    execute: loadBoards,
+    setError
+  } = useAsyncOperation<Board[]>()
+  const [hasLoaded, setHasLoaded] = useState(false)
+  
+  // Use async operation hook for creating boards
+  const {
+    loading: createLoading,
+    error: createError,
+    execute: executeCreateBoard
+  } = useAsyncOperation<Board>()
+
+  const templates = [
+    {
+      key: 'ma-pipeline-en',
+      name: 'M&A Pipeline (EN)',
+      description: 'Prospecting → Screening → Materials Preparation → NDA/Teaser → Management Presentation → LOI → Due Diligence → SPA/SHA → Closing',
+      columns: [
+        'Prospecting',
+        'Screening', 
+        'Materials Preparation (CIM/Info Pack)',
+        'NDA/Teaser (GTM)',
+        'Management Presentation',
+        'LOI',
+        'Due Diligence',
+        'SPA/SHA',
+        'Closing',
+      ],
+    },
+  ]
+
+  const createTemplateColumns = async (boardId: string, templateKey: string) => {
+    const template = templates.find(t => t.key === templateKey)
+    if (!template) return
+
+    for (const columnTitle of template.columns) {
+      try {
+        await apiFetch(`/api/boards/${boardId}/columns`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: columnTitle })
+        })
+      } catch (error) {
+        console.warn('Failed to create column:', columnTitle, error)
+      }
+    }
+  }
+
+  const initializedRef = useRef(false)
 
   useEffect(() => {
-    apiFetch('/api/boards')
-      .then((response: Response) => response.json())
-      .then((data: ApiResponse<Board[]>) => {
-        if (data.success) {
-          setBoards(data.data)
-        } else {
-          setError('Failed to load boards')
-        }
-      })
-      .catch((err: unknown) => {
-        const msg = err instanceof Error ? err.message : String(err)
-        setError('Error connecting to API: ' + msg)
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-  }, [apiFetch])
+    const fetchBoards = async () => {
+      const response = await apiFetch('/api/boards')
+      const data: ApiResponse<Board[]> = await response.json()
+      
+      if (data.success) {
+        setBoards(data.data)
+        setHasLoaded(true)
+        return data.data
+      } else {
+        throw new Error(data.error || 'Failed to load boards')
+      }
+    }
+    
+    if (!initializedRef.current) {
+      initializedRef.current = true
+      loadBoards(fetchBoards)
+    }
+  }, [apiFetch, loadBoards])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowCreateDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const handleCreateBoard = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.title.trim()) return
 
-    setCreateLoading(true)
-    try {
+    const createBoardOperation = async () => {
       const response = await apiFetch('/api/boards', {
         method: 'POST',
         headers: {
@@ -64,25 +131,35 @@ export function BoardsList() {
 
       const result = await response.json()
       if (result.success) {
+        const boardId = result.data.id
+        
+        // If template is selected, create columns from template
+        if (formData.template !== 'none') {
+          await createTemplateColumns(boardId, formData.template)
+        }
+        
         setBoards(prev => [result.data, ...prev])
-        setFormData({ title: '', description: '' })
+        setFormData({ title: '', description: '', template: 'none' })
         setShowCreateForm(false)
+        return result.data
       } else {
-        setError('Failed to create board')
+        throw new Error(result.error || 'Failed to create board')
       }
+    }
+
+    try {
+      await executeCreateBoard(createBoardOperation)
     } catch {
-      setError('Error creating board')
-    } finally {
-      setCreateLoading(false)
+      // Error is handled by useAsyncOperation
     }
   }
+
 
   const handleEditBoard = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!editingBoard || !formData.title.trim()) return
 
-    setCreateLoading(true)
-    try {
+    const editBoardOperation = async () => {
       const response = await apiFetch(`/api/boards/${editingBoard.id}`, {
         method: 'PUT',
         headers: {
@@ -99,15 +176,18 @@ export function BoardsList() {
         setBoards(prev => prev.map(board =>
           board.id === editingBoard.id ? result.data : board
         ))
-        setFormData({ title: '', description: '' })
+        setFormData({ title: '', description: '', template: 'none' })
         setEditingBoard(null)
+        return result.data
       } else {
-        setError('Failed to update board')
+        throw new Error(result.error || 'Failed to update board')
       }
+    }
+
+    try {
+      await executeCreateBoard(editBoardOperation)
     } catch {
-      setError('Error updating board')
-    } finally {
-      setCreateLoading(false)
+      // Error is handled by useAsyncOperation
     }
   }
 
@@ -137,48 +217,120 @@ export function BoardsList() {
 
   const startEdit = (board: Board) => {
     setEditingBoard(board)
-    setFormData({ title: board.title, description: board.description || '' })
+    setFormData({ title: board.title, description: board.description || '', template: 'none' })
     setShowCreateForm(true)
   }
 
-  if (loading) return <div>Loading boards...</div>
+  if (loading && !hasLoaded) return <div>Loading boards...</div>
   if (error) return <div>Error: {error}</div>
 
   return (
-    <div style={{ padding: '20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h1 style={{ margin: 0, color: '#000' }}>Kanban Boards</h1>
-        <button
-          onClick={() => setShowCreateForm(true)}
-          style={{
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            padding: '10px 16px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500'
-          }}
-        >
-          + Create Board
-        </button>
+    <div style={{ padding: theme.spacing?.lg || '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing?.xl || '24px' }}>
+        <h1 style={{ margin: 0, color: theme.textPrimary }}>Kanban Boards</h1>
+        <div style={{ position: 'relative' }} ref={dropdownRef}>
+          <button
+            onClick={() => setShowCreateDropdown(!showCreateDropdown)}
+            style={{
+              backgroundColor: theme.accent,
+              color: theme.accentText,
+              border: `1px solid ${theme.border}`,
+              borderRadius: theme.radius?.sm || '6px',
+              padding: `${theme.spacing?.sm || '10px'} ${theme.spacing?.md || '16px'}`,
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            + Create Board
+            <span style={{ fontSize: '12px' }}>▼</span>
+          </button>
+          {showCreateDropdown && (
+            <div style={{
+              position: 'absolute',
+              top: '100%',
+              right: 0,
+              marginTop: '4px',
+              backgroundColor: theme.surface,
+              border: `1px solid ${theme.border}`,
+              borderRadius: theme.radius?.md || '8px',
+              boxShadow: theme.shadow?.lg || '0 4px 12px rgba(0,0,0,0.15)',
+              zIndex: 10,
+              minWidth: '200px'
+            }}>
+              <button
+                onClick={() => {
+                  setShowCreateForm(true)
+                  setShowCreateDropdown(false)
+                }}
+                style={{
+                  width: '100%',
+                  padding: `${theme.spacing?.sm || '10px'} ${theme.spacing?.md || '16px'}`,
+                  backgroundColor: 'transparent',
+                  color: theme.textPrimary,
+                  border: 'none',
+                  borderRadius: `${theme.radius?.md || '8px'} ${theme.radius?.md || '8px'} 0 0`,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '14px',
+                  borderBottom: `1px solid ${theme.border}`
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = theme.surfaceAlt || 'rgba(0,0,0,0.05)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                }}
+              >
+                Create Empty Board
+              </button>
+              <button
+                onClick={() => {
+                  setShowTemplateModal(true)
+                  setShowCreateDropdown(false)
+                }}
+                style={{
+                  width: '100%',
+                  padding: `${theme.spacing?.sm || '10px'} ${theme.spacing?.md || '16px'}`,
+                  backgroundColor: 'transparent',
+                  color: theme.textPrimary,
+                  border: 'none',
+                  borderRadius: `0 0 ${theme.radius?.md || '8px'} ${theme.radius?.md || '8px'}`,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '14px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = theme.surfaceAlt || 'rgba(0,0,0,0.05)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                }}
+              >
+                Create from Template
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {showCreateForm && (
         <div style={{
-          backgroundColor: 'white',
-          border: '1px solid #ddd',
-          borderRadius: '8px',
-          padding: '20px',
-          marginBottom: '24px'
+          backgroundColor: theme.surface,
+          border: `1px solid ${theme.border}`,
+          borderRadius: theme.radius?.md || '8px',
+          padding: theme.spacing?.lg || '20px',
+          marginBottom: theme.spacing?.xl || '24px'
         }}>
-          <h3 style={{ margin: '0 0 16px 0', color: '#000' }}>
+          <h3 style={{ margin: `0 0 ${theme.spacing?.md || '16px'} 0`, color: theme.textPrimary }}>
             {editingBoard ? 'Edit Board' : 'Create New Board'}
           </h3>
           <form onSubmit={editingBoard ? handleEditBoard : handleCreateBoard}>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#000' }}>
+            <div style={{ marginBottom: theme.spacing?.md || '16px' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: theme.textPrimary }}>
                 Title *
               </label>
               <input
@@ -188,18 +340,18 @@ export function BoardsList() {
                 placeholder="Enter board title"
                 style={{
                   width: '100%',
-                  padding: '8px 12px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
+                  padding: `${theme.spacing?.sm || '8px'} ${theme.spacing?.md || '12px'}`,
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: theme.radius?.sm || '4px',
                   fontSize: '14px',
-                  color: '#213547',
-                  backgroundColor: '#f9f9f9'
+                  color: theme.textPrimary,
+                  backgroundColor: theme.inputBg
                 }}
                 required
               />
             </div>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#000' }}>
+            <div style={{ marginBottom: theme.spacing?.md || '16px' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: theme.textPrimary }}>
                 Description
               </label>
               <textarea
@@ -209,25 +361,74 @@ export function BoardsList() {
                 rows={3}
                 style={{
                   width: '100%',
-                  padding: '8px 12px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
+                  padding: `${theme.spacing?.sm || '8px'} ${theme.spacing?.md || '12px'}`,
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: theme.radius?.sm || '4px',
                   fontSize: '14px',
-                  color: '#213547',
-                  backgroundColor: '#f9f9f9',
+                  color: theme.textPrimary,
+                  backgroundColor: theme.inputBg,
                   resize: 'vertical'
                 }}
               />
             </div>
-            <div style={{ display: 'flex', gap: '12px' }}>
+            {!editingBoard && (
+              <div style={{ marginBottom: theme.spacing?.md || '16px' }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: theme.textPrimary }}>
+                  Template
+                </label>
+                <select
+                  value={formData.template}
+                  onChange={(e) => setFormData(prev => ({ ...prev, template: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: `${theme.spacing?.sm || '8px'} ${theme.spacing?.md || '12px'}`,
+                    border: `1px solid ${theme.border}`,
+                    borderRadius: theme.radius?.sm || '4px',
+                    fontSize: '14px',
+                    color: theme.textPrimary,
+                    backgroundColor: theme.inputBg
+                  }}
+                >
+                  <option value="none">Empty Board (No Template)</option>
+                  {templates.map(template => (
+                    <option key={template.key} value={template.key}>
+                      {template.name}
+                    </option>
+                  ))}
+                </select>
+                {formData.template !== 'none' && (
+                  <div style={{ 
+                    marginTop: '4px', 
+                    fontSize: '12px', 
+                    color: theme.textSecondary,
+                    fontStyle: 'italic'
+                  }}>
+                    {templates.find(t => t.key === formData.template)?.description}
+                  </div>
+                )}
+              </div>
+            )}
+            {createError && (
+              <div style={{
+                marginBottom: theme.spacing?.md || '16px',
+                padding: `${theme.spacing?.sm || '8px'} ${theme.spacing?.md || '12px'}`,
+                backgroundColor: theme.danger || '#dc3545',
+                color: theme.accentText,
+                borderRadius: theme.radius?.sm || '4px',
+                fontSize: '14px'
+              }}>
+                {createError}
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: theme.spacing?.md || '12px' }}>
               <button
                 type="submit"
                 disabled={createLoading || !formData.title.trim()}
                 style={{
-                  backgroundColor: createLoading ? '#999' : '#28a745',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
+                  backgroundColor: createLoading ? theme.muted : theme.accent,
+                  color: theme.accentText,
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: theme.radius?.sm || '4px',
                   padding: '8px 16px',
                   cursor: createLoading ? 'not-allowed' : 'pointer',
                   fontSize: '14px'
@@ -242,14 +443,14 @@ export function BoardsList() {
                 type="button"
                 onClick={() => {
                   setShowCreateForm(false)
-                  setFormData({ title: '', description: '' })
+                  setFormData({ title: '', description: '', template: 'none' })
                   setEditingBoard(null)
                 }}
                 style={{
-                  backgroundColor: '#6c757d',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
+                  backgroundColor: theme.muted,
+                  color: theme.accentText,
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: theme.radius?.sm || '4px',
                   padding: '8px 16px',
                   cursor: 'pointer',
                   fontSize: '14px'
@@ -270,11 +471,11 @@ export function BoardsList() {
             <div
               key={board.id}
               style={{
-                border: '1px solid #ccc',
-                borderRadius: '8px',
-                padding: '16px',
+                border: `1px solid ${theme.border}`,
+                borderRadius: theme.radius?.md || '8px',
+                padding: theme.spacing?.md || '16px',
                 transition: 'box-shadow 0.2s',
-                backgroundColor: 'white',
+                backgroundColor: theme.card,
                 position: 'relative'
               }}
             >
@@ -291,10 +492,10 @@ export function BoardsList() {
                     startEdit(board)
                   }}
                   style={{
-                    backgroundColor: '#007bff',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
+                    backgroundColor: theme.accent,
+                    color: theme.accentText,
+                    border: `1px solid ${theme.border}`,
+                    borderRadius: theme.radius?.sm || '4px',
                     padding: '4px 8px',
                     cursor: 'pointer',
                     fontSize: '10px'
@@ -309,10 +510,10 @@ export function BoardsList() {
                   }}
                   disabled={deleteLoading === board.id}
                   style={{
-                    backgroundColor: deleteLoading === board.id ? '#999' : '#dc3545',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
+                    backgroundColor: deleteLoading === board.id ? theme.muted : (theme.danger || '#dc3545'),
+                    color: theme.accentText,
+                    border: `1px solid ${theme.border}`,
+                    borderRadius: theme.radius?.sm || '4px',
                     padding: '4px 8px',
                     cursor: deleteLoading === board.id ? 'not-allowed' : 'pointer',
                     fontSize: '10px'
@@ -326,12 +527,12 @@ export function BoardsList() {
                 to={`/board/${board.id}`}
                 style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
               >
-                <h3 style={{ margin: '0 0 8px 0', paddingRight: '80px', color: '#000' }}>{board.title}</h3>
-                {board.description && <p style={{ margin: '0 0 12px 0', color: '#333' }}>{board.description}</p>}
-                <p style={{ fontSize: '14px', color: '#333', margin: '0 0 8px 0' }}>
+                <h3 style={{ margin: '0 0 8px 0', paddingRight: '80px', color: theme.textPrimary }}>{board.title}</h3>
+                {board.description && <p style={{ margin: '0 0 12px 0', color: theme.textSecondary }}>{board.description}</p>}
+                <p style={{ fontSize: '14px', color: theme.textSecondary, margin: '0 0 8px 0' }}>
                   {(board._count?.columns ?? 0)} columns
                 </p>
-                <p style={{ fontSize: '12px', color: '#333', margin: 0 }}>
+                <p style={{ fontSize: '12px', color: theme.textSecondary, margin: 0 }}>
                   Created: {new Date(board.createdAt).toLocaleDateString()}
                 </p>
               </Link>
@@ -339,6 +540,95 @@ export function BoardsList() {
           ))}
         </div>
       )}
+
+      {/* Template Selection Modal */}
+      {showTemplateModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }} onClick={(e) => { if (e.target === e.currentTarget) setShowTemplateModal(false) }}>
+          <div style={{
+            backgroundColor: theme.surface,
+            border: `1px solid ${theme.border}`,
+            borderRadius: theme.radius?.lg || '12px',
+            padding: theme.spacing?.lg || '20px',
+            width: '92%',
+            maxWidth: '520px',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            boxShadow: theme.shadow?.lg || '0 4px 12px rgba(0,0,0,0.15)'
+          }} onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ margin: `0 0 ${theme.spacing?.sm || '12px'}`, color: theme.textPrimary, fontSize: '18px' }}>Create Board from Template</h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing?.sm || '10px', marginBottom: theme.spacing?.lg || '18px' }}>
+              {templates.map(template => (
+                <div key={template.key} style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: theme.spacing?.sm || '10px',
+                  padding: theme.spacing?.sm || '10px',
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: theme.radius?.md || '8px',
+                  background: theme.surfaceAlt,
+                }}>
+                  <div style={{ fontWeight: 600, color: theme.textPrimary }}>{template.name}</div>
+                  {template.description && (
+                    <div style={{ color: theme.textSecondary, fontSize: '13px' }}>{template.description}</div>
+                  )}
+                  <div style={{ color: theme.textMuted, fontSize: '12px' }}>
+                    {template.columns.length} columns will be created
+                  </div>
+                  <button
+                    onClick={() => {
+                      setFormData({ title: '', description: '', template: template.key })
+                      setShowCreateForm(true)
+                      setShowTemplateModal(false)
+                    }}
+                    style={{
+                      padding: `${theme.spacing?.sm || '8px'} ${theme.spacing?.md || '12px'}`,
+                      borderRadius: theme.radius?.sm || '6px',
+                      border: `1px solid ${theme.border}`,
+                      background: theme.accent,
+                      color: theme.accentText,
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      alignSelf: 'flex-start'
+                    }}
+                  >
+                    Use This Template
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: theme.spacing?.sm || '8px' }}>
+              <button
+                onClick={() => setShowTemplateModal(false)}
+                style={{
+                  padding: `${theme.spacing?.sm || '8px'} ${theme.spacing?.sm || '12px'}`,
+                  border: `1px solid ${theme.border}`,
+                  background: theme.card,
+                  color: theme.textPrimary,
+                  borderRadius: theme.radius?.sm || '6px',
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

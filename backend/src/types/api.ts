@@ -29,6 +29,10 @@ export interface CreateCardRequest {
   assigneeId?: string;
   createdById?: string; // ignored when auth is enabled
   position?: number;
+  // M&A specific fields
+  deadline?: string;
+  riskLevel?: 'LOW' | 'MEDIUM' | 'HIGH';
+  ownerId?: string;
 }
 
 export interface UpdateCardRequest {
@@ -37,6 +41,10 @@ export interface UpdateCardRequest {
   priority?: 'LOW' | 'MEDIUM' | 'HIGH';
   assigneeId?: string;
   position?: number;
+  // M&A specific fields
+  deadline?: string;
+  riskLevel?: 'LOW' | 'MEDIUM' | 'HIGH';
+  ownerId?: string;
 }
 
 export interface MoveCardRequest {
