@@ -1,7 +1,7 @@
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 import { DndContext, DragOverlay, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
 import type { User } from '../../../shared/realtime'
 import { useAppearance } from '../appearance'
 import type { ApiResponse } from '../types/api'
@@ -9,13 +9,12 @@ import { useToast } from '../ui/useToast'
 import { useApi } from '../useApi'
 import { hasContent, toPlainText } from '../utils/html'
 import { Card as CardView } from './Card'
-import { Suspense, lazy } from 'react'
-const CardDetailModal = lazy(() => import('./CardDetailModal').then(m => ({ default: m.CardDetailModal })))
-const ExportModal = lazy(() => import('./ExportModal').then(m => ({ default: m.ExportModal })))
 import type { ExportOptions } from './ExportModal'
 import { KanbanColumns } from './KanbanColumns'
 import { KanbanHeader } from './KanbanHeader'
 import { KanbanToolbar } from './KanbanToolbar'
+const CardDetailModal = lazy(() => import('./CardDetailModal').then(m => ({ default: m.CardDetailModal })))
+const ExportModal = lazy(() => import('./ExportModal').then(m => ({ default: m.ExportModal })))
 
 interface Card {
   id: string
@@ -333,6 +332,11 @@ export function Board({ board, setBoard, isConnected, onlineUsers, isCompact }: 
         activeFilter={activeFilter}
         isCompact={isCompact}
         boardId={board.id}
+        boardTitle={board.title}
+        boardDescription={board.description}
+        onBoardUpdated={(title, description) => {
+          setBoard(prev => prev ? { ...prev, title, description } : null)
+        }}
       />
 
       {/* Header */}
@@ -464,159 +468,159 @@ export function Board({ board, setBoard, isConnected, onlineUsers, isCompact }: 
           isOpen={showExportModal}
           onClose={() => setShowExportModal(false)}
           onConfirm={(options: ExportOptions) => {
-          setShowExportModal(false)
-          try {
-            const slugify = (s: string) => s
-              .toLowerCase()
-              .replace(/[^a-z0-9\s-]/g, '')
-              .trim()
-              .replace(/\s+/g, '-')
-              .replace(/-+/g, '-')
-            const ts = (() => {
-              const d = new Date()
-              const pad = (n: number) => String(n).padStart(2, '0')
-              return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`
-            })()
-            const slug = slugify(board.title || 'board')
+            setShowExportModal(false)
+            try {
+              const slugify = (s: string) => s
+                .toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '')
+                .trim()
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+              const ts = (() => {
+                const d = new Date()
+                const pad = (n: number) => String(n).padStart(2, '0')
+                return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`
+              })()
+              const slug = slugify(board.title || 'board')
 
-            const sourceColumns = options.honorFilters ? filteredAndSortedColumns : board.columns
+              const sourceColumns = options.honorFilters ? filteredAndSortedColumns : board.columns
 
-            // Helper: download
-            const download = (filename: string, content: BlobPart, type: string) => {
-              const blob = new Blob([content], { type })
-              const url = URL.createObjectURL(blob)
-              const a = document.createElement('a')
-              a.href = url
-              a.download = filename
-              document.body.appendChild(a)
-              a.click()
-              document.body.removeChild(a)
-              URL.revokeObjectURL(url)
-            }
-
-            // Helper: CSV encode
-            const toCsv = <T extends Record<string, unknown>>(rows: T[], headers: string[]): string => {
-              const escape = (v: unknown) => {
-                if (v === null || v === undefined) return ''
-                const s = String(v)
-                if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"'
-                return s
+              // Helper: download
+              const download = (filename: string, content: BlobPart, type: string) => {
+                const blob = new Blob([content], { type })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = filename
+                document.body.appendChild(a)
+                a.click()
+                document.body.removeChild(a)
+                URL.revokeObjectURL(url)
               }
-              const lines = [headers.join(',')]
-              for (const row of rows) {
-                lines.push(headers.map(h => escape(row[h])).join(','))
-              }
-              return lines.join('\n')
-            }
 
-            let filesGenerated = 0
-            // JSON
-            if (options.exportJson) {
-              const jsonPayload = {
-                id: board.id,
-                title: board.title,
-                description: board.description,
-                columns: sourceColumns.map(col => ({
-                  id: col.id,
-                  title: col.title,
-                  position: col.position,
-                  cards: col.cards.map(card => ({
-                    id: card.id,
-                    title: card.title,
-                    description_html: card.description,
-                    description_text: card.description ? toPlainText(card.description) : '',
-                    priority: card.priority,
-                    position: card.position,
-                    assignee: card.assignee ? {
-                      id: card.assignee.id,
-                      name: card.assignee.name,
-                      email: card.assignee.email
-                    } : null
+              // Helper: CSV encode
+              const toCsv = <T extends Record<string, unknown>>(rows: T[], headers: string[]): string => {
+                const escape = (v: unknown) => {
+                  if (v === null || v === undefined) return ''
+                  const s = String(v)
+                  if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"'
+                  return s
+                }
+                const lines = [headers.join(',')]
+                for (const row of rows) {
+                  lines.push(headers.map(h => escape(row[h])).join(','))
+                }
+                return lines.join('\n')
+              }
+
+              let filesGenerated = 0
+              // JSON
+              if (options.exportJson) {
+                const jsonPayload = {
+                  id: board.id,
+                  title: board.title,
+                  description: board.description,
+                  columns: sourceColumns.map(col => ({
+                    id: col.id,
+                    title: col.title,
+                    position: col.position,
+                    cards: col.cards.map(card => ({
+                      id: card.id,
+                      title: card.title,
+                      description_html: card.description,
+                      description_text: card.description ? toPlainText(card.description) : '',
+                      priority: card.priority,
+                      position: card.position,
+                      assignee: card.assignee ? {
+                        id: card.assignee.id,
+                        name: card.assignee.name,
+                        email: card.assignee.email
+                      } : null
+                    }))
                   }))
-                }))
-              }
-              const filename = `board-${slug}-${ts}.json`
-              download(filename, JSON.stringify(jsonPayload, null, 2), 'application/json')
-              filesGenerated++
-            }
-
-            // Cards CSV
-            if (options.exportCardsCsv) {
-              const rows: Array<Record<string, unknown>> = []
-              for (const col of sourceColumns) {
-                for (const card of col.cards) {
-                  rows.push({
-                    id: card.id,
-                    title: card.title,
-                    column_title: col.title,
-                    priority: card.priority,
-                    assignee_name: card.assignee?.name || '',
-                    assignee_email: card.assignee?.email || '',
-                    description_text: card.description ? toPlainText(card.description) : ''
-                  })
                 }
+                const filename = `board-${slug}-${ts}.json`
+                download(filename, JSON.stringify(jsonPayload, null, 2), 'application/json')
+                filesGenerated++
               }
-              const headers = ['id', 'title', 'column_title', 'priority', 'assignee_name', 'assignee_email', 'description_text']
-              const csv = toCsv(rows, headers)
-              const filename = `cards-${slug}-${ts}.csv`
-              download(filename, csv, 'text/csv;charset=utf-8')
-              filesGenerated++
-            }
 
-            // Columns CSV
-            if (options.exportColumnsCsv) {
-              const totalVisibleCards = sourceColumns.reduce((sum, c) => sum + c.cards.length, 0)
-              const rows = sourceColumns.map(col => {
-                const cardCount = col.cards.length
-                const priorityHigh = col.cards.filter(c => c.priority === 'HIGH').length
-                const priorityMedium = col.cards.filter(c => c.priority === 'MEDIUM').length
-                const priorityLow = col.cards.filter(c => c.priority === 'LOW').length
-                const assignedCount = col.cards.filter(c => !!c.assignee).length
-                const unassignedCount = cardCount - assignedCount
-                const distinctAssignees = new Set(col.cards.filter(c => !!c.assignee).map(c => c.assignee!.id)).size
-                const withDescriptionCount = col.cards.filter(c => !!c.description && hasContent(c.description || '')).length
-                const percentAssigned = cardCount > 0 ? assignedCount / cardCount : 0
-                const percentOfBoard = totalVisibleCards > 0 ? cardCount / totalVisibleCards : 0
-                return {
-                  id: col.id,
-                  title: col.title,
-                  position: col.position,
-                  card_count: cardCount,
-                  priority_high_count: priorityHigh,
-                  priority_medium_count: priorityMedium,
-                  priority_low_count: priorityLow,
-                  assigned_count: assignedCount,
-                  unassigned_count: unassignedCount,
-                  percent_assigned: percentAssigned,
-                  distinct_assignees_count: distinctAssignees,
-                  with_description_count: withDescriptionCount,
-                  percent_of_board_cards: percentOfBoard
+              // Cards CSV
+              if (options.exportCardsCsv) {
+                const rows: Array<Record<string, unknown>> = []
+                for (const col of sourceColumns) {
+                  for (const card of col.cards) {
+                    rows.push({
+                      id: card.id,
+                      title: card.title,
+                      column_title: col.title,
+                      priority: card.priority,
+                      assignee_name: card.assignee?.name || '',
+                      assignee_email: card.assignee?.email || '',
+                      description_text: card.description ? toPlainText(card.description) : ''
+                    })
+                  }
                 }
-              })
-              const headers = [
-                'id', 'title', 'position', 'card_count',
-                'priority_high_count', 'priority_medium_count', 'priority_low_count',
-                'assigned_count', 'unassigned_count', 'percent_assigned',
-                'distinct_assignees_count', 'with_description_count', 'percent_of_board_cards'
-              ]
-              const csv = toCsv(rows, headers)
-              const filename = `columns-${slug}-${ts}.csv`
-              download(filename, csv, 'text/csv;charset=utf-8')
-              filesGenerated++
+                const headers = ['id', 'title', 'column_title', 'priority', 'assignee_name', 'assignee_email', 'description_text']
+                const csv = toCsv(rows, headers)
+                const filename = `cards-${slug}-${ts}.csv`
+                download(filename, csv, 'text/csv;charset=utf-8')
+                filesGenerated++
+              }
+
+              // Columns CSV
+              if (options.exportColumnsCsv) {
+                const totalVisibleCards = sourceColumns.reduce((sum, c) => sum + c.cards.length, 0)
+                const rows = sourceColumns.map(col => {
+                  const cardCount = col.cards.length
+                  const priorityHigh = col.cards.filter(c => c.priority === 'HIGH').length
+                  const priorityMedium = col.cards.filter(c => c.priority === 'MEDIUM').length
+                  const priorityLow = col.cards.filter(c => c.priority === 'LOW').length
+                  const assignedCount = col.cards.filter(c => !!c.assignee).length
+                  const unassignedCount = cardCount - assignedCount
+                  const distinctAssignees = new Set(col.cards.filter(c => !!c.assignee).map(c => c.assignee!.id)).size
+                  const withDescriptionCount = col.cards.filter(c => !!c.description && hasContent(c.description || '')).length
+                  const percentAssigned = cardCount > 0 ? assignedCount / cardCount : 0
+                  const percentOfBoard = totalVisibleCards > 0 ? cardCount / totalVisibleCards : 0
+                  return {
+                    id: col.id,
+                    title: col.title,
+                    position: col.position,
+                    card_count: cardCount,
+                    priority_high_count: priorityHigh,
+                    priority_medium_count: priorityMedium,
+                    priority_low_count: priorityLow,
+                    assigned_count: assignedCount,
+                    unassigned_count: unassignedCount,
+                    percent_assigned: percentAssigned,
+                    distinct_assignees_count: distinctAssignees,
+                    with_description_count: withDescriptionCount,
+                    percent_of_board_cards: percentOfBoard
+                  }
+                })
+                const headers = [
+                  'id', 'title', 'position', 'card_count',
+                  'priority_high_count', 'priority_medium_count', 'priority_low_count',
+                  'assigned_count', 'unassigned_count', 'percent_assigned',
+                  'distinct_assignees_count', 'with_description_count', 'percent_of_board_cards'
+                ]
+                const csv = toCsv(rows, headers)
+                const filename = `columns-${slug}-${ts}.csv`
+                download(filename, csv, 'text/csv;charset=utf-8')
+                filesGenerated++
+              }
+              if (filesGenerated > 0) {
+                const parts: string[] = []
+                if (options.exportJson) parts.push('JSON')
+                if (options.exportCardsCsv) parts.push('cards CSV')
+                if (options.exportColumnsCsv) parts.push('columns CSV')
+                toastSuccess(`Exported ${parts.join(', ')} for "${board.title}"`)
+              }
+            } catch (err) {
+              console.error('Export failed:', err)
+              toastError('Export failed. Please try again.')
             }
-            if (filesGenerated > 0) {
-              const parts: string[] = []
-              if (options.exportJson) parts.push('JSON')
-              if (options.exportCardsCsv) parts.push('cards CSV')
-              if (options.exportColumnsCsv) parts.push('columns CSV')
-              toastSuccess(`Exported ${parts.join(', ')} for "${board.title}"`)
-            }
-          } catch (err) {
-            console.error('Export failed:', err)
-            toastError('Export failed. Please try again.')
-          }
-        }}
-      />
+          }}
+        />
       </Suspense>
     </div>
   )

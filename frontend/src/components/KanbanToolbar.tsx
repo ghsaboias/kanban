@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useAppearance } from '../appearance'
 import { useApi } from '../useApi'
+import { BoardSettingsModal } from './BoardSettingsModal'
 import { NewCardModal } from './NewCardModal'
 import { TemplateImportModal } from './TemplateImportModal'
 
@@ -26,6 +27,9 @@ interface KanbanToolbarProps {
   columns?: Column[]
   activeSort?: string
   activeFilter?: string
+  boardTitle?: string
+  boardDescription?: string | null
+  onBoardUpdated?: (title: string, description: string | null) => void
 }
 
 interface CardData {
@@ -55,6 +59,9 @@ export function KanbanToolbar({
   activeFilter = 'all',
   isCompact,
   boardId,
+  boardTitle = '',
+  boardDescription = null,
+  onBoardUpdated,
 }: KanbanToolbarProps & { isCompact?: boolean, boardId?: string }) {
   const { theme } = useAppearance()
   const { apiFetch } = useApi()
@@ -67,6 +74,7 @@ export function KanbanToolbar({
   const [moreMenuPos, setMoreMenuPos] = useState<{ top: number; left: number; width: number } | null>(null)
   const [showNewCardModal, setShowNewCardModal] = useState(false)
   const [showTemplateModal, setShowTemplateModal] = useState(false)
+  const [showBoardSettingsModal, setShowBoardSettingsModal] = useState(false)
   const [deletingAll, setDeletingAll] = useState(false)
   const moreOptionsRef = useRef<HTMLDivElement>(null)
   const moreDropdownRef = useRef<HTMLDivElement>(null)
@@ -495,7 +503,7 @@ export function KanbanToolbar({
               <div
                 style={dropdownItemStyle}
                 onClick={() => {
-                  // TODO: implement board settings panel
+                  setShowBoardSettingsModal(true)
                   setShowMoreOptions(false)
                 }}
                 onMouseEnter={(e) => {
@@ -506,21 +514,6 @@ export function KanbanToolbar({
                 }}
               >
                 ⚙️ Board Settings
-              </div>
-              <div
-                style={dropdownItemStyle}
-                onClick={() => {
-                  // TODO: navigate to activity view
-                  setShowMoreOptions(false)
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = theme.surfaceAlt || '#f8f9fa'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent'
-                }}
-              >
-                📊 View Activity
               </div>
             </div>,
             document.body
@@ -620,6 +613,21 @@ export function KanbanToolbar({
           boardId={boardId || ''}
           existingColumns={columns.map(c => ({ id: c.id, title: c.title, position: c.position, cardCount: (Array.isArray(c.cards) ? c.cards.length : 0) }))}
           onAfterApply={async () => { await onReloadBoard?.() }}
+        />
+      )}
+
+      {/* Board Settings Modal */}
+      {showBoardSettingsModal && (
+        <BoardSettingsModal
+          isOpen={showBoardSettingsModal}
+          onClose={() => setShowBoardSettingsModal(false)}
+          boardId={boardId || ''}
+          currentTitle={boardTitle}
+          currentDescription={boardDescription}
+          onBoardUpdated={(title, description) => {
+            onBoardUpdated?.(title, description)
+            setShowBoardSettingsModal(false)
+          }}
         />
       )}
     </div>
