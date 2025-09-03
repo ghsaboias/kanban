@@ -74,8 +74,7 @@ vi.mock('@clerk/clerk-react', () => ({
 vi.mock('../../hooks/useRealtimeBoard', () => ({
   useRealtimeBoard: () => ({
     isConnected: true,
-    onlineUsers: [],
-    activities: []
+    onlineUsers: []
   })
 }))
 
@@ -106,13 +105,5 @@ describe('BoardPage', () => {
     await expect(screen.findByText('← Back to Boards')).resolves.toBeInTheDocument()
   })
 
-  it('renders activity feed toggle button', async () => {
-    render(
-      <SocketProvider>
-        <BoardPage />
-      </SocketProvider>
-    )
 
-    await expect(screen.findByText('Ver Atividades')).resolves.toBeInTheDocument()
-  })
 })

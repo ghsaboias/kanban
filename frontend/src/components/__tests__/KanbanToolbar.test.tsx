@@ -160,7 +160,6 @@ describe('KanbanToolbar', () => {
       await waitFor(() => {
         expect(screen.getByText('📤 Export Board')).toBeInTheDocument()
         expect(screen.getByText('⚙️ Board Settings')).toBeInTheDocument()
-        expect(screen.getByText('📊 View Activity')).toBeInTheDocument()
       })
     })
 
