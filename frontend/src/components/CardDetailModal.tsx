@@ -5,6 +5,7 @@ import { hasContent, extractImages } from '../utils/html'
 import { useApi } from '../useApi'
 import { useAppearance } from '../appearance'
 import type { ApiResponse } from '../types/api'
+import { TIMEOUTS } from '../constants/timeouts'
 
 interface CardData {
   id: string
@@ -97,7 +98,7 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
       })
       
       // Focus title input
-      setTimeout(() => titleInputRef.current?.focus(), 100)
+      setTimeout(() => titleInputRef.current?.focus(), TIMEOUTS.FOCUS_DELAY)
     }
   }, [isOpen, card])
 

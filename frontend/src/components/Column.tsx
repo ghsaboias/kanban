@@ -1,10 +1,11 @@
 import { useDroppable } from '@dnd-kit/core'
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useEffect, useState } from 'react'
 import { useAppearance } from '../appearance'
 import type { ApiResponse } from '../types/api'
 import { useApi } from '../useApi'
-import { SortableCard } from './SortableCard'
+import { Card } from './Card'
 import { useAsyncOperation } from '../hooks/useAsyncOperation'
 
 interface CardData {
@@ -18,6 +19,32 @@ interface CardData {
     name: string
     email: string
   } | null
+}
+
+function SortableCardWrapper({ card, onCardUpdated, onCardDeleted, onCardClick }: {
+  card: CardData
+  onCardUpdated?: (updatedCard: CardData) => void
+  onCardDeleted?: (cardId: string) => void
+  onCardClick?: (card: CardData) => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: `card-${card.id}` })
+  
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0 : 1
+  }
+  
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <Card
+        card={card}
+        onCardUpdated={onCardUpdated}
+        onCardDeleted={onCardDeleted}
+        onCardClick={onCardClick}
+      />
+    </div>
+  )
 }
 
 interface ColumnData {
@@ -340,14 +367,14 @@ export function Column({ column, onCardCreated, onColumnUpdated, onColumnDeleted
       <div ref={setDroppableNodeRef} style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing?.sm || '8px' }}>
         <SortableContext items={column.cards.map(c => `card-${c.id}`)} strategy={verticalListSortingStrategy}>
           {column.cards.map(card => (
-              <SortableCard
-                key={card.id}
-                card={card}
-                onCardUpdated={onCardUpdated}
-                onCardDeleted={onCardDeleted}
-                onCardClick={onCardClick}
-              />
-            ))}
+            <SortableCardWrapper
+              key={card.id}
+              card={card}
+              onCardUpdated={onCardUpdated}
+              onCardDeleted={onCardDeleted}
+              onCardClick={onCardClick}
+            />
+          ))}
         </SortableContext>
 
         {column.cards.length === 0 && !showCreateCard && (

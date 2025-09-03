@@ -2,5 +2,5 @@
 export { AppearanceProvider } from './AppearanceProvider'
 export { AppearanceControl } from './AppearanceControl'
 export { useAppearance } from './useAppearance'
-export type { AppearanceConfig, MATheme, MAPreset, BaseMode, AdvancedSettings } from './types'
-export { createMAPreset, baseLight, baseDark } from './presets'
+export type { AppearanceConfig, MATheme, BaseMode, AdvancedSettings } from './types'
+export { baseLight, baseDark } from './presets'

@@ -2,14 +2,7 @@
 
 export type BaseMode = 'light' | 'dark' | 'auto'
 
-export type MAPreset = 
-  | 'pipeline-review'
-  | 'diligence-tracker' 
-  | 'ic-presentation'
-  | 'night-work'
-  | 'redline-legal'
-  | 'deal-room-readout'
-  | 'analytics-view'
+// Removed M&A presets - now use Simple (base themes) + Advanced (custom) only
 
 export type Palette = 'neutral' | 'navy' | 'slate' | 'emerald' | 'burgundy' | 'monochrome'
 
@@ -35,7 +28,7 @@ export interface AdvancedSettings {
 
 export interface AppearanceConfig {
   mode: BaseMode
-  preset?: MAPreset
+  // Removed preset - now using Simple (mode) + Advanced (advanced) only
   advanced?: AdvancedSettings
   complianceLocked?: boolean
 }

@@ -1,17 +1,15 @@
 import type { ReactNode } from 'react'
 import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
-import type { AppearanceConfig, BaseMode, MAPreset, MATheme, AdvancedSettings } from './types'
-import { createMAPreset, baseLight, baseDark } from './presets'
+import type { AppearanceConfig, BaseMode, MATheme, AdvancedSettings } from './types'
+import { baseLight, baseDark } from './presets'
 import { applyAdvancedSettings } from './utils'
 
 type AppearanceContextValue = {
   theme: MATheme
   config: AppearanceConfig
   setMode: (mode: BaseMode) => void
-  setPreset: (preset: MAPreset | null) => void
   setAdvanced: (settings: AdvancedSettings) => void
   resetToDefaults: () => void
-  availablePresets: MAPreset[]
   locked: boolean
 }
 
@@ -22,7 +20,6 @@ export { AppearanceContext }
 const LS_KEY = 'kanban_ma_appearance'
 const DEFAULT_CONFIG: AppearanceConfig = {
   mode: 'auto',
-  preset: undefined,
   advanced: {
     palette: 'neutral',
     density: 'compact', 
@@ -37,15 +34,6 @@ const DEFAULT_CONFIG: AppearanceConfig = {
   complianceLocked: false,
 }
 
-const AVAILABLE_PRESETS: MAPreset[] = [
-  'pipeline-review',
-  'diligence-tracker',
-  'ic-presentation', 
-  'night-work',
-  'redline-legal',
-  'deal-room-readout',
-  'analytics-view',
-]
 
 function getSystemTheme(): 'light' | 'dark' {
   if (typeof window === 'undefined') return 'light'
@@ -101,15 +89,8 @@ export function AppearanceProvider({ children, orgDefaults, complianceLocked }: 
 
   // Derived theme based on current config
   const theme = useMemo<MATheme>(() => {
-    let baseTheme: MATheme
-    
-    if (config.preset) {
-      // Use M&A preset
-      baseTheme = createMAPreset(config.preset)
-    } else {
-      // Use base theme with mode
-      baseTheme = resolveBaseTheme(config.mode)
-    }
+    // Use base theme with mode (Simple)
+    const baseTheme = resolveBaseTheme(config.mode)
     
     // Apply advanced settings if provided
     if (config.advanced) {
@@ -196,17 +177,11 @@ export function AppearanceProvider({ children, orgDefaults, complianceLocked }: 
 
   const setMode = useCallback((mode: BaseMode) => {
     if (locked) return
-    const newConfig = { ...config, mode, preset: undefined }
+    const newConfig = { ...config, mode }
     setConfig(newConfig)
     persistConfig(newConfig)
   }, [config, persistConfig, locked])
 
-  const setPreset = useCallback((preset: MAPreset | null) => {
-    if (locked) return
-    const newConfig = { ...config, preset: preset || undefined }
-    setConfig(newConfig)
-    persistConfig(newConfig)
-  }, [config, persistConfig, locked])
 
   const setAdvanced = useCallback((settings: AdvancedSettings) => {
     if (locked) return
@@ -230,12 +205,10 @@ export function AppearanceProvider({ children, orgDefaults, complianceLocked }: 
     theme,
     config,
     setMode,
-    setPreset,
     setAdvanced,
     resetToDefaults,
-    availablePresets: AVAILABLE_PRESETS,
     locked,
-  }), [theme, config, setMode, setPreset, setAdvanced, resetToDefaults, locked])
+  }), [theme, config, setMode, setAdvanced, resetToDefaults, locked])
 
   return (
     <AppearanceContext.Provider value={value}>

@@ -1,6 +1,48 @@
-import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable'
+import { SortableContext, horizontalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useAppearance } from '../appearance'
-import { SortableColumn } from './SortableColumn'
+import { Column } from './Column'
+
+// Extracted sortable column component to avoid creating it in render loop
+function SortableColumnInner({ 
+  column, 
+  onCardCreated, 
+  onColumnUpdated, 
+  onColumnDeleted, 
+  onCardUpdated, 
+  onCardDeleted, 
+  onCardClick 
+}: {
+  column: ColumnData
+  onCardCreated?: (columnId: string, newCard: CardData) => void
+  onColumnUpdated?: (updatedColumn: ColumnData) => void
+  onColumnDeleted?: (columnId: string) => void
+  onCardUpdated?: (columnId: string, updatedCard: CardData) => void
+  onCardDeleted?: (columnId: string, cardId: string) => void
+  onCardClick?: (card: CardData) => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: `column-sort-${column.id}` })
+  
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1
+  }
+  
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <Column
+        column={column}
+        onCardCreated={(newCard) => onCardCreated?.(column.id, newCard)}
+        onColumnUpdated={onColumnUpdated}
+        onColumnDeleted={onColumnDeleted}
+        onCardUpdated={(updatedCard) => onCardUpdated?.(column.id, updatedCard)}
+        onCardDeleted={(cardId) => onCardDeleted?.(column.id, cardId)}
+        onCardClick={onCardClick}
+      />
+    </div>
+  )
+}
 
 interface CardData {
   id: string
@@ -149,20 +191,20 @@ export function KanbanColumns({
   return (
     <div style={containerStyle}>
       <SortableContext
-        items={columns.map(c => `column-${c.id}`)}
+        items={columns.map(c => `column-sort-${c.id}`)}
         strategy={horizontalListSortingStrategy}
       >
         {columns
           .sort((a, b) => a.position - b.position)
           .map(column => (
-            <SortableColumn
+            <SortableColumnInner
               key={column.id}
               column={column}
-              onCardCreated={(newCard) => onCardCreated?.(column.id, newCard)}
+              onCardCreated={onCardCreated}
               onColumnUpdated={onColumnUpdated}
               onColumnDeleted={onColumnDeleted}
-              onCardUpdated={(updatedCard) => onCardUpdated?.(column.id, updatedCard)}
-              onCardDeleted={(cardId) => onCardDeleted?.(column.id, cardId)}
+              onCardUpdated={onCardUpdated}
+              onCardDeleted={onCardDeleted}
               onCardClick={onCardClick}
             />
           ))}

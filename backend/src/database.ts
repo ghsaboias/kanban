@@ -1,4 +1,5 @@
 import { PrismaClient } from '../../generated/prisma/index.js';
+import { logger } from './utils/logger';
 
 // Initialize Prisma client
 export const prisma = new PrismaClient();
@@ -14,18 +15,18 @@ export async function testDatabase() {
       }
     });
     
-    console.log('✅ Database connection successful!');
-    console.log('Created user:', user);
+    logger.info('✅ Database connection successful!');
+    logger.debug('Created test user', { id: user.id });
     
     // Clean up test data
     await prisma.user.delete({
       where: { id: user.id }
     });
     
-    console.log('✅ Test data cleaned up');
+    logger.info('✅ Test data cleaned up');
     
   } catch (error) {
-    console.error('❌ Database connection failed:', error);
+    logger.error('❌ Database connection failed');
   } finally {
     await prisma.$disconnect();
   }

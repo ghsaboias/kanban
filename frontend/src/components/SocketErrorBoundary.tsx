@@ -1,5 +1,6 @@
 import React, { Component, type ReactNode } from 'react';
 import { AppearanceContext } from '../appearance/AppearanceProvider'
+import { TIMEOUTS } from '../constants/timeouts'
 
 interface SocketErrorBoundaryState {
   hasError: boolean;
@@ -89,7 +90,7 @@ export class SocketErrorBoundary extends Component<SocketErrorBoundaryProps, Soc
   }
 
   private scheduleRetry = () => {
-    const delay = Math.min(1000 * Math.pow(2, this.state.retryCount), 10000); // Exponential backoff, max 10s
+    const delay = Math.min(TIMEOUTS.SOCKET_RETRY_BASE * Math.pow(2, this.state.retryCount), TIMEOUTS.SOCKET_RETRY_MAX); // Exponential backoff
     
     this.retryTimeoutId = window.setTimeout(() => {
       this.handleRetry();

@@ -111,10 +111,10 @@ export function Board({ board, setBoard, isConnected, onlineUsers, isCompact }: 
     const activeId = String(active.id)
     const overId = String(over.id)
 
-    // Column reordering
-    if (activeId.startsWith('column-') && overId.startsWith('column-')) {
-      const oldIndex = board.columns.findIndex(c => `column-${c.id}` === activeId)
-      const newIndex = board.columns.findIndex(c => `column-${c.id}` === overId)
+    // Column reordering (use distinct ids for sortable columns)
+    if (activeId.startsWith('column-sort-') && overId.startsWith('column-sort-')) {
+      const oldIndex = board.columns.findIndex(c => `column-sort-${c.id}` === activeId)
+      const newIndex = board.columns.findIndex(c => `column-sort-${c.id}` === overId)
       if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return
 
       const prevColumns = board.columns
@@ -314,9 +314,9 @@ export function Board({ board, setBoard, isConnected, onlineUsers, isCompact }: 
         onFilter={setActiveFilter}
         onSort={() => setActiveSort(prev => prev === 'position' ? 'priority' : 'position')}
         onSearch={setSearchQuery}
-        onNewCard={() => console.log('Create new card')}
-        onExpandView={() => console.log('Expand view - toggle full screen')}
-        onShowMoreOptions={() => console.log('More options clicked')}
+        onNewCard={() => { /* no-op: handled by toolbar modal */ }}
+        onExpandView={() => { /* TODO: implement fullscreen toggle */ }}
+        onShowMoreOptions={() => { /* menu handled internally */ }}
         onExportClick={() => setShowExportModal(true)}
         onReloadBoard={reloadBoard}
         onCardCreated={(columnId, newCard) => {

@@ -199,7 +199,7 @@ describe('Board Component', () => {
       expect(screen.getByText('Test Board')).toBeInTheDocument();
     });
 
-    // TODO: Add data-testid to SortableColumn count element for better testing
+    // TODO: Add data-testid to Column count element for better testing
     // For now, verify columns and cards render (count is displayed internally)
     expect(screen.getByText('To Do')).toBeInTheDocument();
     expect(screen.getByText('Test Card 1')).toBeInTheDocument();
@@ -272,7 +272,7 @@ describe('Board Component', () => {
     await waitFor(() => {
       expect(screen.getByText('To Do')).toBeInTheDocument();
     });
-    // TODO: Improve SortableColumn mocking to test card addition functionality
+    // TODO: Improve Column mocking to test card addition functionality
     // This test is currently limited due to complex component interaction
   });
 

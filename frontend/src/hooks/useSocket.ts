@@ -1,6 +1,7 @@
 import { useAuth } from '@clerk/clerk-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { logger } from '../lib/logger';
 
 export interface SocketUser {
   id: string;
@@ -26,7 +27,7 @@ export const useSocket = () => {
     const initializeSocket = async () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
-        console.log('🔌 Socket: Initializing connection to:', apiUrl);
+        logger.debug('🔌 Socket: Initializing connection to:', apiUrl);
         const socket = io(apiUrl, {
           autoConnect: false,
         });
@@ -41,21 +42,21 @@ export const useSocket = () => {
         };
 
         socket.on('connect', () => {
-          console.log('✅ Socket: Connected to server with ID:', socket.id);
+          logger.info('✅ Socket: Connected to server with ID:', socket.id);
           setIsConnected(true);
           setSocketId(socket.id ?? null);
           setError(null);
         });
 
         socket.on('disconnect', () => {
-          console.log('❌ Socket: Disconnected from server');
+          logger.info('❌ Socket: Disconnected from server');
           setIsConnected(false);
           setSocketId(null);
         });
 
         // If the server rejects the auth (expired/invalid), refresh token and retry once
         socket.on('connect_error', async (err: { message?: string }) => {
-          console.error('❌ Socket: Connection error:', err?.message);
+          logger.error('❌ Socket: Connection error:', err?.message);
           setError(err?.message || 'Connection error');
           setIsConnected(false);
           if (err?.message && (err.message.includes('Authentication failed') || err.message.includes('Authentication token'))) {
@@ -84,7 +85,7 @@ export const useSocket = () => {
           socket.connect();
         }
       } catch (error) {
-        console.error('Failed to initialize socket:', error);
+        logger.error('Failed to initialize socket:', error);
         setError('Failed to connect to server');
       }
     };
@@ -114,24 +115,24 @@ export const useSocket = () => {
 
   const on = useCallback((event: string, callback: (...args: unknown[]) => void) => {
     if (!socketRef.current) {
-      console.log('useSocket: Cannot add listener - socket not available for event:', event);
+      logger.debug('useSocket: Cannot add listener - socket not available for event:', event);
       return () => {};
     }
 
-    console.log('useSocket: Adding listener for event:', event);
+    logger.debug('useSocket: Adding listener for event:', event);
     const wrappedCallback = (...args: unknown[]) => {
-      console.log('🔌 useSocket: Received event:', event, 'with args:', args.length > 0 ? JSON.stringify(args[0]).substring(0, 200) + '...' : 'no args');
+      logger.debug('🔌 useSocket: Received event:', event, 'with args:', args.length > 0 ? JSON.stringify(args[0]).substring(0, 200) + '...' : 'no args');
       try {
         callback(...args);
       } catch (error) {
-        console.error('🔌 useSocket: Error in event callback for', event, ':', error);
+        logger.error('🔌 useSocket: Error in event callback for', event, ':', error);
       }
     };
     
     socketRef.current.on(event, wrappedCallback);
 
     return () => {
-      console.log('useSocket: Removing listener for event:', event);
+      logger.debug('useSocket: Removing listener for event:', event);
       if (socketRef.current) {
         socketRef.current.off(event, wrappedCallback);
       }
@@ -140,17 +141,17 @@ export const useSocket = () => {
 
   const off = useCallback((event: string, callback?: (...args: unknown[]) => void) => {
     if (socketRef.current) {
-      console.log('useSocket: Removing listener for event:', event);
+      logger.debug('useSocket: Removing listener for event:', event);
       socketRef.current.off(event, callback);
     }
   }, []);
 
   const emit = useCallback((event: string, data?: unknown) => {
     if (socketRef.current && isConnected) {
-      console.log('useSocket: Emitting event:', event, 'with data:', data);
+      logger.debug('useSocket: Emitting event:', event, 'with data:', data);
       socketRef.current.emit(event, data);
     } else {
-      console.log('useSocket: Cannot emit event - socket not connected or available:', event);
+      logger.debug('useSocket: Cannot emit event - socket not connected or available:', event);
     }
   }, [isConnected]);
 

@@ -495,7 +495,7 @@ export function KanbanToolbar({
               <div
                 style={dropdownItemStyle}
                 onClick={() => {
-                  console.log('Board settings')
+                  // TODO: implement board settings panel
                   setShowMoreOptions(false)
                 }}
                 onMouseEnter={(e) => {
@@ -510,7 +510,7 @@ export function KanbanToolbar({
               <div
                 style={dropdownItemStyle}
                 onClick={() => {
-                  console.log('View activity')
+                  // TODO: navigate to activity view
                   setShowMoreOptions(false)
                 }}
                 onMouseEnter={(e) => {

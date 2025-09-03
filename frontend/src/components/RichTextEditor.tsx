@@ -5,6 +5,7 @@ import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import Image from '@tiptap/extension-image'
 import { useAppearance } from '../appearance'
+import { TIMEOUTS } from '../constants/timeouts'
 
 interface RichTextEditorProps {
   value: string
@@ -272,7 +273,7 @@ export function RichTextEditor({ value, onChange, readOnly }: RichTextEditorProp
                     setTimeout(() => {
                       button.textContent = originalText
                       button.disabled = false
-                    }, 500)
+                    }, TIMEOUTS.RICH_TEXT_SAVE)
                   }
                   reader.onerror = () => {
                     // Handle error
