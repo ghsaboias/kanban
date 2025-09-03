@@ -1,7 +1,7 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import type { AdvancedSettings, BaseMode } from './types'
 import { useAppearance } from './useAppearance'
-import { getPresetDescription, PALETTES } from './utils'
-import type { BaseMode, MAPreset, AdvancedSettings } from './types'
+import { PALETTES } from './utils'
 
 interface ControlsProps {
   disabled?: boolean
@@ -9,13 +9,13 @@ interface ControlsProps {
 
 function SimpleControls({ disabled }: ControlsProps) {
   const { config, setMode } = useAppearance()
-  
+
   const modes: { key: BaseMode; label: string; description: string }[] = [
     { key: 'light', label: 'Light', description: 'Clean light theme' },
     { key: 'dark', label: 'Dark', description: 'Professional dark theme' },
     { key: 'auto', label: 'Auto', description: 'Match system preference' },
   ]
-  
+
   return (
     <div style={{ display: 'grid', gap: '8px' }}>
       <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '4px' }}>
@@ -43,9 +43,9 @@ function SimpleControls({ disabled }: ControlsProps) {
           />
           <div>
             <div style={{ fontWeight: 500 }}>{mode.label}</div>
-            <div style={{ 
-              fontSize: '12px', 
-              color: config.mode === mode.key ? 'var(--color-accent-text)' : 'var(--color-text-muted)' 
+            <div style={{
+              fontSize: '12px',
+              color: config.mode === mode.key ? 'var(--color-accent-text)' : 'var(--color-text-muted)'
             }}>
               {mode.description}
             </div>
@@ -56,104 +56,22 @@ function SimpleControls({ disabled }: ControlsProps) {
   )
 }
 
-function PresetControls({ disabled }: ControlsProps) {
-  const { config, setPreset, availablePresets } = useAppearance()
-  
-  const presetLabels: Record<MAPreset, string> = {
-    'pipeline-review': '📊 Pipeline Review',
-    'diligence-tracker': '✅ Diligence Tracker',
-    'ic-presentation': '📋 IC Presentation',
-    'night-work': '🌙 Night Work',
-    'redline-legal': '⚖️ Redline/Legal',
-    'deal-room-readout': '🏢 Deal Room Readout',
-    'analytics-view': '📈 Analytics View',
-  }
-  
-  return (
-    <div style={{ display: 'grid', gap: '8px' }}>
-      <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '4px' }}>
-        M&A Presets
-      </div>
-      
-      {/* None/Custom option */}
-      <label style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        cursor: 'pointer',
-        padding: '8px',
-        borderRadius: 'var(--radius-md)',
-        backgroundColor: !config.preset ? 'var(--color-accent)' : 'transparent',
-        color: !config.preset ? 'var(--color-accent-text)' : 'var(--color-text-primary)',
-      }}>
-        <input
-          type="radio"
-          name="preset"
-          checked={!config.preset}
-          onChange={() => setPreset(null)}
-          disabled={disabled}
-          style={{ margin: 0 }}
-        />
-        <div>
-          <div style={{ fontWeight: 500 }}>Base Theme Only</div>
-          <div style={{ 
-            fontSize: '12px', 
-            color: !config.preset ? 'var(--color-accent-text)' : 'var(--color-text-muted)' 
-          }}>
-            Use base theme with optional advanced settings
-          </div>
-        </div>
-      </label>
-      
-      {availablePresets.map(preset => (
-        <label key={preset} style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          cursor: 'pointer',
-          padding: '8px',
-          borderRadius: 'var(--radius-md)',
-          backgroundColor: config.preset === preset ? 'var(--color-accent)' : 'transparent',
-          color: config.preset === preset ? 'var(--color-accent-text)' : 'var(--color-text-primary)',
-        }}>
-          <input
-            type="radio"
-            name="preset"
-            value={preset}
-            checked={config.preset === preset}
-            onChange={() => setPreset(preset)}
-            disabled={disabled}
-            style={{ margin: 0 }}
-          />
-          <div>
-            <div style={{ fontWeight: 500 }}>{presetLabels[preset]}</div>
-            <div style={{ 
-              fontSize: '12px', 
-              color: config.preset === preset ? 'var(--color-accent-text)' : 'var(--color-text-muted)' 
-            }}>
-              {getPresetDescription(preset)}
-            </div>
-          </div>
-        </label>
-      ))}
-    </div>
-  )
-}
+
 
 function AdvancedControls({ disabled }: ControlsProps) {
   const { config, setAdvanced } = useAppearance()
   const advanced = config.advanced!
-  
+
   const updateAdvanced = (updates: Partial<AdvancedSettings>) => {
     setAdvanced({ ...advanced, ...updates })
   }
-  
+
   return (
     <div style={{ display: 'grid', gap: '16px' }}>
       <div style={{ fontSize: '14px', fontWeight: 600 }}>
         Advanced Customization
       </div>
-      
+
       {/* Palette */}
       <div>
         <div style={{ fontSize: '13px', fontWeight: 500, marginBottom: '6px' }}>
@@ -178,7 +96,7 @@ function AdvancedControls({ disabled }: ControlsProps) {
           ))}
         </select>
       </div>
-      
+
       {/* Density */}
       <div>
         <div style={{ fontSize: '13px', fontWeight: 500, marginBottom: '6px' }}>
@@ -201,13 +119,13 @@ function AdvancedControls({ disabled }: ControlsProps) {
                 opacity: disabled ? 0.6 : 1,
               }}
             >
-              {density === 'compact' ? 'Compact' : 
-               density === 'comfortable' ? 'Comfortable' : 'Presentation'}
+              {density === 'compact' ? 'Compact' :
+                density === 'comfortable' ? 'Comfortable' : 'Presentation'}
             </button>
           ))}
         </div>
       </div>
-      
+
       {/* Separation */}
       <div>
         <div style={{ fontSize: '13px', fontWeight: 500, marginBottom: '6px' }}>
@@ -235,7 +153,7 @@ function AdvancedControls({ disabled }: ControlsProps) {
           ))}
         </div>
       </div>
-      
+
       {/* Corner Style */}
       <div>
         <div style={{ fontSize: '13px', fontWeight: 500, marginBottom: '6px' }}>
@@ -258,13 +176,13 @@ function AdvancedControls({ disabled }: ControlsProps) {
                 opacity: disabled ? 0.6 : 1,
               }}
             >
-              {corners === 'subtle' ? 'Subtle' : 
-               corners === 'standard' ? 'Standard' : 'Rounded'}
+              {corners === 'subtle' ? 'Subtle' :
+                corners === 'standard' ? 'Standard' : 'Rounded'}
             </button>
           ))}
         </div>
       </div>
-      
+
       {/* Emphasis Toggles */}
       <div>
         <div style={{ fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>
@@ -286,7 +204,7 @@ function AdvancedControls({ disabled }: ControlsProps) {
               <input
                 type="checkbox"
                 checked={advanced.emphasis[key]}
-                onChange={(e) => updateAdvanced({ 
+                onChange={(e) => updateAdvanced({
                   emphasis: { ...advanced.emphasis, [key]: e.target.checked }
                 })}
                 disabled={disabled}
@@ -303,7 +221,7 @@ function AdvancedControls({ disabled }: ControlsProps) {
 // Mini board preview component  
 function MiniBoard() {
   const { theme, config } = useAppearance()
-  
+
   type Priority = 'HIGH' | 'MEDIUM' | 'LOW'
   type Card = {
     id: string
@@ -318,52 +236,52 @@ function MiniBoard() {
   const mockColumns: Column[] = [
     {
       id: '1',
-      title: 'To Do', 
+      title: 'To Do',
       cards: [
-        { 
-          id: '1', 
-          title: 'Due Diligence Review', 
-          priority: 'HIGH', 
+        {
+          id: '1',
+          title: 'Due Diligence Review',
+          priority: 'HIGH',
           deadline: '2025-09-05',
           owner: 'Smith',
           risk: 'HIGH'
         },
-        { 
-          id: '2', 
-          title: 'Contract Analysis', 
+        {
+          id: '2',
+          title: 'Contract Analysis',
           priority: 'MEDIUM'
         },
       ]
     },
-        { 
-          id: '2', 
-          title: 'In Progress', 
-          cards: [
-            { 
-              id: '3', 
-              title: 'Financial Audit', 
-              priority: 'HIGH',
-              owner: 'Johnson',
-              deadline: '2025-09-10'
-            },
-          ]
-        },
+    {
+      id: '2',
+      title: 'In Progress',
+      cards: [
         {
           id: '3',
-          title: 'Done',
-          cards: [
-            { 
-              id: '4', 
-              title: 'Initial Assessment', 
-              priority: 'LOW',
-              
-            },
-          ]
-        }
+          title: 'Financial Audit',
+          priority: 'HIGH',
+          owner: 'Johnson',
+          deadline: '2025-09-10'
+        },
       ]
-  
+    },
+    {
+      id: '3',
+      title: 'Done',
+      cards: [
+        {
+          id: '4',
+          title: 'Initial Assessment',
+          priority: 'LOW',
+
+        },
+      ]
+    }
+  ]
+
   // Force re-render when theme changes by using config as a dependency
-  const themeKey = `${config.mode}-${config.preset}-${JSON.stringify(config.advanced)}`
+  const themeKey = `${config.mode}-${JSON.stringify(config.advanced)}`
 
   // Helper function to get priority color with fallback
   const getPriorityColor = (priority: Priority) => {
@@ -371,7 +289,7 @@ function MiniBoard() {
     switch (priority) {
       case 'HIGH':
         return colors.high || colors.HIGH || colors.high || '#fd7e14'
-      case 'MEDIUM': 
+      case 'MEDIUM':
         return colors.medium || colors.MEDIUM || colors.medium || '#bf8700'
       case 'LOW':
         return colors.low || colors.LOW || colors.low || '#1a7f37'
@@ -383,7 +301,7 @@ function MiniBoard() {
   return (
     <div key={themeKey} style={{
       width: '300px',
-      height: '200px', 
+      height: '200px',
       backgroundColor: theme.background,
       border: `1px solid ${theme.border}`,
       borderRadius: theme.radius.md,
@@ -430,15 +348,15 @@ function MiniBoard() {
                   <div>{card.title}</div>
                   {/* M&A Fields Preview */}
                   {(card.owner || card.deadline || card.risk) && (
-                    <div style={{ 
-                      display: 'flex', 
-                      gap: '2px', 
-                      marginTop: '2px', 
+                    <div style={{
+                      display: 'flex',
+                      gap: '2px',
+                      marginTop: '2px',
                       flexWrap: 'wrap',
                       fontSize: '6px'
                     }}>
                       {card.owner && (
-                        <span style={{ 
+                        <span style={{
                           color: theme.emphasis?.owner || theme.textSecondary,
                           backgroundColor: theme.surfaceAlt + '50',
                           padding: '1px 2px',
@@ -448,7 +366,7 @@ function MiniBoard() {
                         </span>
                       )}
                       {card.deadline && (
-                        <span style={{ 
+                        <span style={{
                           color: theme.emphasis?.deadline || theme.danger,
                           backgroundColor: theme.danger + '10',
                           padding: '1px 2px',
@@ -458,7 +376,7 @@ function MiniBoard() {
                         </span>
                       )}
                       {card.risk && (
-                        <span style={{ 
+                        <span style={{
                           color: theme.emphasis?.riskFlag || theme.danger,
                           backgroundColor: theme.danger + '10',
                           padding: '1px 2px',
@@ -467,9 +385,9 @@ function MiniBoard() {
                           ⚠️
                         </span>
                       )}
-                      
-                </div>
-              )}
+
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -484,16 +402,16 @@ export function AppearanceControl() {
   const { theme, resetToDefaults, locked } = useAppearance()
   const [open, setOpen] = useState(false)
   const [previewCollapsed, setPreviewCollapsed] = useState(false)
-  const [activeTab, setActiveTab] = useState<'simple' | 'presets' | 'advanced'>('simple')
+  const [activeTab, setActiveTab] = useState<'simple' | 'advanced'>('simple')
   const dialogRef = useRef<HTMLDivElement>(null)
   const firstFocusableRef = useRef<HTMLButtonElement>(null)
   const lastFocusableRef = useRef<HTMLButtonElement>(null)
-  
+
   // Close modal handler
   const handleClose = useCallback(() => {
     setOpen(false)
   }, [])
-  
+
   // ESC key handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -505,30 +423,30 @@ export function AppearanceControl() {
         handleClose()
       }
     }
-    
+
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [open, handleClose])
-  
+
   // Focus trap effect
   useEffect(() => {
     if (!open || !dialogRef.current) return
-    
+
     const dialog = dialogRef.current
     const focusableElements = dialog.querySelectorAll(
       'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
     )
     const firstElement = focusableElements[0] as HTMLElement
     const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement
-    
+
     // Focus first element on open
     if (firstElement) {
       firstElement.focus()
     }
-    
+
     const handleTabKey = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') return
-      
+
       if (e.shiftKey) {
         if (document.activeElement === firstElement) {
           e.preventDefault()
@@ -541,18 +459,18 @@ export function AppearanceControl() {
         }
       }
     }
-    
+
     dialog.addEventListener('keydown', handleTabKey)
     return () => dialog.removeEventListener('keydown', handleTabKey)
   }, [open])
-  
+
   // Overlay click handler
   const handleOverlayClick = useCallback((e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       handleClose()
     }
   }, [handleClose])
-  
+
   if (!open) {
     return (
       <div style={{ position: 'fixed', right: '16px', bottom: '16px', zIndex: 500 }}>
@@ -575,27 +493,27 @@ export function AppearanceControl() {
       </div>
     )
   }
-  
+
   return (
     <>
       {/* Overlay */}
-      <div 
-        style={{ 
-          position: 'fixed', 
-          inset: 0, 
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.5)',
           zIndex: 998,
         }}
         onClick={handleOverlayClick}
         aria-hidden="true"
       />
-      
+
       {/* Dialog */}
-      <div 
-        style={{ 
-          position: 'fixed', 
-          right: '16px', 
-          bottom: '16px', 
+      <div
+        style={{
+          position: 'fixed',
+          right: '16px',
+          bottom: '16px',
           zIndex: 999,
           display: 'flex',
           gap: '16px',
@@ -613,9 +531,9 @@ export function AppearanceControl() {
             <MiniBoard />
           </div>
         )}
-        
+
         {/* Main Panel */}
-        <div 
+        <div
           ref={dialogRef}
           role="dialog"
           aria-modal="true"
@@ -633,11 +551,11 @@ export function AppearanceControl() {
           }}
         >
           {/* Header */}
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between', 
-            marginBottom: '16px' 
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '16px'
           }}>
             <h3 id="appearance-title" style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>
               Appearance Settings {locked && '🔒'}
@@ -675,7 +593,7 @@ export function AppearanceControl() {
               </button>
             </div>
           </div>
-          
+
           {/* Lock Notice */}
           {locked && (
             <div style={{
@@ -690,18 +608,17 @@ export function AppearanceControl() {
               🔒 Appearance settings are locked by administrator
             </div>
           )}
-          
+
           {/* Tabs */}
-          <div style={{ 
-            display: 'flex', 
-            gap: '4px', 
+          <div style={{
+            display: 'flex',
+            gap: '4px',
             marginBottom: '16px',
             borderBottom: `1px solid ${theme.border}`,
             paddingBottom: '8px',
           }}>
             {[
               { key: 'simple' as const, label: 'Simple' },
-              { key: 'presets' as const, label: 'M&A Presets' },
               { key: 'advanced' as const, label: 'Advanced' },
             ].map(tab => (
               <button
@@ -724,19 +641,18 @@ export function AppearanceControl() {
               </button>
             ))}
           </div>
-          
-          
+
+
           {/* Content */}
           <div style={{ marginBottom: '16px' }}>
             {activeTab === 'simple' && <SimpleControls disabled={locked} />}
-            {activeTab === 'presets' && <PresetControls disabled={locked} />}
             {activeTab === 'advanced' && <AdvancedControls disabled={locked} />}
           </div>
-          
+
           {/* Footer */}
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
             alignItems: 'center',
             paddingTop: '12px',
             borderTop: `1px solid ${theme.border}`,

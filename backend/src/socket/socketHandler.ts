@@ -71,7 +71,7 @@ export const setupSocket = (httpServer: HTTPServer) => {
       
       next();
     } catch (error) {
-      logger.error('Socket authentication failed');
+      logger.error('Socket authentication failed', { error });
       next(new Error('Authentication failed'));
     }
   });
@@ -138,7 +138,7 @@ export const setupSocket = (httpServer: HTTPServer) => {
         
         logger.debug(`User joined board`, { userId: authSocket.user.id, boardId, others: roster.length });
       } catch (error) {
-        logger.error('Error joining board');
+        logger.error('Error joining board', { error });
         authSocket.emit('error', { message: 'Failed to join board' } as ErrorEvent);
       }
     });

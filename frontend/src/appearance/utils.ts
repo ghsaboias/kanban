@@ -1,11 +1,11 @@
-import type { MATheme, AdvancedSettings, Palette } from './types'
+import type { AdvancedSettings, MATheme, Palette } from './types';
 
 // Color utility functions
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
   const clean = hex.replace('#', '')
   const expanded = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean
   const bigint = parseInt(expanded, 16)
-  
+
   return {
     r: (bigint >> 16) & 255,
     g: (bigint >> 8) & 255,
@@ -35,20 +35,20 @@ function darken(hex: string, amount = 0.1): string {
 }
 
 // Palette definitions for advanced customization
-const PALETTES: Record<Palette, { 
+const PALETTES: Record<Palette, {
   name: string
   accent: string
   accentHover: string
   success: string
   warning: string
-  danger: string 
+  danger: string
 }> = {
   neutral: {
     name: 'Neutral',
     accent: '#0969da',
     accentHover: '#0550ae',
     success: '#1a7f37',
-    warning: '#bf8700', 
+    warning: '#bf8700',
     danger: '#cf222e',
   },
   navy: {
@@ -95,7 +95,7 @@ const PALETTES: Record<Palette, {
 
 export function applyAdvancedSettings(baseTheme: MATheme, settings: AdvancedSettings): MATheme {
   let theme = { ...baseTheme }
-  
+
   // Apply palette
   if (settings.palette !== 'neutral') {
     const palette = PALETTES[settings.palette]
@@ -108,14 +108,14 @@ export function applyAdvancedSettings(baseTheme: MATheme, settings: AdvancedSett
       danger: palette.danger,
     }
   }
-  
+
   // Apply density
-  const densityFactor = settings.density === 'compact' ? 0.8 : 
-                       settings.density === 'presentation' ? 1.3 : 1.0
-  
+  const densityFactor = settings.density === 'compact' ? 0.8 :
+    settings.density === 'presentation' ? 1.3 : 1.0
+
   const toNum = (px: string) => parseFloat(px.replace('px', '')) || 0
   const toPx = (n: number) => `${Math.round(n)}px`
-  
+
   theme.spacing = {
     xs: toPx(toNum(theme.spacing.xs) * densityFactor),
     sm: toPx(toNum(theme.spacing.sm) * densityFactor),
@@ -123,7 +123,7 @@ export function applyAdvancedSettings(baseTheme: MATheme, settings: AdvancedSett
     lg: toPx(toNum(theme.spacing.lg) * densityFactor),
     xl: toPx(toNum(theme.spacing.xl) * densityFactor),
   }
-  
+
   theme.fontSize = {
     xs: toPx(toNum(theme.fontSize.xs) * Math.min(densityFactor * 1.1, 1.2)),
     sm: toPx(toNum(theme.fontSize.sm) * Math.min(densityFactor * 1.1, 1.2)),
@@ -131,7 +131,7 @@ export function applyAdvancedSettings(baseTheme: MATheme, settings: AdvancedSett
     lg: toPx(toNum(theme.fontSize.lg) * Math.min(densityFactor * 1.1, 1.2)),
     xl: toPx(toNum(theme.fontSize.xl) * Math.min(densityFactor * 1.1, 1.2)),
   }
-  
+
   // Apply separation style
   if (settings.separation === 'subtle') {
     theme.border = lighten(theme.border, 0.15)
@@ -140,17 +140,17 @@ export function applyAdvancedSettings(baseTheme: MATheme, settings: AdvancedSett
     theme.border = darken(theme.border, 0.1)
     // Keep existing shadows for clear separation
   }
-  
+
   // Apply corner style
   const cornerMultiplier = settings.corners === 'subtle' ? 0.5 :
-                          settings.corners === 'rounded' ? 1.5 : 1.0
-  
+    settings.corners === 'rounded' ? 1.5 : 1.0
+
   theme.radius = {
     sm: toPx(toNum(theme.radius.sm) * cornerMultiplier),
     md: toPx(toNum(theme.radius.md) * cornerMultiplier),
     lg: toPx(toNum(theme.radius.lg) * cornerMultiplier),
   }
-  
+
   // Apply emphasis toggles (this affects the emphasis colors visibility)
   if (!settings.emphasis.owners) {
     theme.emphasis.owner = theme.textSecondary
@@ -161,23 +161,12 @@ export function applyAdvancedSettings(baseTheme: MATheme, settings: AdvancedSett
   if (!settings.emphasis.riskFlags) {
     theme.emphasis.riskFlag = theme.textSecondary
   }
-  
-  
+
+
   return theme
 }
 
-export function getPresetDescription(presetKey: string): string {
-  const descriptions: Record<string, string> = {
-    'pipeline-review': 'Extra-dense layout for deal pipeline overviews',
-    'diligence-tracker': 'Checklist emphasis with clear status indicators',
-    'ic-presentation': 'Spacious layout optimized for presentations and exports', 
-    'night-work': 'Eye-strain optimized dark theme for late hours',
-    'redline-legal': 'High contrast for document review and legal analysis',
-    'deal-room-readout': 'Clean layout for deal room presentations and exports',
-    'analytics-view': 'Data-dense layout with numeric emphasis',
-  }
-  
-  return descriptions[presetKey] || ''
-}
 
-export { PALETTES }
+
+export { PALETTES };
+

@@ -26,7 +26,7 @@ export async function testDatabase() {
     logger.info('✅ Test data cleaned up');
     
   } catch (error) {
-    logger.error('❌ Database connection failed');
+    logger.error('❌ Database connection failed', { error });
   } finally {
     await prisma.$disconnect();
   }
