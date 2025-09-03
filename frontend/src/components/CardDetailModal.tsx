@@ -1,11 +1,13 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { RichTextEditor } from './RichTextEditor'
-import { hasContent, extractImages } from '../utils/html'
-import { useApi } from '../useApi'
 import { useAppearance } from '../appearance'
 import type { ApiResponse } from '../types/api'
-import { TIMEOUTS } from '../constants/timeouts'
+import { useApi } from '../useApi'
+import { hasContent } from '../utils/html'
+import { CardFormFields } from './CardFormFields'
+import { CardModalFooter } from './CardModalFooter'
+import { CardModalHeader } from './CardModalHeader'
+import { ImageModal } from './ImageModal'
 
 interface CardData {
   id: string
@@ -41,17 +43,7 @@ interface CardDetailModalProps {
   onCardUpdated: (updatedCard: CardData) => void
 }
 
-const priorityLabels = {
-  HIGH: 'Alta',
-  MEDIUM: 'Média', 
-  LOW: 'Baixa'
-}
 
-const priorityColors = {
-  HIGH: '#ff6b6b',
-  MEDIUM: '#ffd93d',
-  LOW: '#6bcf7f'
-}
 
 export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDetailModalProps) {
   const { theme } = useAppearance()
@@ -70,8 +62,6 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
     ownerId: card.owner?.id || ''
   })
   const modalRef = useRef<HTMLDivElement>(null)
-  const titleInputRef = useRef<HTMLInputElement>(null)
-  const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const { apiFetch } = useApi()
 
   useEffect(() => {
@@ -96,9 +86,6 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
         riskLevel: card.riskLevel || '',
         ownerId: card.owner?.id || ''
       })
-      
-      // Focus title input
-      setTimeout(() => titleInputRef.current?.focus(), TIMEOUTS.FOCUS_DELAY)
     }
   }, [isOpen, card])
 
@@ -145,6 +132,16 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
     if (e.target === e.currentTarget) {
       onClose()
     }
+  }
+
+  const handleFormDataChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
+
+  const handleImageSelect = (src: string) => {
+    setSelectedImage(src)
   }
 
   const handleSave = async () => {
@@ -195,7 +192,7 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
   }
 
   const modalContent = (
-    <div 
+    <div
       style={{
         position: 'fixed',
         top: 0,
@@ -229,59 +226,11 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
         onPointerDown={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div style={{
-          padding: theme.spacing?.lg || '20px',
-          borderBottom: '1px solid #e1e1e1',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
-          <input
-            ref={titleInputRef}
-            type="text"
-            value={formData.title}
-            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-            style={{
-              border: 'none',
-              outline: 'none',
-              fontSize: '20px',
-              fontWeight: '600',
-              color: '#333',
-              background: 'transparent',
-              flex: 1,
-              marginRight: theme.spacing?.md || '16px',
-              minWidth: 0
-            }}
-            placeholder="Card title"
-          />
-          <button
-            onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation()
-            onClose()
-          }}
-          style={{
-            background: 'none',
-            border: 'none',
-            fontSize: '24px',
-            color: '#666',
-            cursor: 'pointer',
-            padding: theme.spacing?.xs || '4px',
-            borderRadius: theme.radius?.sm || '4px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#f0f0f0'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent'
-            }}
-          >
-            ×
-          </button>
-        </div>
+        <CardModalHeader
+          title={formData.title}
+          onTitleChange={(title) => handleFormDataChange('title', title)}
+          onClose={onClose}
+        />
 
         {/* Content */}
         <div style={{
@@ -294,465 +243,35 @@ export function CardDetailModal({ card, isOpen, onClose, onCardUpdated }: CardDe
           gap: theme.spacing?.lg || '24px',
           boxSizing: 'border-box'
         }}>
-          {/* Status Section */}
-          <div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: theme.spacing?.sm || '12px',
-              marginBottom: theme.spacing?.xs || '8px'
-            }}>
-              <div style={{
-                width: '16px',
-                height: '16px',
-                borderRadius: '50%',
-                backgroundColor: priorityColors[formData.priority]
-              }}></div>
-              <span style={{
-                fontSize: '14px',
-                fontWeight: '500',
-                color: '#666'
-              }}>Status</span>
-            </div>
-            <select
-              value={formData.priority}
-              onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value as 'LOW' | 'MEDIUM' | 'HIGH' }))}
-            style={{
-              width: '100%',
-              padding: `${theme.spacing?.xs || '8px'} ${theme.spacing?.sm || '12px'}`,
-              border: '1px solid #cbd5e1',
-              borderRadius: theme.radius?.sm || '6px',
-              fontSize: '14px',
-              backgroundColor: 'white',
-              color: '#111827',
-              cursor: 'pointer',
-              boxSizing: 'border-box',
-              maxWidth: '100%'
-            }}
-            >
-              <option value="LOW">{priorityLabels.LOW}</option>
-              <option value="MEDIUM">{priorityLabels.MEDIUM}</option>
-              <option value="HIGH">{priorityLabels.HIGH}</option>
-            </select>
-          </div>
-
-          {/* Assign Section */}
-          <div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: theme.spacing?.sm || '12px',
-              marginBottom: theme.spacing?.xs || '8px'
-            }}>
-              <div style={{
-                width: '16px',
-                height: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '12px',
-                color: '#666'
-              }}>👤</div>
-              <span style={{
-                fontSize: '14px',
-                fontWeight: '500',
-                color: '#666'
-              }}>Assign</span>
-            </div>
-            <select
-              value={formData.assigneeId}
-              onChange={(e) => setFormData(prev => ({ ...prev, assigneeId: e.target.value }))}
-            style={{
-              width: '100%',
-              padding: `${theme.spacing?.xs || '8px'} ${theme.spacing?.sm || '12px'}`,
-              border: '1px solid #cbd5e1',
-              borderRadius: theme.radius?.sm || '6px',
-              fontSize: '14px',
-              backgroundColor: 'white',
-              color: '#111827',
-              cursor: 'pointer',
-              boxSizing: 'border-box',
-              maxWidth: '100%'
-            }}
-            >
-              <option value="">Sem responsável</option>
-              {users.map(user => (
-                <option key={user.id} value={user.id}>{user.name}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* M&A Fields Section */}
-          <div style={{ 
-            marginBottom: theme.spacing?.lg || '20px',
-            padding: theme.spacing?.md || '16px',
-            backgroundColor: theme.surfaceAlt + '30',
-            borderRadius: theme.radius?.sm || '6px',
-            border: `1px solid ${theme.border}`
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: theme.spacing?.sm || '12px',
-              marginBottom: theme.spacing?.md || '16px'
-            }}>
-              <div style={{
-                width: '16px',
-                height: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '12px',
-                color: '#666'
-              }}>🏢</div>
-              <span style={{
-                fontSize: '16px',
-                fontWeight: '600',
-                color: theme.textPrimary
-              }}>M&A Fields</span>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: theme.spacing?.md || '16px', marginBottom: theme.spacing?.sm || '12px' }}>
-              {/* Owner */}
-              <div>
-                <label style={{
-                  display: 'block',
-                  marginBottom: theme.spacing?.xs || '6px',
-                  fontSize: '13px',
-                  fontWeight: '500',
-                  color: '#374151'
-                }}>
-                  Owner
-                </label>
-                <select
-                  value={formData.ownerId}
-                  onChange={(e) => setFormData(prev => ({ ...prev, ownerId: e.target.value }))}
-                  style={{
-                    width: '100%',
-                    padding: `${theme.spacing?.xs || '8px'} ${theme.spacing?.sm || '12px'}`,
-                    border: '1px solid #cbd5e1',
-                    borderRadius: theme.radius?.sm || '6px',
-                    fontSize: '14px',
-                    backgroundColor: 'white',
-                    color: '#111827',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <option value="">Sem owner</option>
-                  {users.map(user => (
-                    <option key={user.id} value={user.id}>{user.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Risk Level */}
-              <div>
-                <label style={{
-                  display: 'block',
-                  marginBottom: theme.spacing?.xs || '6px',
-                  fontSize: '13px',
-                  fontWeight: '500',
-                  color: '#374151'
-                }}>
-                  Risk Level
-                </label>
-                <select
-                  value={formData.riskLevel}
-                  onChange={(e) => setFormData(prev => ({ ...prev, riskLevel: e.target.value as '' | 'LOW' | 'MEDIUM' | 'HIGH' }))}
-                  style={{
-                    width: '100%',
-                    padding: `${theme.spacing?.xs || '8px'} ${theme.spacing?.sm || '12px'}`,
-                    border: '1px solid #cbd5e1',
-                    borderRadius: theme.radius?.sm || '6px',
-                    fontSize: '14px',
-                    backgroundColor: 'white',
-                    color: '#111827',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <option value="">Sem risco</option>
-                  <option value="LOW">Baixo Risco</option>
-                  <option value="MEDIUM">Médio Risco</option>
-                  <option value="HIGH">Alto Risco</option>
-                </select>
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: theme.spacing?.md || '16px' }}>
-              {/* Deadline */}
-              <div>
-                <label style={{
-                  display: 'block',
-                  marginBottom: theme.spacing?.xs || '6px',
-                  fontSize: '13px',
-                  fontWeight: '500',
-                  color: '#374151'
-                }}>
-                  Deadline
-                </label>
-                <input
-                  type="date"
-                  value={formData.deadline}
-                  onChange={(e) => setFormData(prev => ({ ...prev, deadline: e.target.value }))}
-                  style={{
-                    width: '100%',
-                    padding: `${theme.spacing?.xs || '8px'} ${theme.spacing?.sm || '12px'}`,
-                    border: '1px solid #cbd5e1',
-                    borderRadius: theme.radius?.sm || '6px',
-                    fontSize: '14px',
-                    backgroundColor: 'white',
-                    color: '#111827',
-                    boxSizing: 'border-box'
-                  }}
-                />
-              </div>
-
-              
-            </div>
-          </div>
-
-          {/* Description Section */}
-          <div style={{ width: '100%' }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: theme.spacing?.sm || '12px',
-              marginBottom: theme.spacing?.xs || '8px'
-            }}>
-              <div style={{
-                width: '16px',
-                height: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '12px',
-                color: '#666'
-              }}>📝</div>
-              <span style={{
-                fontSize: '14px',
-                fontWeight: '500',
-                color: '#666'
-              }}>Description</span>
-            </div>
-            <RichTextEditor
-              value={formData.description}
-              onChange={(html) => setFormData(prev => ({ ...prev, description: html }))}
-            />
-            
-            {/* Image Preview */}
-            {(() => {
-              const images = extractImages(formData.description)
-              if (images.length === 0) return null
-              
-              return (
-                <div style={{ marginTop: theme.spacing?.sm || '8px' }}>
-                  <span style={{ 
-                    fontSize: '12px', 
-                    color: '#666', 
-                    display: 'block', 
-                    marginBottom: theme.spacing?.xs || '6px' 
-                  }}>Images ({images.length})</span>
-                  <div style={{ 
-                    display: 'flex', 
-                    gap: theme.spacing?.xs || '8px', 
-                    flexWrap: 'wrap' 
-                  }}>
-                    {images.map((src, index) => (
-                      <div
-                        key={index}
-                        onClick={() => setSelectedImage(src)}
-                        style={{
-                          width: '60px',
-                          height: '40px',
-                          border: '1px solid #e1e1e1',
-                          borderRadius: theme.radius?.sm || '4px',
-                          overflow: 'hidden',
-                          cursor: 'pointer',
-                          backgroundColor: '#f8f9fa'
-                        }}
-                      >
-                        <img
-                          src={src}
-                          alt={`Preview ${index + 1}`}
-                          loading="lazy"
-                          decoding="async"
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover'
-                          }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )
-            })()}
-          </div>
-
-          {/* Add Property Button */}
-          <button
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: theme.spacing?.xs || '8px',
-            padding: `${theme.spacing?.xs || '8px'} ${theme.spacing?.sm || '12px'}`,
-            backgroundColor: '#f5f5f5',
-            border: '1px solid #e1e1e1',
-            borderRadius: theme.radius?.sm || '6px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            color: '#666',
-            width: 'fit-content'
-          }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#e8e8e8'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#f5f5f5'
-            }}
-          >
-            <span>+</span>
-            Add a property
-          </button>
-
-          {/* Comments Section */}
-          <div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: theme.spacing?.sm || '12px',
-              marginBottom: theme.spacing?.xs || '8px'
-            }}>
-              <div style={{
-                width: '16px',
-                height: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '12px',
-                color: '#666'
-              }}>💬</div>
-              <span style={{
-                fontSize: '14px',
-                fontWeight: '500',
-                color: '#666'
-              }}>Comments</span>
-            </div>
-          <textarea
-            placeholder="Add a comment..."
-            style={{
-              width: '100%',
-              minHeight: '60px',
-              padding: theme.spacing?.sm || '12px',
-              border: '1px solid #e1e1e1',
-              borderRadius: theme.radius?.sm || '6px',
-              fontSize: '14px',
-              color: '#213547',
-              backgroundColor: '#f8f9fa',
-              resize: 'vertical',
-              fontFamily: 'inherit',
-              lineHeight: '1.5',
-              boxSizing: 'border-box',
-              maxWidth: '100%',
-              overflowWrap: 'anywhere'
-            }}
+          <CardFormFields
+            formData={formData}
+            users={users}
+            onFormDataChange={handleFormDataChange}
+            onImageSelect={handleImageSelect}
           />
-          </div>
         </div>
 
         {/* Footer */}
-        {hasChanges() && (
-          <div style={{
-            padding: `${theme.spacing?.md || '16px'} ${theme.spacing?.lg || '20px'}`,
-            borderTop: '1px solid #e1e1e1',
-            display: 'flex',
-            gap: theme.spacing?.sm || '12px',
-            justifyContent: 'flex-end'
-          }}>
-            <button
-              onClick={onClose}
-              style={{
-                padding: `${theme.spacing?.xs || '8px'} ${theme.spacing?.md || '16px'}`,
-                border: '1px solid #e1e1e1',
-                borderRadius: theme.radius?.sm || '6px',
-                backgroundColor: 'white',
-                color: '#666',
-                cursor: 'pointer',
-                fontSize: '14px'
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={loading || !formData.title.trim()}
-              style={{
-                padding: `${theme.spacing?.xs || '8px'} ${theme.spacing?.md || '16px'}`,
-                border: 'none',
-                borderRadius: theme.radius?.sm || '6px',
-                backgroundColor: loading ? '#999' : '#007bff',
-                color: 'white',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                fontSize: '14px'
-              }}
-            >
-              {loading ? 'Saving...' : 'Save'}
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-
-  // Image Modal
-  const imageModal = selectedImage && (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.9)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 2000,
-        padding: theme.spacing?.lg || '20px'
-      }}
-      onClick={() => setSelectedImage(null)}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          maxWidth: '90vw',
-          maxHeight: '90vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}
-      >
-        <img
-          src={selectedImage}
-          alt="Full size"
-          style={{
-            maxWidth: '100%',
-            maxHeight: '100%',
-            objectFit: 'contain',
-            borderRadius: theme.radius?.md || '8px',
-            boxShadow: theme.shadow?.lg || '0 20px 60px rgba(0, 0, 0, 0.5)'
-          }}
-          onClick={() => setSelectedImage(null)}
+        <CardModalFooter
+          hasChanges={hasChanges()}
+          loading={loading}
+          title={formData.title}
+          onCancel={onClose}
+          onSave={handleSave}
         />
       </div>
     </div>
   )
 
+  // Image Modal Component
+
   return (
     <>
       {createPortal(modalContent, document.body)}
-      {imageModal && createPortal(imageModal, document.body)}
+      <ImageModal
+        selectedImage={selectedImage}
+        onClose={() => setSelectedImage(null)}
+      />
     </>
   )
 }
