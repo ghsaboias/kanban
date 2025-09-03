@@ -34,7 +34,7 @@ interface CardProps {
 
 const riskLabels = {
   HIGH: 'Alto Risco',
-  MEDIUM: 'Médio Risco', 
+  MEDIUM: 'Médio Risco',
   LOW: 'Baixo Risco'
 }
 
@@ -44,12 +44,12 @@ function formatDeadline(deadline: string): string {
     const date = new Date(deadline)
     const now = new Date()
     const diffDays = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-    
+
     if (diffDays < 0) return `${Math.abs(diffDays)}d atrasado`
     if (diffDays === 0) return 'Hoje'
     if (diffDays === 1) return 'Amanhã'
     if (diffDays <= 7) return `${diffDays}d`
-    
+
     return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
   } catch {
     return deadline
@@ -70,7 +70,7 @@ function isDeadlineUrgent(deadline: string): boolean {
 
 export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardProps) {
   const { apiFetch } = useApi()
-  const { theme } = useAppearance()
+  const { theme, config } = useAppearance()
   // mark onCardUpdated as used for now (edit feature later)
   void onCardUpdated
   const [hovering, setHovering] = useState(false)
@@ -275,104 +275,111 @@ export function Card({ card, onCardUpdated, onCardDeleted, onCardClick }: CardPr
       })()}
 
       {/* Unified metadata row: priority, owner/assignee, deadline, risk */}
-      {(card.priority || card.owner || card.assignee || card.deadline || card.riskLevel) && (
-        <div style={{ marginTop: theme.spacing?.sm || '8px' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: theme.spacing?.xs || '4px' }}>
-            {/* Priority */}
-            {card.priority && (
-              <div style={{
-                fontSize: '10px',
-                color: '#fff',
-                backgroundColor: theme.priority[card.priority],
-                padding: '2px 6px',
-                borderRadius: theme.radius?.md || '10px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                textTransform: 'uppercase',
-                border: '1px solid transparent'
-              }}>
-                <span>⏱</span>
-                <span>{card.priority}</span>
-              </div>
-            )}
+      {(() => {
+        const emphasis = config.advanced?.emphasis || { owners: true, deadlines: true, riskFlags: true }
+        const showPriority = card.priority
+        const showOwner = emphasis.owners && (card.owner || card.assignee)
+        const showDeadline = emphasis.deadlines && card.deadline
+        const showRisk = emphasis.riskFlags && card.riskLevel
 
-            {/* Owner (fallback to assignee for legacy) */}
-            {(card.owner || card.assignee) && (
-              <div style={{
-                fontSize: '10px',
-                color: theme.emphasis?.owner || theme.textSecondary,
-                backgroundColor: theme.surfaceAlt + '80',
-                padding: '2px 6px',
-                borderRadius: theme.radius?.sm || '3px',
-                border: `1px solid ${theme.border}`,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}>
-                <span>👤</span>
-                <span>{card.owner?.name || card.assignee?.name}</span>
-              </div>
-            )}
+        return (showPriority || showOwner || showDeadline || showRisk) && (
+          <div style={{ marginTop: theme.spacing?.sm || '8px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: theme.spacing?.xs || '4px' }}>
+              {/* Priority */}
+              {showPriority && (
+                <div style={{
+                  fontSize: '10px',
+                  color: '#fff',
+                  backgroundColor: theme.priority[card.priority],
+                  padding: '2px 6px',
+                  borderRadius: theme.radius?.md || '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  textTransform: 'uppercase',
+                  border: '1px solid transparent'
+                }}>
+                  <span>⏱</span>
+                  <span>{card.priority}</span>
+                </div>
+              )}
 
-            {/* Deadline */}
-            {card.deadline && (
-              <div style={{
-                fontSize: '10px',
-                color: isDeadlineUrgent(card.deadline) 
-                  ? theme.emphasis?.deadline || theme.danger 
-                  : theme.emphasis?.deadline || theme.textSecondary,
-                backgroundColor: isDeadlineUrgent(card.deadline) 
-                  ? (theme.danger || '#dc3545') + '10' 
-                  : theme.surfaceAlt + '80',
-                padding: '2px 6px',
-                borderRadius: theme.radius?.sm || '3px',
-                border: `1px solid ${isDeadlineUrgent(card.deadline) ? theme.danger : theme.border}`,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                fontWeight: isDeadlineUrgent(card.deadline) ? 600 : 400
-              }}>
-                <span>📅</span>
-                <span>{formatDeadline(card.deadline)}</span>
-              </div>
-            )}
+              {/* Owner (fallback to assignee for legacy) */}
+              {showOwner && (
+                <div style={{
+                  fontSize: '10px',
+                  color: theme.emphasis?.owner || theme.textSecondary,
+                  backgroundColor: theme.surfaceAlt + '80',
+                  padding: '2px 6px',
+                  borderRadius: theme.radius?.sm || '3px',
+                  border: `1px solid ${theme.border}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
+                  <span>👤</span>
+                  <span>{card.owner?.name || card.assignee?.name}</span>
+                </div>
+              )}
 
-            {/* Risk Level */}
-            {card.riskLevel && (
-              <div style={{
-                fontSize: '10px',
-                color: theme.emphasis?.riskFlag || (
-                  card.riskLevel === 'HIGH' ? theme.danger :
-                  card.riskLevel === 'MEDIUM' ? theme.warning :
-                  theme.textSecondary
-                ),
-                backgroundColor: card.riskLevel === 'HIGH' 
-                  ? (theme.danger || '#dc3545') + '10'
-                  : card.riskLevel === 'MEDIUM'
-                  ? (theme.warning || '#ffc107') + '10'
-                  : theme.surfaceAlt + '80',
-                padding: '2px 6px',
-                borderRadius: theme.radius?.sm || '3px',
-                border: `1px solid ${
-                  card.riskLevel === 'HIGH' ? theme.danger :
-                  card.riskLevel === 'MEDIUM' ? theme.warning :
-                  theme.border
-                }`,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                fontWeight: card.riskLevel !== 'LOW' ? 600 : 400
-              }}>
-                <span>⚠️</span>
-                <span>{riskLabels[card.riskLevel]}</span>
-              </div>
-            )}
+              {/* Deadline */}
+              {showDeadline && card.deadline && (
+                <div style={{
+                  fontSize: '10px',
+                  color: isDeadlineUrgent(card.deadline)
+                    ? theme.emphasis?.deadline || theme.danger
+                    : theme.emphasis?.deadline || theme.textSecondary,
+                  backgroundColor: isDeadlineUrgent(card.deadline)
+                    ? (theme.danger || '#dc3545') + '10'
+                    : theme.surfaceAlt + '80',
+                  padding: '2px 6px',
+                  borderRadius: theme.radius?.sm || '3px',
+                  border: `1px solid ${isDeadlineUrgent(card.deadline) ? theme.danger : theme.border}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontWeight: isDeadlineUrgent(card.deadline) ? 600 : 400
+                }}>
+                  <span>📅</span>
+                  <span>{formatDeadline(card.deadline)}</span>
+                </div>
+              )}
 
-            
+              {/* Risk Level */}
+              {showRisk && card.riskLevel && (
+                <div style={{
+                  fontSize: '10px',
+                  color: theme.emphasis?.riskFlag || (
+                    card.riskLevel === 'HIGH' ? theme.danger :
+                      card.riskLevel === 'MEDIUM' ? theme.warning :
+                        theme.textSecondary
+                  ),
+                  backgroundColor: card.riskLevel === 'HIGH'
+                    ? (theme.danger || '#dc3545') + '10'
+                    : card.riskLevel === 'MEDIUM'
+                      ? (theme.warning || '#ffc107') + '10'
+                      : theme.surfaceAlt + '80',
+                  padding: '2px 6px',
+                  borderRadius: theme.radius?.sm || '3px',
+                  border: `1px solid ${card.riskLevel === 'HIGH' ? theme.danger :
+                    card.riskLevel === 'MEDIUM' ? theme.warning :
+                      theme.border
+                    }`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontWeight: card.riskLevel !== 'LOW' ? 600 : 400
+                }}>
+                  <span>⚠️</span>
+                  <span>{riskLabels[card.riskLevel]}</span>
+                </div>
+              )}
+
+
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
     </div>
   )
 }

@@ -347,47 +347,54 @@ function MiniBoard() {
                 }}>
                   <div>{card.title}</div>
                   {/* M&A Fields Preview */}
-                  {(card.owner || card.deadline || card.risk) && (
-                    <div style={{
-                      display: 'flex',
-                      gap: '2px',
-                      marginTop: '2px',
-                      flexWrap: 'wrap',
-                      fontSize: '6px'
-                    }}>
-                      {card.owner && (
-                        <span style={{
-                          color: theme.emphasis?.owner || theme.textSecondary,
-                          backgroundColor: theme.surfaceAlt + '50',
-                          padding: '1px 2px',
-                          borderRadius: '1px'
-                        }}>
-                          👤 {card.owner}
-                        </span>
-                      )}
-                      {card.deadline && (
-                        <span style={{
-                          color: theme.emphasis?.deadline || theme.danger,
-                          backgroundColor: theme.danger + '10',
-                          padding: '1px 2px',
-                          borderRadius: '1px'
-                        }}>
-                          📅 3d
-                        </span>
-                      )}
-                      {card.risk && (
-                        <span style={{
-                          color: theme.emphasis?.riskFlag || theme.danger,
-                          backgroundColor: theme.danger + '10',
-                          padding: '1px 2px',
-                          borderRadius: '1px'
-                        }}>
-                          ⚠️
-                        </span>
-                      )}
+                  {(() => {
+                    const emphasis = config.advanced?.emphasis || { owners: true, deadlines: true, riskFlags: true }
+                    const showOwner = emphasis.owners && card.owner
+                    const showDeadline = emphasis.deadlines && card.deadline
+                    const showRisk = emphasis.riskFlags && card.risk
 
-                    </div>
-                  )}
+                    return (showOwner || showDeadline || showRisk) && (
+                      <div style={{
+                        display: 'flex',
+                        gap: '2px',
+                        marginTop: '2px',
+                        flexWrap: 'wrap',
+                        fontSize: '6px'
+                      }}>
+                        {showOwner && (
+                          <span style={{
+                            color: theme.emphasis?.owner || theme.textSecondary,
+                            backgroundColor: theme.surfaceAlt + '50',
+                            padding: '1px 2px',
+                            borderRadius: '1px'
+                          }}>
+                            👤 {card.owner}
+                          </span>
+                        )}
+                        {showDeadline && (
+                          <span style={{
+                            color: theme.emphasis?.deadline || theme.danger,
+                            backgroundColor: theme.danger + '10',
+                            padding: '1px 2px',
+                            borderRadius: '1px'
+                          }}>
+                            📅 3d
+                          </span>
+                        )}
+                        {showRisk && (
+                          <span style={{
+                            color: theme.emphasis?.riskFlag || theme.danger,
+                            backgroundColor: theme.danger + '10',
+                            padding: '1px 2px',
+                            borderRadius: '1px'
+                          }}>
+                            ⚠️
+                          </span>
+                        )}
+
+                      </div>
+                    )
+                  })()}
                 </div>
               ))}
             </div>
