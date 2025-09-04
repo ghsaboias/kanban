@@ -5,7 +5,9 @@
   "type": "module",
   "description": "Shared types and utilities for Kanban",
   "scripts": {
-    "build": "tsc -p ./tsconfig.json"
+    "build": "bun build realtime.ts --outdir dist --format esm",
+    "build:tsc": "tsc -p ./tsconfig.json",
+    "build:npm": "npx tsc -p ./tsconfig.json"
   },
   "types": "dist/realtime.d.ts"
 }
