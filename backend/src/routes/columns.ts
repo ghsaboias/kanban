@@ -2,15 +2,14 @@ import { Request, Response, Router } from 'express';
 import type { ColumnCreatedEvent, ColumnDeletedEvent, ColumnReorderedEvent, ColumnUpdatedEvent } from '@kanban/shared/realtime';
 import { prisma } from '../database';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
-import { ActivityLogger } from '../services/activityLogger';
+import { activityLogger } from '../services/activityLoggerSingleton';
 import { toPriority } from '../utils/priority';
 import { CreateColumnRequest, ReorderColumnRequest, UpdateColumnRequest } from '../types/api';
 import { broadcastToRoom } from '../utils/socketBroadcaster';
 
 const router = Router();
 
-// Activity logger instance
-const activityLogger = new ActivityLogger(prisma);
+// Activity logger is shared via singleton
 
 router.post('/boards/:boardId/columns', asyncHandler(async (req: Request, res: Response) => {
   const boardId = req.params.boardId;
