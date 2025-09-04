@@ -1,24 +1,6 @@
 import { randomUUID } from 'crypto';
-import type { NextFunction, Request, Response } from 'express';
 import { testPrisma } from '../setup';
 import { mock } from 'bun:test';
-
-// Mock authentication middleware - will be updated with actual user data in setupGlobalMocks
-const mockUser = {
-    id: 'placeholder-id',
-    name: 'Test User',
-    email: 'test@example.com',
-    clerkId: 'placeholder-clerk-id',
-};
-
-mock.module('../../auth/clerk', () => ({
-    withAuth: (req: Request, res: Response, next: NextFunction) => next(),
-    requireAuthMw: (req: Request, res: Response, next: NextFunction) => next(),
-    ensureUser: (req: Request, res: Response, next: NextFunction) => {
-        res.locals.user = mockUser;
-        next()
-    },
-}));
 
 export const setupTestData = async () => {
     const uniqueId1 = randomUUID();
@@ -62,11 +44,9 @@ export const setupTestData = async () => {
         }
     });
 
-    // Update mockUser with the actual created user data
-    mockUser.id = testUser.id;
-    mockUser.email = testUser.email;
-    mockUser.name = testUser.name;
-    mockUser.clerkId = testUser.clerkId || 'placeholder-clerk-id';
+    // Test routes use a test app with a mock auth middleware that
+    // reads the user from the 'x-test-user' header, so no module
+    // mocking of auth is needed here.
 
     return { testUser, testAssignee, testBoard, testColumn };
 };
