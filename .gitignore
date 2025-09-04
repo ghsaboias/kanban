@@ -56,3 +56,12 @@ vitest-out.json
 */vitest-out.json
 
 logs/
+
+# Package manager locks for non-Bun managers
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Local backups and perf artifacts
+*.backup
+perf-results/
