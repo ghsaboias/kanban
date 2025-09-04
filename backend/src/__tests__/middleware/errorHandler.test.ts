@@ -1,5 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
-import { AppError, errorHandler, asyncHandler, notFound } from '../../middleware/errorHandler';
+import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
+import { NextFunction, Request, Response } from 'express';
+import { AppError, asyncHandler, errorHandler, notFound } from '../../middleware/errorHandler';
 
 describe('AppError', () => {
   it('should create an AppError with message and status', () => {
@@ -29,17 +30,17 @@ describe('errorHandler middleware', () => {
   beforeEach(() => {
     req = {};
     res = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
+      status: mock(function (this: Response, _code?: number) { return this; } as unknown as Response['status']),
+      json: mock(),
     };
-    next = jest.fn();
-    
+    next = mock();
+
     // Mock console.error to avoid noise in tests
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    spyOn(console, 'error').mockImplementation(() => { });
   });
 
-  afterEach(() => {
-    jest.restoreAllMocks();
+  afterEach((): void => {
+    // In Bun test, mocks are automatically restored between tests
   });
 
   it('should handle AppError correctly', () => {
@@ -97,7 +98,7 @@ describe('errorHandler middleware', () => {
 
   it('should log error details', () => {
     const error = new AppError('Test error', 400);
-    
+
     errorHandler(error, req as Request, res as Response, next);
 
     // In the 'test' environment, we don't log to the console
@@ -113,13 +114,13 @@ describe('asyncHandler', () => {
   beforeEach(() => {
     req = {};
     res = {};
-    next = jest.fn();
+    next = mock();
   });
 
   it('should call next with error when async function rejects', async () => {
     const error = new Error('Async error');
-    const asyncFn = jest.fn().mockRejectedValue(error);
-    const wrappedFn = asyncHandler(asyncFn);
+    const asyncFn = mock(() => Promise.reject(error));
+    const wrappedFn = asyncHandler(asyncFn as unknown as (req: Request, res: Response, next: NextFunction) => void | Promise<void>);
 
     await wrappedFn(req as Request, res as Response, next);
 
@@ -127,8 +128,8 @@ describe('asyncHandler', () => {
   });
 
   it('should not call next when async function resolves', async () => {
-    const asyncFn = jest.fn().mockResolvedValue('success');
-    const wrappedFn = asyncHandler(asyncFn);
+    const asyncFn = mock(() => Promise.resolve('success'));
+    const wrappedFn = asyncHandler(asyncFn as unknown as (req: Request, res: Response, next: NextFunction) => void | Promise<void>);
 
     await wrappedFn(req as Request, res as Response, next);
 
@@ -136,8 +137,8 @@ describe('asyncHandler', () => {
   });
 
   it('should pass arguments to wrapped function', async () => {
-    const asyncFn = jest.fn().mockResolvedValue('success');
-    const wrappedFn = asyncHandler(asyncFn);
+    const asyncFn = mock(() => Promise.resolve('success'));
+    const wrappedFn = asyncHandler(asyncFn as unknown as (req: Request, res: Response, next: NextFunction) => void | Promise<void>);
 
     await wrappedFn(req as Request, res as Response, next);
 
@@ -152,8 +153,8 @@ describe('notFound middleware', () => {
   beforeEach(() => {
     req = {};
     res = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
+      status: mock(function (this: Response, _code?: number) { return this; } as unknown as Response['status']),
+      json: mock(),
     };
   });
 

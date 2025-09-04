@@ -1,37 +1,25 @@
-import type { NextFunction, Request, Response } from 'express';
+import { randomUUID } from 'crypto';
 import request from 'supertest';
-import app from '../../app';
 import { testPrisma } from '../setup';
+import { createTestApp } from '../testApp';
+import { beforeEach, describe, expect, it } from 'bun:test';
 
-// Restore real ActivityLogger for activity logging tests
-jest.unmock('../../services/activityLogger');
-
-// Mock authentication middleware
-jest.mock('../../auth/clerk', () => ({
-  withAuth: (req: Request, res: Response, next: NextFunction) => next(),
-  requireAuthMw: (req: Request, res: Response, next: NextFunction) => next(),
-  ensureUser: (req: Request, res: Response, next: NextFunction) => {
-    res.locals.user = {
-      id: 'test-user-id',
-      name: 'Test User',
-      email: 'test@example.com',
-      clerkId: 'test-clerk-id'
-    };
-    next();
-  }
-}));
+// Create test app instance
+const app = createTestApp();
 
 describe('Board Routes - Activity Logging', () => {
   let testUser: { id: string; email: string; name: string; clerkId: string | null; };
 
   beforeEach(async () => {
     // Create a test user for authentication
+    const uniqueId = randomUUID();
+    const userId = `test-user-${uniqueId}`;
     testUser = await testPrisma.user.create({
       data: {
-        id: 'test-user-id',
-        email: 'test@example.com',
+        id: userId,
+        email: `test-${uniqueId}@example.com`,
         name: 'Test User',
-        clerkId: 'test-clerk-id'
+        clerkId: `test-clerk-${uniqueId}`
       }
     });
   });
@@ -45,6 +33,7 @@ describe('Board Routes - Activity Logging', () => {
 
       const response = await request(app)
         .post('/api/boards')
+        .set('x-test-user', JSON.stringify(testUser))
         .send(boardData)
         .expect(201);
 
@@ -75,8 +64,9 @@ describe('Board Routes - Activity Logging', () => {
         description: 'Important board'
       };
 
-      await request(app)
+      const response = await request(app)
         .post('/api/boards')
+        .set('x-test-user', JSON.stringify(testUser))
         .send(boardData)
         .expect(201);
 
@@ -84,6 +74,7 @@ describe('Board Routes - Activity Logging', () => {
       const activities = await testPrisma.activity.findMany({
         where: {
           entityType: 'BOARD',
+          entityId: response.body.data.id,
           action: 'CREATE'
         }
       });
@@ -113,6 +104,7 @@ describe('Board Routes - Activity Logging', () => {
 
       const response = await request(app)
         .put(`/api/boards/${board.id}`)
+        .set('x-test-user', JSON.stringify(testUser))
         .send(updateData)
         .expect(200);
 
@@ -158,6 +150,7 @@ describe('Board Routes - Activity Logging', () => {
 
       await request(app)
         .put(`/api/boards/${board.id}`)
+        .set('x-test-user', JSON.stringify(testUser))
         .send(updateData)
         .expect(200);
 
@@ -196,6 +189,7 @@ describe('Board Routes - Activity Logging', () => {
 
       await request(app)
         .put(`/api/boards/${board.id}`)
+        .set('x-test-user', JSON.stringify(testUser))
         .send(updateData)
         .expect(200);
 
@@ -223,6 +217,7 @@ describe('Board Routes - Activity Logging', () => {
 
       await request(app)
         .delete(`/api/boards/${board.id}`)
+        .set('x-test-user', JSON.stringify(testUser))
         .expect(200);
 
       // Check that activity was logged
@@ -269,6 +264,7 @@ describe('Board Routes - Activity Logging', () => {
 
       await request(app)
         .delete(`/api/boards/${board.id}`)
+        .set('x-test-user', JSON.stringify(testUser))
         .expect(200);
 
       // Should still log board deletion activity
@@ -294,6 +290,14 @@ describe('Board Routes - Activity Logging', () => {
 
   describe('Error Cases', () => {
     it('should not log activity when board creation fails', async () => {
+      // Get current activity count before the failed operation
+      const activitiesBefore = await testPrisma.activity.count({
+        where: {
+          entityType: 'BOARD',
+          action: 'CREATE'
+        }
+      });
+
       const invalidBoardData = {
         // Missing required title
         description: 'Invalid board'
@@ -301,55 +305,74 @@ describe('Board Routes - Activity Logging', () => {
 
       await request(app)
         .post('/api/boards')
+        .set('x-test-user', JSON.stringify(testUser))
         .send(invalidBoardData)
         .expect(400);
 
-      // Should not have logged any activity for failed creation
-      const activities = await testPrisma.activity.findMany({
+      // Should not have logged any new activity for failed creation
+      const activitiesAfter = await testPrisma.activity.count({
         where: {
           entityType: 'BOARD',
           action: 'CREATE'
         }
       });
 
-      expect(activities).toHaveLength(0);
+      expect(activitiesAfter).toBe(activitiesBefore);
     });
 
     it('should not log activity when board update fails', async () => {
-      const nonExistentId = 'non-existent-board-id';
-
-      await request(app)
-        .put(`/api/boards/${nonExistentId}`)
-        .send({ title: 'Updated Title' })
-        .expect(404);
-
-      // Should not have logged any activity for failed update
-      const activities = await testPrisma.activity.findMany({
+      // Get current activity count before the failed operation
+      const activitiesBefore = await testPrisma.activity.count({
         where: {
           entityType: 'BOARD',
           action: 'UPDATE'
         }
       });
 
-      expect(activities).toHaveLength(0);
-    });
-
-    it('should not log activity when board deletion fails', async () => {
       const nonExistentId = 'non-existent-board-id';
 
       await request(app)
-        .delete(`/api/boards/${nonExistentId}`)
+        .put(`/api/boards/${nonExistentId}`)
+        .set('x-test-user', JSON.stringify(testUser))
+        .send({ title: 'Updated Title' })
         .expect(404);
 
-      // Should not have logged any activity for failed deletion
-      const activities = await testPrisma.activity.findMany({
+      // Should not have logged any new activity for failed update
+      const activitiesAfter = await testPrisma.activity.count({
+        where: {
+          entityType: 'BOARD',
+          action: 'UPDATE'
+        }
+      });
+
+      expect(activitiesAfter).toBe(activitiesBefore);
+    });
+
+    it('should not log activity when board deletion fails', async () => {
+      // Get current activity count before the failed operation
+      const activitiesBefore = await testPrisma.activity.count({
         where: {
           entityType: 'BOARD',
           action: 'DELETE'
         }
       });
 
-      expect(activities).toHaveLength(0);
+      const nonExistentId = 'non-existent-board-id';
+
+      await request(app)
+        .delete(`/api/boards/${nonExistentId}`)
+        .set('x-test-user', JSON.stringify(testUser))
+        .expect(404);
+
+      // Should not have logged any new activity for failed deletion
+      const activitiesAfter = await testPrisma.activity.count({
+        where: {
+          entityType: 'BOARD',
+          action: 'DELETE'
+        }
+      });
+
+      expect(activitiesAfter).toBe(activitiesBefore);
     });
   });
 
@@ -361,6 +384,7 @@ describe('Board Routes - Activity Logging', () => {
 
       const response = await request(app)
         .post('/api/boards')
+        .set('x-test-user', JSON.stringify(testUser))
         .send(boardData)
         .expect(201);
 

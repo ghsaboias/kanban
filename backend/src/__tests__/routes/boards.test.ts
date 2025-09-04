@@ -1,50 +1,39 @@
-import type { NextFunction, Request, Response } from 'express';
+import { randomUUID } from 'crypto';
 import request from 'supertest';
-import app from '../../app';
 import { testPrisma } from '../setup';
+import { createTestApp } from '../testApp';
+import { beforeEach, describe, expect, it } from 'bun:test';
 
 // Mock ActivityLogger to prevent foreign key constraint issues in route tests
-jest.mock('../../services/activityLogger', () => ({
-  ActivityLogger: jest.fn(() => ({
-    logActivity: jest.fn().mockResolvedValue(undefined),
-    flush: jest.fn().mockResolvedValue(undefined),
-    stop: jest.fn().mockResolvedValue(undefined),
-    getQueueSize: jest.fn().mockReturnValue(0)
-  }))
-}));
+// Note: This mock will be handled by the test app factory
 
-// Mock authentication middleware
-jest.mock('../../auth/clerk', () => ({
-  withAuth: (req: Request, res: Response, next: NextFunction) => next(),
-  requireAuthMw: (req: Request, res: Response, next: NextFunction) => next(),
-  ensureUser: (req: Request, res: Response, next: NextFunction) => {
-    res.locals.user = {
-      id: 'test-user-id',
-      name: 'Test User',
-      email: 'test@example.com',
-      clerkId: 'test-clerk-id',
-    };
-    next();
-  },
-}));
+// Create test app instance
+const app = createTestApp();
 
 describe('Boards API', () => {
   let testUser: { id: string; name: string; email: string; clerkId: string | null; };
 
   beforeEach(async () => {
     // Create a test user with the same ID used by the mock so FK constraints work
+    const uniqueId = randomUUID();
+    const userId = `test-user-${uniqueId}`;
     testUser = await testPrisma.user.create({
       data: {
-        id: 'test-user-id',
+        id: userId,
         name: 'Test User',
-        email: 'test@example.com',
-        clerkId: 'test-clerk-id',
+        email: `test-${uniqueId}@example.com`,
+        clerkId: `test-clerk-${uniqueId}`,
       },
     });
+
+    // Note: User data is now handled by the test app factory
   });
 
   describe('GET /api/boards', () => {
     it('should return empty array when no boards exist', async () => {
+      // Explicitly ensure no boards exist for this test
+      await testPrisma.board.deleteMany();
+
       const response = await request(app)
         .get('/api/boards')
         .expect(200);
@@ -56,6 +45,9 @@ describe('Boards API', () => {
     });
 
     it('should return all boards with column count', async () => {
+      // Explicitly ensure no boards exist before creating test data
+      await testPrisma.board.deleteMany();
+
       // Create test boards
       const board1 = await testPrisma.board.create({
         data: { title: 'Board 1', description: 'First board' },
@@ -88,6 +80,9 @@ describe('Boards API', () => {
     });
 
     it('should return boards ordered by creation date (newest first)', async () => {
+      // Explicitly ensure no boards exist before creating test data
+      await testPrisma.board.deleteMany();
+
       const board1 = await testPrisma.board.create({
         data: { title: 'Older Board' },
       });

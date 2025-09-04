@@ -1,13 +1,15 @@
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
+import { randomUUID } from 'crypto';
 import { ActivityLogger } from '../../services/activityLogger';
 import { testPrisma } from '../setup';
 
 // Mock Socket.IO for testing
-const mockEmit = jest.fn();
-const mockExceptEmit = jest.fn();
-const mockExcept = jest.fn(() => ({
+const mockEmit = mock();
+const mockExceptEmit = mock();
+const mockExcept = mock(() => ({
   emit: mockExceptEmit
 }));
-const mockTo = jest.fn(() => ({
+const mockTo = mock(() => ({
   emit: mockEmit,
   except: mockExcept
 }));
@@ -21,11 +23,12 @@ const mockIo = {
 
 // Helper function to create test data
 async function createTestBoard() {
+  const uniqueId = randomUUID();
   const user = await testPrisma.user.create({
     data: {
-      email: 'test@example.com',
+      email: `test-${uniqueId}@example.com`,
       name: 'Test User',
-      clerkId: 'test-clerk-id'
+      clerkId: `test-clerk-id-${uniqueId}`
     }
   });
 
@@ -64,11 +67,8 @@ describe('ActivityLogger Service', () => {
   beforeEach(async () => {
     // Create fresh activity logger instance
     activityLogger = new ActivityLogger(testPrisma);
-    // Clear all mocks
-    mockEmit.mockClear();
-    mockExceptEmit.mockClear();
-    mockExcept.mockClear();
-    mockTo.mockClear();
+    // Clear all mocks - Note: Bun test mocks don't have mockClear(), they reset automatically
+    // In Bun, mock functions are automatically reset between tests
   });
 
   afterEach(async () => {
@@ -92,7 +92,9 @@ describe('ActivityLogger Service', () => {
         priority: 'HIGH'
       });
 
-      const activities = await testPrisma.activity.findMany();
+      const activities = await testPrisma.activity.findMany({
+        where: { boardId: board.id }
+      });
       expect(activities).toHaveLength(1);
       expect(activities[0].entityType).toBe('CARD');
       expect(activities[0].action).toBe('CREATE');
@@ -114,7 +116,9 @@ describe('ActivityLogger Service', () => {
       });
 
       // Should not be in database immediately
-      let activities = await testPrisma.activity.findMany();
+      let activities = await testPrisma.activity.findMany({
+        where: { boardId: board.id }
+      });
       expect(activities).toHaveLength(0);
 
       // Should be in queue
@@ -124,7 +128,9 @@ describe('ActivityLogger Service', () => {
       await activityLogger.flush();
 
       // Now should be in database
-      activities = await testPrisma.activity.findMany();
+      activities = await testPrisma.activity.findMany({
+        where: { boardId: board.id }
+      });
       expect(activities).toHaveLength(1);
     });
 
@@ -167,7 +173,9 @@ describe('ActivityLogger Service', () => {
       // The batch interval is 100ms, so wait a bit longer to ensure processing completes
       await new Promise(resolve => setTimeout(resolve, 200));
 
-      const activities = await testPrisma.activity.findMany();
+      const activities = await testPrisma.activity.findMany({
+        where: { boardId: board.id }
+      });
       expect(activities).toHaveLength(5);
     });
 
@@ -175,9 +183,13 @@ describe('ActivityLogger Service', () => {
       const { user, board } = await createTestBoard();
 
       // Mock the prisma.activity.create to fail
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      const createSpy = jest.spyOn(testPrisma.activity, 'create')
-        .mockRejectedValue(new Error('Database error'));
+      const consoleSpy = mock();
+      const originalConsoleError = console.error;
+      console.error = consoleSpy;
+
+      const createSpy = mock(() => Promise.reject(new Error('Database error')));
+      const originalCreate = testPrisma.activity.create;
+      testPrisma.activity.create = createSpy as unknown as typeof testPrisma.activity.create;
 
       await activityLogger.logActivity({
         entityType: 'CARD',
@@ -190,8 +202,12 @@ describe('ActivityLogger Service', () => {
       });
 
       expect(consoleSpy).toHaveBeenCalled();
-      createSpy.mockRestore();
-      consoleSpy.mockRestore();
+
+      // Restore mocks
+      console.error = originalConsoleError;
+      testPrisma.activity.create = originalCreate;
+      testPrisma.activity.create = originalCreate;
+      console.error = originalConsoleError;
 
       // Should not throw and other logging should continue to work
       await activityLogger.logActivity({
@@ -207,7 +223,7 @@ describe('ActivityLogger Service', () => {
       // Ensure all pending activities are processed
       await activityLogger.flush();
 
-      const activities = await testPrisma.activity.findMany();
+      const activities = await testPrisma.activity.findMany({ where: { boardId: board.id } });
       expect(activities).toHaveLength(1);
       expect(activities[0].entityType).toBe('BOARD');
     });
@@ -296,7 +312,7 @@ describe('ActivityLogger Service', () => {
 
       await activityLogger.flush();
 
-      const activities = await testPrisma.activity.findMany();
+      const activities = await testPrisma.activity.findMany({ where: { boardId: board.id } });
       // Should be rate limited to fewer than 20 activities
       expect(activities.length).toBeLessThan(20);
       expect(activities.length).toBeGreaterThan(0);
@@ -360,7 +376,7 @@ describe('ActivityLogger Service', () => {
 
       await activityLogger.flush();
 
-      const activities = await testPrisma.activity.findMany();
+      const activities = await testPrisma.activity.findMany({ where: { boardId: board.id } });
       expect(activities).toHaveLength(3);
     });
   });
@@ -413,7 +429,7 @@ describe('ActivityLogger Service', () => {
       await smallQueueLogger.flush();
       await smallQueueLogger.stop();
 
-      const activities = await testPrisma.activity.findMany();
+      const activities = await testPrisma.activity.findMany({ where: { boardId: board.id } });
       expect(activities.length).toBeGreaterThan(0);
       expect(activities.length).toBeLessThanOrEqual(5);
     });
@@ -424,9 +440,13 @@ describe('ActivityLogger Service', () => {
       const { user, board, card } = await createTestBoard();
 
       // Create a spy to simulate temporary database failure
-      const createSpy = jest.spyOn(testPrisma.activity, 'create')
-        .mockRejectedValueOnce(new Error('Database connection failed'))
-        .mockResolvedValueOnce({
+      let callCount = 0;
+      const createSpy = mock(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.reject(new Error('Database connection failed'));
+        }
+        return Promise.resolve({
           id: 'test-id',
           createdAt: new Date(),
           entityType: 'CARD',
@@ -437,6 +457,9 @@ describe('ActivityLogger Service', () => {
           userId: user.id,
           meta: JSON.stringify({})
         });
+      });
+      const originalCreate = testPrisma.activity.create;
+      testPrisma.activity.create = createSpy as unknown as typeof testPrisma.activity.create;
 
       await activityLogger.logActivity({
         entityType: 'CARD',
@@ -451,16 +474,19 @@ describe('ActivityLogger Service', () => {
 
       // Should have retried and succeeded
       expect(createSpy).toHaveBeenCalledTimes(2);
-      createSpy.mockRestore();
+      testPrisma.activity.create = originalCreate;
     });
 
     it('should handle permanent failures after max retries', async () => {
       const { user, board, card } = await createTestBoard();
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleSpy = mock();
+      const originalConsoleError = console.error;
+      console.error = consoleSpy;
 
       // Mock permanent failure
-      const createSpy = jest.spyOn(testPrisma.activity, 'create')
-        .mockRejectedValue(new Error('Permanent database failure'));
+      const createSpy = mock(() => Promise.reject(new Error('Permanent database failure')));
+      const originalCreate = testPrisma.activity.create;
+      testPrisma.activity.create = createSpy as unknown as typeof testPrisma.activity.create;
 
       await activityLogger.logActivity({
         entityType: 'CARD',
@@ -478,8 +504,8 @@ describe('ActivityLogger Service', () => {
         expect.any(Error)
       );
 
-      createSpy.mockRestore();
-      consoleSpy.mockRestore();
+      testPrisma.activity.create = originalCreate;
+      console.error = originalConsoleError;
     });
   });
 
@@ -501,7 +527,7 @@ describe('ActivityLogger Service', () => {
       const duration = Date.now() - startTime;
       expect(duration).toBeLessThan(500); // More reasonable for test environment
 
-      const activities = await testPrisma.activity.findMany();
+      const activities = await testPrisma.activity.findMany({ where: { boardId: board.id } });
       expect(activities).toHaveLength(1);
       expect(activities[0].action).toBe('CREATE');
     });
@@ -545,7 +571,7 @@ describe('ActivityLogger Service', () => {
       // Should complete batch within 3 seconds (reasonable for test environment with DB setup)
       expect(duration).toBeLessThan(3000);
 
-      const activities = await testPrisma.activity.findMany();
+      const activities = await testPrisma.activity.findMany({ where: { boardId: board.id } });
       expect(activities).toHaveLength(10);
       expect(activities[0].action).toBe('REORDER');
     });

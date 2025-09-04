@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'bun:test';
 import { sanitizeDescription } from '../../utils/sanitize';
 
 describe('sanitizeDescription', () => {

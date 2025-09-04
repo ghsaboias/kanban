@@ -1,12 +1,15 @@
+import { randomUUID } from 'crypto';
 import { testPrisma } from '../setup';
+import { describe, expect, it } from 'bun:test';
 
 // Helper function to create test data
 async function createTestBoard() {
+  const uniqueId = randomUUID();
   const user = await testPrisma.user.create({
     data: {
-      email: 'test@example.com',
+      email: `test-${uniqueId}@example.com`,
       name: 'Test User',
-      clerkId: 'test-clerk-id'
+      clerkId: `test-clerk-id-${uniqueId}`
     }
   });
 
@@ -71,61 +74,89 @@ describe('Activity Model Validation', () => {
     it('should require entityType field', async () => {
       const { user, board, card } = await createTestBoard();
 
-      await expect(testPrisma.activity.create({
-        data: {
-          // Missing entityType
-          entityId: card.id,
-          action: 'CREATE',
-          boardId: board.id,
-          userId: user.id,
-          meta: {}
-        }
-      } as never)).rejects.toThrow();
+      let errorThrown = false;
+      try {
+        await testPrisma.activity.create({
+          data: {
+            // Missing entityType
+            entityId: card.id,
+            action: 'CREATE',
+            boardId: board.id,
+            userId: user.id,
+            meta: {}
+          }
+        } as never);
+      } catch (error) {
+        errorThrown = true;
+        expect(error).toBeDefined();
+      }
+      expect(errorThrown).toBe(true);
     });
 
     it('should require entityId field', async () => {
       const { user, board } = await createTestBoard();
 
-      await expect(testPrisma.activity.create({
-        data: {
-          entityType: 'BOARD',
-          // Missing entityId
-          action: 'CREATE',
-          boardId: board.id,
-          userId: user.id,
-          meta: {}
-        }
-      } as never)).rejects.toThrow();
+      let errorThrown = false;
+      try {
+        await testPrisma.activity.create({
+          data: {
+            entityType: 'BOARD',
+            // Missing entityId
+            action: 'CREATE',
+            boardId: board.id,
+            userId: user.id,
+            meta: {}
+          }
+        } as never);
+      } catch (error) {
+        errorThrown = true;
+        expect(error).toBeDefined();
+      }
+      expect(errorThrown).toBe(true);
     });
 
     it('should require action field', async () => {
       const { user, board, card } = await createTestBoard();
 
-      await expect(testPrisma.activity.create({
-        data: {
-          entityType: 'CARD',
-          entityId: card.id,
-          // Missing action
-          boardId: board.id,
-          userId: user.id,
-          meta: {}
-        }
-      } as never)).rejects.toThrow();
+      let errorThrown = false;
+      try {
+        await testPrisma.activity.create({
+          data: {
+            entityType: 'CARD',
+            entityId: card.id,
+            // Missing action
+            boardId: board.id,
+            userId: user.id,
+            meta: {}
+          }
+        } as never);
+      } catch (error) {
+        errorThrown = true;
+        expect(error).toBeDefined();
+      }
+      expect(errorThrown).toBe(true);
     });
 
     it('should require boardId field', async () => {
       const { user, card } = await createTestBoard();
 
-      await expect(testPrisma.activity.create({
-        data: {
-          entityType: 'CARD',
-          entityId: card.id,
-          action: 'CREATE',
-          // Missing boardId
-          userId: user.id,
-          meta: {}
-        }
-      } as never)).rejects.toThrow();
+      let errorThrown = false;
+      try {
+        await testPrisma.activity.create({
+          data: {
+            entityType: 'CARD',
+            entityId: card.id,
+            action: 'CREATE',
+            // Missing boardId
+            userId: user.id,
+            meta: {}
+          }
+        } as never);
+      } catch (error) {
+        errorThrown = true;
+        expect(error).toBeDefined();
+      }
+      expect(errorThrown).toBe(true);
     });
   });
 
@@ -186,10 +217,10 @@ describe('Activity Model Validation', () => {
     it('should validate entity types at application level', async () => {
       const validEntityTypes = ['BOARD', 'COLUMN', 'CARD'];
       const invalidEntityType = 'INVALID_TYPE';
-      
+
       // Test that invalid types are not in our valid set
       expect(validEntityTypes).not.toContain(invalidEntityType);
-      
+
       // Test that all valid types are recognized
       validEntityTypes.forEach(entityType => {
         expect(['BOARD', 'COLUMN', 'CARD']).toContain(entityType);
@@ -225,10 +256,10 @@ describe('Activity Model Validation', () => {
     it('should validate action types at application level', async () => {
       const validActions = ['CREATE', 'UPDATE', 'DELETE', 'MOVE', 'REORDER', 'ASSIGN', 'UNASSIGN'];
       const invalidAction = 'INVALID_ACTION';
-      
+
       // Test that invalid actions are not in our valid set
       expect(validActions).not.toContain(invalidAction);
-      
+
       // Test that all valid actions are recognized
       validActions.forEach(action => {
         expect(['CREATE', 'UPDATE', 'DELETE', 'MOVE', 'REORDER', 'ASSIGN', 'UNASSIGN']).toContain(action);

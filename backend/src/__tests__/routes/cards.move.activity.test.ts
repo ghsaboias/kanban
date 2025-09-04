@@ -1,26 +1,17 @@
-import type { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
-import app from '../../app';
 import { testPrisma } from '../setup';
+import { createTestApp } from '../testApp';
 import { setupGlobalMocks, setupTestData } from './cards.activity.setup';
+import { __flushActivityLoggerForTests as flushActivityLogger } from '../../services/activityLoggerSingleton';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 
 // Restore real ActivityLogger for activity logging tests
-jest.unmock('../../services/activityLogger');
 
 // Mock authentication middleware
-jest.mock('../../auth/clerk', () => ({
-    withAuth: (req: Request, res: Response, next: NextFunction) => next(),
-    requireAuthMw: (req: Request, res: Response, next: NextFunction) => next(),
-    ensureUser: (req: Request, res: Response, next: NextFunction) => {
-        res.locals.user = {
-            id: 'test-user-id',
-            name: 'Test User',
-            email: 'test@example.com',
-            clerkId: 'test-clerk-id',
-        }
-        next()
-    },
-}));
+// Note: Mocking is handled by the test app factory
+
+// Create test app instance
+const app = createTestApp();
 
 describe('Cards Routes - Move Activity Logging', () => {
     let testUser: { id: string; email: string; name: string; clerkId: string | null; };
@@ -63,8 +54,7 @@ describe('Cards Routes - Move Activity Logging', () => {
     });
 
     afterEach(async () => {
-        // Wait for any pending activity logging to complete before cleanup
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await flushActivityLogger();
     });
 
     describe('POST /api/cards/:id/move', () => {
@@ -76,6 +66,7 @@ describe('Cards Routes - Move Activity Logging', () => {
 
             const response = await request(app)
                 .post(`/api/cards/${testCard.id}/move`)
+                .set('x-test-user', JSON.stringify(testUser))
                 .send(moveData)
                 .expect(200);
 
@@ -124,11 +115,12 @@ describe('Cards Routes - Move Activity Logging', () => {
 
             await request(app)
                 .post(`/api/cards/${testCard.id}/move`)
+                .set('x-test-user', JSON.stringify(testUser))
                 .send(moveData)
                 .expect(200);
 
-            // Wait for LOW priority activity batch processing to complete
-            await new Promise(resolve => setTimeout(resolve, 200));
+            // Flush batched activities deterministically
+            await flushActivityLogger();
 
             // Check that activity was logged as REORDER since it's within same column
             const activities = await testPrisma.activity.findMany({
@@ -159,6 +151,7 @@ describe('Cards Routes - Move Activity Logging', () => {
 
             await request(app)
                 .post(`/api/cards/${testCard.id}/move`)
+                .set('x-test-user', JSON.stringify(testUser))
                 .send(moveData)
                 .expect(200);
 
@@ -184,20 +177,29 @@ describe('Cards Routes - Move Activity Logging', () => {
                 position: 0
             };
 
-            await request(app)
-                .post(`/api/cards/${nonExistentId}/move`)
-                .send(moveData)
-                .expect(404);
-
-            // Should not have logged any activity for failed move
-            const activities = await testPrisma.activity.findMany({
+            // Get count of activities before the failed operation
+            const activitiesBefore = await testPrisma.activity.count({
                 where: {
                     entityType: 'CARD',
                     action: 'MOVE'
                 }
             });
 
-            expect(activities).toHaveLength(0);
+            await request(app)
+                .post(`/api/cards/${nonExistentId}/move`)
+                .set('x-test-user', JSON.stringify(testUser))
+                .send(moveData)
+                .expect(404);
+
+            // Should not have logged any NEW activity for failed move
+            const activitiesAfter = await testPrisma.activity.count({
+                where: {
+                    entityType: 'CARD',
+                    action: 'MOVE'
+                }
+            });
+
+            expect(activitiesAfter).toBe(activitiesBefore);
         });
     });
 });

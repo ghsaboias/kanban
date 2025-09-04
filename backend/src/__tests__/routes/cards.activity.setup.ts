@@ -1,42 +1,48 @@
+import { randomUUID } from 'crypto';
 import type { NextFunction, Request, Response } from 'express';
 import { testPrisma } from '../setup';
+import { mock } from 'bun:test';
 
-// Restore real ActivityLogger for activity logging tests
-jest.unmock('../../services/activityLogger');
+// Mock authentication middleware - will be updated with actual user data in setupGlobalMocks
+const mockUser = {
+    id: 'placeholder-id',
+    name: 'Test User',
+    email: 'test@example.com',
+    clerkId: 'placeholder-clerk-id',
+};
 
-// Mock authentication middleware
-jest.mock('../../auth/clerk', () => ({
+mock.module('../../auth/clerk', () => ({
     withAuth: (req: Request, res: Response, next: NextFunction) => next(),
     requireAuthMw: (req: Request, res: Response, next: NextFunction) => next(),
     ensureUser: (req: Request, res: Response, next: NextFunction) => {
-        res.locals.user = {
-            id: 'test-user-id',
-            name: 'Test User',
-            email: 'test@example.com',
-            clerkId: 'test-clerk-id',
-        }
+        res.locals.user = mockUser;
         next()
     },
 }));
 
 export const setupTestData = async () => {
+    const uniqueId1 = randomUUID();
+    const uniqueId2 = randomUUID();
+    const userUniqueId = randomUUID();
+
     // Create test user for authentication
     const testUser = await testPrisma.user.create({
         data: {
-            id: 'test-user-id',
-            email: 'test@example.com',
+            id: `test-user-${userUniqueId}`,
+            email: `test-${uniqueId1}@example.com`,
             name: 'Test User',
-            clerkId: 'test-clerk-id'
+            clerkId: `test-clerk-${uniqueId1}`
         }
     });
 
     // Create test assignee
+    const assigneeUniqueId = randomUUID();
     const testAssignee = await testPrisma.user.create({
         data: {
-            id: 'assignee-user-id',
-            email: 'assignee@example.com',
+            id: `assignee-user-${assigneeUniqueId}`,
+            email: `assignee-${uniqueId2}@example.com`,
             name: 'Assignee User',
-            clerkId: 'assignee-clerk-id'
+            clerkId: `assignee-clerk-${uniqueId2}`
         }
     });
 
@@ -56,13 +62,19 @@ export const setupTestData = async () => {
         }
     });
 
+    // Update mockUser with the actual created user data
+    mockUser.id = testUser.id;
+    mockUser.email = testUser.email;
+    mockUser.name = testUser.name;
+    mockUser.clerkId = testUser.clerkId || 'placeholder-clerk-id';
+
     return { testUser, testAssignee, testBoard, testColumn };
 };
 
 export const setupGlobalMocks = () => {
-    const fakeBroadcaster: { emit: jest.Mock; except: jest.Mock } = {
-        emit: jest.fn(),
-        except: jest.fn(() => fakeBroadcaster)
+    const fakeBroadcaster: { emit: ReturnType<typeof mock>; except: ReturnType<typeof mock> } = {
+        emit: mock(),
+        except: mock(() => fakeBroadcaster)
     };
-    (global as unknown as { io: { to: jest.Mock } }).io = { to: jest.fn(() => fakeBroadcaster) };
+    (global as unknown as { io: { to: ReturnType<typeof mock> } }).io = { to: mock(() => fakeBroadcaster) };
 };

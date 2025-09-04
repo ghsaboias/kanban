@@ -1,26 +1,16 @@
-import type { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
-import app from '../../app';
 import { testPrisma } from '../setup';
+import { createTestApp } from '../testApp';
 import { setupGlobalMocks, setupTestData } from './cards.activity.setup';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 
 // Restore real ActivityLogger for activity logging tests
-jest.unmock('../../services/activityLogger');
 
 // Mock authentication middleware
-jest.mock('../../auth/clerk', () => ({
-    withAuth: (req: Request, res: Response, next: NextFunction) => next(),
-    requireAuthMw: (req: Request, res: Response, next: NextFunction) => next(),
-    ensureUser: (req: Request, res: Response, next: NextFunction) => {
-        res.locals.user = {
-            id: 'test-user-id',
-            name: 'Test User',
-            email: 'test@example.com',
-            clerkId: 'test-clerk-id',
-        }
-        next()
-    },
-}));
+// Note: Mocking is handled by the test app factory
+
+// Create test app instance
+const app = createTestApp();
 
 describe('Cards Routes - Delete Activity Logging', () => {
     let testUser: { id: string; email: string; name: string; clerkId: string | null; };
@@ -62,6 +52,7 @@ describe('Cards Routes - Delete Activity Logging', () => {
         it('should log card deletion activity', async () => {
             await request(app)
                 .delete(`/api/cards/${testCard.id}`)
+                .set('x-test-user', JSON.stringify(testUser))
                 .expect(200);
 
             // Check that activity was logged
@@ -91,19 +82,28 @@ describe('Cards Routes - Delete Activity Logging', () => {
         it('should not log activity when card deletion fails', async () => {
             const nonExistentId = 'non-existent-card-id';
 
-            await request(app)
-                .delete(`/api/cards/${nonExistentId}`)
-                .expect(404);
-
-            // Should not have logged any activity for failed deletion
-            const activities = await testPrisma.activity.findMany({
+            // Get count of activities before the failed operation
+            const activitiesBefore = await testPrisma.activity.count({
                 where: {
                     entityType: 'CARD',
                     action: 'DELETE'
                 }
             });
 
-            expect(activities).toHaveLength(0);
+            await request(app)
+                .delete(`/api/cards/${nonExistentId}`)
+                .set('x-test-user', JSON.stringify(testUser))
+                .expect(404);
+
+            // Should not have logged any NEW activity for failed deletion
+            const activitiesAfter = await testPrisma.activity.count({
+                where: {
+                    entityType: 'CARD',
+                    action: 'DELETE'
+                }
+            });
+
+            expect(activitiesAfter).toBe(activitiesBefore);
         });
     });
 });

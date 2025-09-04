@@ -1,32 +1,11 @@
-import type { NextFunction, Request, Response } from 'express';
+import { randomUUID } from 'crypto';
 import request from 'supertest';
-import app from '../../app';
 import { testPrisma } from '../setup';
+import { createTestApp } from '../testApp';
+import { beforeEach, describe, expect, it } from 'bun:test';
 
-// Mock ActivityLogger to prevent foreign key constraint issues in route tests
-jest.mock('../../services/activityLogger', () => ({
-  ActivityLogger: jest.fn(() => ({
-    logActivity: jest.fn().mockResolvedValue(undefined),
-    flush: jest.fn().mockResolvedValue(undefined),
-    stop: jest.fn().mockResolvedValue(undefined),
-    getQueueSize: jest.fn().mockReturnValue(0)
-  }))
-}));
-
-// Mock authentication middleware (pass-through) and ensure user in locals
-jest.mock('../../auth/clerk', () => ({
-  withAuth: (req: Request, res: Response, next: NextFunction) => next(),
-  requireAuthMw: (req: Request, res: Response, next: NextFunction) => next(),
-  ensureUser: (req: Request, res: Response, next: NextFunction) => {
-    res.locals.user = {
-      id: 'test-user-id',
-      name: 'Test User',
-      email: 'test@example.com',
-      clerkId: 'test-clerk-id',
-    }
-    next()
-  },
-}))
+// Create test app instance
+const app = createTestApp();
 
 describe('Columns API', () => {
   let board: { id: string; title: string; }
@@ -35,13 +14,7 @@ describe('Columns API', () => {
     board = await testPrisma.board.create({ data: { title: 'Board X' } })
   })
 
-  beforeAll(() => {
-    const fakeBroadcaster: { emit: jest.Mock; except: jest.Mock } = {
-      emit: jest.fn(),
-      except: jest.fn(() => fakeBroadcaster)
-    };
-    (global as unknown as { io: { to: jest.Mock } }).io = { to: jest.fn(() => fakeBroadcaster) };
-  });
+  // Note: Socket.IO mocking is handled by the test app factory
 
   describe('POST /api/boards/:boardId/columns', () => {
     it('creates a column with auto-incremented position', async () => {
@@ -117,7 +90,8 @@ describe('Columns API', () => {
 
   describe('DELETE /api/columns/:id', () => {
     it('prevents deleting a column with cards', async () => {
-      const user = await testPrisma.user.create({ data: { name: 'U', email: 'u@example.com', clerkId: 'c1' } })
+      const uniqueId = randomUUID();
+      const user = await testPrisma.user.create({ data: { name: 'U', email: `u-${uniqueId}@example.com`, clerkId: `c-${uniqueId}` } })
       const col = await testPrisma.column.create({ data: { title: 'C', position: 0, boardId: board.id } })
       await testPrisma.card.create({ data: { title: 'Card', position: 0, priority: 'LOW', columnId: col.id, createdById: user.id } })
 

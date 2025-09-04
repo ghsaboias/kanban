@@ -1,26 +1,17 @@
-import type { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
-import app from '../../app';
 import { testPrisma } from '../setup';
+import { createTestApp } from '../testApp';
 import { setupGlobalMocks, setupTestData } from './cards.activity.setup';
+import { __flushActivityLoggerForTests as flushActivityLogger } from '../../services/activityLoggerSingleton';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 
 // Restore real ActivityLogger for activity logging tests
-jest.unmock('../../services/activityLogger');
 
 // Mock authentication middleware
-jest.mock('../../auth/clerk', () => ({
-    withAuth: (req: Request, res: Response, next: NextFunction) => next(),
-    requireAuthMw: (req: Request, res: Response, next: NextFunction) => next(),
-    ensureUser: (req: Request, res: Response, next: NextFunction) => {
-        res.locals.user = {
-            id: 'test-user-id',
-            name: 'Test User',
-            email: 'test@example.com',
-            clerkId: 'test-clerk-id',
-        }
-        next()
-    },
-}));
+// Note: Mocking is handled by the test app factory
+
+// Create test app instance
+const app = createTestApp();
 
 describe('Cards Routes - Update Activity Logging', () => {
     let testUser: { id: string; email: string; name: string; clerkId: string | null; };
@@ -53,8 +44,7 @@ describe('Cards Routes - Update Activity Logging', () => {
     });
 
     afterEach(async () => {
-        // Wait for any pending activity logging to complete before cleanup
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await flushActivityLogger();
     });
 
     describe('PUT /api/cards/:id', () => {
@@ -68,6 +58,7 @@ describe('Cards Routes - Update Activity Logging', () => {
 
             const response = await request(app)
                 .put(`/api/cards/${testCard.id}`)
+                .set('x-test-user', JSON.stringify(testUser))
                 .send(updateData)
                 .expect(200);
 
@@ -111,6 +102,7 @@ describe('Cards Routes - Update Activity Logging', () => {
 
             await request(app)
                 .put(`/api/cards/${testCard.id}`)
+                .set('x-test-user', JSON.stringify(testUser))
                 .send(updateData)
                 .expect(200);
 
@@ -141,11 +133,12 @@ describe('Cards Routes - Update Activity Logging', () => {
 
             await request(app)
                 .put(`/api/cards/${testCard.id}`)
+                .set('x-test-user', JSON.stringify(testUser))
                 .send(updateData)
                 .expect(200);
 
-            // Wait for batched activities to be processed
-            await new Promise(resolve => setTimeout(resolve, 200));
+            // Flush batched activities deterministically
+            await flushActivityLogger();
 
             const activities = await testPrisma.activity.findMany({
                 where: {
@@ -168,12 +161,14 @@ describe('Cards Routes - Update Activity Logging', () => {
             // First assign to someone
             await request(app)
                 .put(`/api/cards/${testCard.id}`)
+                .set('x-test-user', JSON.stringify(testUser))
                 .send({ assigneeId: testAssignee.id })
                 .expect(200);
 
             // Then unassign (set to null)
             await request(app)
                 .put(`/api/cards/${testCard.id}`)
+                .set('x-test-user', JSON.stringify(testUser))
                 .send({ assigneeId: null })
                 .expect(200);
 
@@ -213,6 +208,7 @@ describe('Cards Routes - Update Activity Logging', () => {
 
             await request(app)
                 .put(`/api/cards/${testCard.id}`)
+                .set('x-test-user', JSON.stringify(testUser))
                 .send(updateData)
                 .expect(200);
 
@@ -231,20 +227,29 @@ describe('Cards Routes - Update Activity Logging', () => {
         it('should not log activity when card update fails', async () => {
             const nonExistentId = 'non-existent-card-id';
 
-            await request(app)
-                .put(`/api/cards/${nonExistentId}`)
-                .send({ title: 'Updated Title' })
-                .expect(404);
-
-            // Should not have logged any activity for failed update
-            const activities = await testPrisma.activity.findMany({
+            // Get count of activities before the failed operation
+            const activitiesBefore = await testPrisma.activity.count({
                 where: {
                     entityType: 'CARD',
                     action: 'UPDATE'
                 }
             });
 
-            expect(activities).toHaveLength(0);
+            await request(app)
+                .put(`/api/cards/${nonExistentId}`)
+                .set('x-test-user', JSON.stringify(testUser))
+                .send({ title: 'Updated Title' })
+                .expect(404);
+
+            // Should not have logged any NEW activity for failed update
+            const activitiesAfter = await testPrisma.activity.count({
+                where: {
+                    entityType: 'CARD',
+                    action: 'UPDATE'
+                }
+            });
+
+            expect(activitiesAfter).toBe(activitiesBefore);
         });
     });
 });
