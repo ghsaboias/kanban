@@ -2,10 +2,12 @@ import type { CardMovedEvent } from '@kanban/shared/realtime';
 import { Request, Response } from 'express';
 import { prisma } from '../database';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
-import { ActivityLogger } from '../services/activityLogger';
+import { activityLogger } from '../services/activityLoggerSingleton';
 import { MoveCardRequest } from '../types/api';
 import { toPriority } from '../utils/priority';
 import { broadcastToRoom } from '../utils/socketBroadcaster';
+
+// Activity logger is shared via singleton
 
 export const moveCardHandler = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id;
@@ -181,7 +183,6 @@ export const moveCardHandler = asyncHandler(async (req: Request, res: Response) 
         if (oldColumnId === columnId) {
             // Same column = REORDER
             try {
-                const activityLogger = new ActivityLogger(prisma);
                 await activityLogger.logActivity({
                     entityType: 'CARD',
                     entityId: card.id,
@@ -208,7 +209,6 @@ export const moveCardHandler = asyncHandler(async (req: Request, res: Response) 
         } else {
             // Cross-column = MOVE
             try {
-                const activityLogger = new ActivityLogger(prisma);
                 await activityLogger.logActivity({
                     entityType: 'CARD',
                     entityId: card.id,

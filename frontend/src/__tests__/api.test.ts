@@ -1,22 +1,39 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { api } from '../api';
 
-// Mock fetch globally
+// Create a proper fetch mock
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+
+// Type-safe assignment
+(global as unknown as { fetch: typeof mockFetch }).fetch = mockFetch;
+
+// Helper function to create mock Response objects
+const createMockResponse = (data: unknown, options: { ok?: boolean; status?: number } = {}) => {
+  const { ok = true, status = 200 } = options;
+
+  // Handle 204 No Content - cannot have a body
+  if (status === 204) {
+    return new Response(null, {
+      status,
+      statusText: 'No Content',
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
+  return new Response(JSON.stringify(data), {
+    status,
+    statusText: ok ? 'OK' : 'Error',
+    headers: { 'Content-Type': 'application/json' }
+  });
+};
 
 describe('API Client', () => {
   const baseUrl = 'http://localhost:3001';
 
-
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset fetch mock to default successful response
-    mockFetch.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => ({ success: true, data: 'test' }),
-    });
+    mockFetch.mockResolvedValue(createMockResponse({ success: true, data: 'test' }));
   });
 
   afterEach(() => {
@@ -26,7 +43,7 @@ describe('API Client', () => {
   describe('request method', () => {
     it('should make GET request with correct headers', async () => {
       const mockToken = 'test-token-123';
-      
+
       await api.request('/api/test', {
         method: 'GET',
         headers: { Authorization: `Bearer ${mockToken}` },
@@ -67,7 +84,7 @@ describe('API Client', () => {
 
       await api.request('/api/test', {
         method: 'GET',
-        headers: { 
+        headers: {
           Authorization: `Bearer ${mockToken}`,
           'X-Socket-Id': socketId,
         },
@@ -85,11 +102,7 @@ describe('API Client', () => {
 
     it('should handle successful response', async () => {
       const mockResponse = { success: true, data: { id: '1', title: 'Test' } };
-      mockFetch.mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse,
-      });
+      mockFetch.mockResolvedValue(createMockResponse(mockResponse));
 
       const result = await api.request('/api/test');
       expect(result).toEqual(mockResponse);
@@ -97,21 +110,13 @@ describe('API Client', () => {
 
     it('should throw error for HTTP error status', async () => {
       const errorResponse = { success: false, error: 'Not found' };
-      mockFetch.mockResolvedValue({
-        ok: false,
-        status: 404,
-        json: async () => errorResponse,
-      });
+      mockFetch.mockResolvedValue(createMockResponse(errorResponse, { ok: false, status: 404 }));
 
       await expect(api.request('/api/test')).rejects.toThrow('Not found');
     });
 
     it('should throw generic error when no error message in response', async () => {
-      mockFetch.mockResolvedValue({
-        ok: false,
-        status: 500,
-        json: async () => ({}),
-      });
+      mockFetch.mockResolvedValue(createMockResponse({}, { ok: false, status: 500 }));
 
       await expect(api.request('/api/test')).rejects.toThrow('Request failed');
     });
@@ -123,15 +128,14 @@ describe('API Client', () => {
     });
 
     it('should handle JSON parsing errors', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
+      const mockResponse = new Response('invalid json', {
         status: 200,
-        json: async () => {
-          throw new Error('Invalid JSON');
-        },
+        statusText: 'OK',
+        headers: { 'Content-Type': 'application/json' }
       });
+      mockFetch.mockResolvedValue(mockResponse);
 
-      await expect(api.request('/api/test')).rejects.toThrow('Invalid JSON');
+      await expect(api.request('/api/test')).rejects.toThrow();
     });
   });
 
@@ -139,12 +143,8 @@ describe('API Client', () => {
     it('should make GET request', async () => {
       const mockToken = 'test-token';
       const mockResponse = { success: true, data: [] };
-      
-      mockFetch.mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse,
-      });
+
+      mockFetch.mockResolvedValue(createMockResponse(mockResponse));
 
       const result = await api.get('/api/boards', mockToken);
 
@@ -181,11 +181,7 @@ describe('API Client', () => {
       const testData = { title: 'New Board', description: 'Test' };
       const mockResponse = { success: true, data: { id: '1', ...testData } };
 
-      mockFetch.mockResolvedValue({
-        ok: true,
-        status: 201,
-        json: async () => mockResponse,
-      });
+      mockFetch.mockResolvedValue(createMockResponse(mockResponse));
 
       const result = await api.post('/api/boards', testData, mockToken);
 
@@ -225,11 +221,7 @@ describe('API Client', () => {
       const testData = { title: 'Updated Board' };
       const mockResponse = { success: true, data: { id: '1', ...testData } };
 
-      mockFetch.mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse,
-      });
+      mockFetch.mockResolvedValue(createMockResponse(mockResponse));
 
       const result = await api.put('/api/boards/1', testData, mockToken);
 
@@ -268,11 +260,7 @@ describe('API Client', () => {
       const mockToken = 'test-token';
       const mockResponse = { success: true, message: 'Deleted successfully' };
 
-      mockFetch.mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: async () => mockResponse,
-      });
+      mockFetch.mockResolvedValue(createMockResponse(mockResponse));
 
       const result = await api.delete('/api/boards/1', mockToken);
 
@@ -306,44 +294,28 @@ describe('API Client', () => {
   describe('Error handling', () => {
     it('should handle 400 Bad Request', async () => {
       const errorResponse = { success: false, error: 'Invalid data', details: 'Title is required' };
-      mockFetch.mockResolvedValue({
-        ok: false,
-        status: 400,
-        json: async () => errorResponse,
-      });
+      mockFetch.mockResolvedValue(createMockResponse(errorResponse, { ok: false, status: 400 }));
 
       await expect(api.get('/api/test', 'token')).rejects.toThrow('Invalid data');
     });
 
     it('should handle 401 Unauthorized', async () => {
       const errorResponse = { success: false, error: 'Unauthorized' };
-      mockFetch.mockResolvedValue({
-        ok: false,
-        status: 401,
-        json: async () => errorResponse,
-      });
+      mockFetch.mockResolvedValue(createMockResponse(errorResponse, { ok: false, status: 401 }));
 
       await expect(api.get('/api/test', 'invalid-token')).rejects.toThrow('Unauthorized');
     });
 
     it('should handle 404 Not Found', async () => {
       const errorResponse = { success: false, error: 'Board not found' };
-      mockFetch.mockResolvedValue({
-        ok: false,
-        status: 404,
-        json: async () => errorResponse,
-      });
+      mockFetch.mockResolvedValue(createMockResponse(errorResponse, { ok: false, status: 404 }));
 
       await expect(api.get('/api/boards/nonexistent', 'token')).rejects.toThrow('Board not found');
     });
 
     it('should handle 500 Internal Server Error', async () => {
       const errorResponse = { success: false, error: 'Internal server error' };
-      mockFetch.mockResolvedValue({
-        ok: false,
-        status: 500,
-        json: async () => errorResponse,
-      });
+      mockFetch.mockResolvedValue(createMockResponse(errorResponse, { ok: false, status: 500 }));
 
       await expect(api.get('/api/test', 'token')).rejects.toThrow('Internal server error');
     });
@@ -351,11 +323,7 @@ describe('API Client', () => {
 
   describe('Edge cases', () => {
     it('should handle empty response body', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        status: 204,
-        json: async () => null,
-      });
+      mockFetch.mockResolvedValue(createMockResponse(null, { ok: true, status: 204 }));
 
       const result = await api.delete('/api/test', 'token');
       expect(result).toBeNull();
@@ -373,12 +341,12 @@ describe('API Client', () => {
     });
 
     it('should merge custom headers with default headers', async () => {
-      const customHeaders = { 
+      const customHeaders = {
         'Custom-Header': 'value',
         'Authorization': 'Bearer custom-token',
       };
 
-      await api.request('/api/test', { 
+      await api.request('/api/test', {
         method: 'GET',
         headers: customHeaders,
       });

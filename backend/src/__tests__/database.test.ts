@@ -1,23 +1,25 @@
 import { testPrisma } from './setup';
+import { describe, expect, it } from 'bun:test';
 
 describe('Database Connection', () => {
   it('should connect to the database successfully', async () => {
-    await expect(testPrisma.$connect()).resolves.not.toThrow();
+    await expect(testPrisma.$connect()).resolves.toBeUndefined();
   });
 
   it('should perform basic CRUD operations', async () => {
+    const timestamp = Date.now();
     // Create a test user
     const user = await testPrisma.user.create({
       data: {
         name: 'Test User',
-        email: 'test@example.com',
-        clerkId: 'test-clerk-id',
+        email: `test-${timestamp}@example.com`,
+        clerkId: `test-clerk-id-${timestamp}`,
       },
     });
 
     expect(user).toHaveProperty('id');
     expect(user.name).toBe('Test User');
-    expect(user.email).toBe('test@example.com');
+    expect(user.email).toBe(`test-${timestamp}@example.com`);
 
     // Read the user
     const foundUser = await testPrisma.user.findUnique({
@@ -48,12 +50,13 @@ describe('Database Connection', () => {
   });
 
   it('should handle relationships correctly', async () => {
+    const timestamp = Date.now();
     // Create user
     const user = await testPrisma.user.create({
       data: {
         name: 'Test User',
-        email: 'test@example.com',
-        clerkId: 'test-clerk-id',
+        email: `test-rel-${timestamp}@example.com`,
+        clerkId: `test-clerk-id-rel-${timestamp}`,
       },
     });
 
@@ -109,28 +112,37 @@ describe('Database Connection', () => {
   });
 
   it('should enforce database constraints', async () => {
+    const timestamp = Date.now();
+    const uniqueEmail = `unique-${timestamp}@example.com`;
+
     // Test unique email constraint
     await testPrisma.user.create({
       data: {
         name: 'User 1',
-        email: 'unique@example.com',
-        clerkId: 'clerk-1',
+        email: uniqueEmail,
+        clerkId: `clerk-1-${timestamp}`,
       },
     });
 
     // Attempting to create another user with same email should fail
-    await expect(
-      testPrisma.user.create({
+    let errorThrown = false;
+    try {
+      await testPrisma.user.create({
         data: {
           name: 'User 2',
-          email: 'unique@example.com',
-          clerkId: 'clerk-2',
+          email: uniqueEmail,
+          clerkId: `clerk-2-${timestamp}`,
         },
-      })
-    ).rejects.toThrow();
+      });
+    } catch (error) {
+      errorThrown = true;
+      expect(error).toBeDefined();
+    }
+    expect(errorThrown).toBe(true);
   });
 
   it('should handle cascade deletes', async () => {
+    const timestamp = Date.now();
     // Create board with columns and cards
     const board = await testPrisma.board.create({
       data: {
@@ -147,8 +159,8 @@ describe('Database Connection', () => {
                 createdBy: {
                   create: {
                     name: 'Creator',
-                    email: 'creator@example.com',
-                    clerkId: 'creator-clerk',
+                    email: `creator-${timestamp}@example.com`,
+                    clerkId: `creator-clerk-${timestamp}`,
                   },
                 },
               },

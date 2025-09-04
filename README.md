@@ -31,8 +31,8 @@ Uma aplicação colaborativa de quadro Kanban construída com React, TypeScript 
 
 ### Pré-requisitos
 
-- Node.js 18+
-- npm ou yarn
+- Bun 1.x (recomendado)
+- Opcional: Node.js 20+/npm (fluxos alternativos)
 
 ### Instalação
 
@@ -46,7 +46,7 @@ cd kanban
 2. Instale as dependências:
 
 ```bash
-npm install
+bun install
 ```
 
 3. Configure as variáveis de ambiente (Autenticação):
@@ -66,19 +66,19 @@ CORS_ORIGIN=http://localhost:5173
 
 ```bash
 # Gera o cliente Prisma
-npm run db:generate
+bun run db:generate
 
 # Aplica o schema ao banco
-npm run db:push
+bun run db:push
 
 # Testa a conexão (opcional)
-npm run test:db
+bun run test:db
 ```
 
 5. Inicie os servidores de desenvolvimento:
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 Isso irá iniciar:
@@ -104,13 +104,13 @@ Quer testar a performance com o bundle otimizado? Use o fluxo abaixo.
 2) Gerar os artefatos de produção (monorepo inteiro)
 
 ```bash
-npm run build
+bun run build
 ```
 
 3) Subir o backend (produção)
 
 ```bash
-NODE_ENV=production PORT=3001 node backend/dist/index.js
+NODE_ENV=production PORT=3001 bun backend/dist/index.js
 ```
 
 4) Servir o frontend gerado e abrir no navegador
@@ -118,7 +118,7 @@ NODE_ENV=production PORT=3001 node backend/dist/index.js
 Opção A (recomendado):
 
 ```bash
-npm run serve:prod
+bun run serve:prod
 # Acesse: http://localhost:5173
 ```
 
@@ -131,8 +131,8 @@ python3 -m http.server 5173
 ```
 
 Observações importantes:
-- `npm run dev` usa servidores com HMR/watchers (rápido para desenvolvimento).
-- `npm run build` gera artefatos otimizados: `frontend/dist` (Vite) e `backend/dist` (TypeScript compilado).
+- `bun run dev` usa servidores com HMR/watchers (rápido para desenvolvimento).
+- `bun run build` gera artefatos otimizados: `frontend/dist` (Vite) e `backend/dist` (TypeScript compilado).
 - Para o frontend em produção funcionar, o `VITE_API_URL` precisa apontar para o backend em execução.
 - Se aparecer erro de CORS no navegador, confira `CORS_ORIGIN=http://localhost:5173` no `.env` e reinicie o backend.
 
@@ -148,24 +148,25 @@ Para executar frontend e backend separadamente:
 
 ```bash
 # Apenas frontend
-npm run dev:frontend
+bun run dev:frontend:bun
 
 # Apenas backend
-npm run dev:backend
+bun run dev:backend:bun
 ```
 
 ### Executar Pacotes Individualmente (a partir da raiz)
 
 ```bash
 # Frontend
-npm run -w frontend dev
-npm run -w frontend build
-npm run -w frontend preview -- --port 5173
+cd frontend && bun run dev
+cd frontend && bun run build
+cd frontend && bun run preview -- --port 5173
 
 # Backend
-npm run -w kanban-backend dev
-npm run -w kanban-backend build
-NODE_ENV=production node backend/dist/index.js
+cd backend && bun run dev
+cd backend && bun run build
+# Executar em produção (a partir da raiz)
+cd .. && NODE_ENV=production bun backend/dist/index.js
 ```
 
 ## Estrutura do Projeto
@@ -299,20 +300,20 @@ curl -X POST http://localhost:3001/api/cards/{cardId}/move \
 
 ```bash
 # Database
-npm run db:generate    # Regenera cliente Prisma
-npm run db:push        # Atualiza schema no banco
-npm run test:db        # Testa conexão
+bun run db:generate    # Regenera cliente Prisma
+bun run db:push        # Atualiza schema no banco
+bun run test:db        # Testa conexão
 
 # Desenvolvimento
-npm run dev           # Inicia frontend + backend
-npm run dev:frontend  # Apenas React (5173)
-npm run dev:backend   # Apenas backend
+bun run dev                 # Inicia frontend + backend
+bun run dev:frontend:bun    # Apenas React (5173)
+bun run dev:backend:bun     # Apenas backend
 
 # Testes
-npm test              # Executa todos os testes (backend + frontend)
-npm run test:backend  # Testes do backend apenas
-npm run test:frontend # Testes do frontend apenas
-npm run test:watch    # Executa testes em modo watch
+bun run test                 # Executa todos os testes (backend + frontend)
+bun run test:backend:bun     # Testes do backend apenas
+bun run test:frontend:vitest # Testes do frontend apenas
+bun run test:watch           # Executa testes em modo watch
 ```
 
 ## Testes
@@ -321,24 +322,24 @@ O projeto inclui testes automatizados para garantir a qualidade do código:
 
 ### Estrutura de Testes
 
-- **Backend**: Jest com Supertest para testes de API
-- **Frontend**: Vitest com React Testing Library para testes de componentes
-- **Database**: SQLite separado para testes (`test.db`)
+- **Backend**: Bun Test (`bun:test`) com Supertest para rotas de API
+- **Frontend**: Vitest + React Testing Library para componentes
+- **Database**: SQLite dedicado para testes (`test.db`)
 
 ### Executando Testes
 
 ```bash
-npm test                    # Todos os testes
-npm run test:backend        # Apenas backend (API routes, database, auth)
-npm run test:frontend       # Apenas frontend (components, hooks)
-npm run test:watch          # Modo watch para desenvolvimento
+bun run test                 # Todos os testes (frontend + backend)
+bun run test:backend:bun     # Apenas backend
+bun run test:frontend:vitest # Apenas frontend
+bun run test:watch           # Modo watch
 ```
 
 ### Cobertura Atual
 
-- **Total**: 243 testes passando
-- **Backend**: 157 testes (rotas API, autenticação, database)
-- **Frontend**: 86 testes (componentes, hooks, performance)
+- **Total**: Centenas de testes automatizados
+- **Backend**: Rotas API, autenticação, database com Bun Test + Supertest
+- **Frontend**: Componentes, hooks, performance com Vitest + RTL
 
 Os testes cobrem funcionalidades essenciais incluindo CRUD operations, autenticação, drag & drop, e real-time features.
 
@@ -494,9 +495,9 @@ As escolhas técnicas priorizaram **agilidade de desenvolvimento** e **confiabil
 2. **Verificações de Qualidade** (Paralelas)
 
    ```yaml
-   - Lint: npm run lint (ESLint frontend + backend)
-   - TypeCheck: npm run typecheck (TypeScript compilation)
-   - Tests: npm test (243 testes automatizados)
+   - Lint: bun run lint (ESLint frontend + backend)
+   - TypeCheck: bun run typecheck (TypeScript compilation)
+   - Tests: bun run test (suite automatizada)
    ```
 
 3. **Proteções de Branch**
@@ -509,14 +510,14 @@ As escolhas técnicas priorizaram **agilidade de desenvolvimento** e **confiabil
 **Comandos Disponíveis:**
 
 ```bash
-npm run lint      # ESLint: 0 erros, 113 warnings (apenas any types)
-npm run typecheck # TypeScript: compilação limpa
-npm test          # 243 testes: 157 backend + 86 frontend
+bun run lint      # ESLint (frontend + backend)
+bun run typecheck # TypeScript (frontend + backend)
+bun run test      # Testes (Bun + Vitest)
 ```
 
 **Benefícios:**
 
 - **Prevenção de bugs**: Código quebrado não chega ao master
 - **Consistência**: Estilo e qualidade padronizados
-- **Confiabilidade**: 243 testes garantem funcionalidade
+- **Confiabilidade**: Suite de testes abrangente garante funcionalidade
 - **Velocidade**: Validação automática em ~3-5 minutos

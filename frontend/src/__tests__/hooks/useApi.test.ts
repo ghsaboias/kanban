@@ -25,7 +25,8 @@ describe('useApi', () => {
 
   beforeEach(async () => {
     mockFetch = vi.fn();
-    global.fetch = mockFetch;
+    // Bun's fetch type includes a `preconnect` property; cast for tests
+    globalThis.fetch = mockFetch as unknown as typeof fetch;
 
     mockGetToken = vi.fn().mockResolvedValue('mock-token');
 

@@ -1,26 +1,12 @@
-import type { NextFunction, Request, Response } from 'express';
+import { randomUUID } from 'crypto';
 import request from 'supertest';
-import app from '../../app';
+import '../setup'; // Import setup to register global hooks
 import { testPrisma } from '../setup';
-import { setupGlobalMocks, setupTestData } from './cards.activity.setup';
+import { createTestApp } from '../testApp';
+import { beforeEach, describe, expect, it } from 'bun:test';
 
-// Restore real ActivityLogger for activity logging tests
-jest.unmock('../../services/activityLogger');
-
-// Mock authentication middleware
-jest.mock('../../auth/clerk', () => ({
-    withAuth: (req: Request, res: Response, next: NextFunction) => next(),
-    requireAuthMw: (req: Request, res: Response, next: NextFunction) => next(),
-    ensureUser: (req: Request, res: Response, next: NextFunction) => {
-        res.locals.user = {
-            id: 'test-user-id',
-            name: 'Test User',
-            email: 'test@example.com',
-            clerkId: 'test-clerk-id',
-        }
-        next()
-    },
-}));
+// Create test app instance
+const app = createTestApp();
 
 describe('Cards Routes - Create Activity Logging', () => {
     let testUser: { id: string; email: string; name: string; clerkId: string | null; };
@@ -28,21 +14,47 @@ describe('Cards Routes - Create Activity Logging', () => {
     let testColumn: { id: string; title: string; position: number; boardId: string; };
     let testAssignee: { id: string; email: string; name: string; clerkId: string | null; };
 
-    beforeAll(() => {
-        setupGlobalMocks();
-    });
-
     beforeEach(async () => {
-        const data = await setupTestData();
-        testUser = data.testUser;
-        testAssignee = data.testAssignee;
-        testBoard = data.testBoard;
-        testColumn = data.testColumn;
-    });
+        // Create fresh test data for each test
+        const uniqueId = randomUUID();
+        const userUniqueId = randomUUID();
+        const assigneeUniqueId = randomUUID();
 
-    afterEach(async () => {
-        // Wait for any pending activity logging to complete before cleanup
-        await new Promise(resolve => setTimeout(resolve, 300));
+        // Create test user for authentication
+        testUser = await testPrisma.user.create({
+            data: {
+                id: `test-user-${userUniqueId}`,
+                email: `test-${uniqueId}@example.com`,
+                name: 'Test User',
+                clerkId: `test-clerk-${uniqueId}`
+            }
+        });
+
+        // Create test assignee
+        testAssignee = await testPrisma.user.create({
+            data: {
+                id: `assignee-user-${assigneeUniqueId}`,
+                email: `assignee-${uniqueId}@example.com`,
+                name: 'Assignee User',
+                clerkId: `assignee-clerk-${uniqueId}`
+            }
+        });
+
+        // Create test board and column
+        testBoard = await testPrisma.board.create({
+            data: {
+                title: 'Test Board',
+                description: 'Test board for cards'
+            }
+        });
+
+        testColumn = await testPrisma.column.create({
+            data: {
+                title: 'Test Column',
+                position: 0,
+                boardId: testBoard.id
+            }
+        });
     });
 
     describe('POST /api/columns/:columnId/cards', () => {
@@ -57,6 +69,7 @@ describe('Cards Routes - Create Activity Logging', () => {
 
             const response = await request(app)
                 .post(`/api/columns/${testColumn.id}/cards`)
+                .set('x-test-user', JSON.stringify(testUser))
                 .send(cardData)
                 .expect(201);
 
@@ -94,6 +107,7 @@ describe('Cards Routes - Create Activity Logging', () => {
 
             const response = await request(app)
                 .post(`/api/columns/${testColumn.id}/cards`)
+                .set('x-test-user', JSON.stringify(testUser))
                 .send(cardData)
                 .expect(201);
 
@@ -125,15 +139,17 @@ describe('Cards Routes - Create Activity Logging', () => {
                 priority: 'HIGH'
             };
 
-            await request(app)
+            const response = await request(app)
                 .post(`/api/columns/${testColumn.id}/cards`)
+                .set('x-test-user', JSON.stringify(testUser))
                 .send(cardData)
                 .expect(201);
 
-            // Check that activity was logged immediately (HIGH priority)
+            // Check that activity was logged immediately (HIGH priority) for this specific card
             const activities = await testPrisma.activity.findMany({
                 where: {
                     entityType: 'CARD',
+                    entityId: response.body.data.id,
                     action: 'CREATE'
                 }
             });
@@ -151,20 +167,29 @@ describe('Cards Routes - Create Activity Logging', () => {
                 description: 'Invalid card'
             };
 
-            await request(app)
-                .post(`/api/columns/${testColumn.id}/cards`)
-                .send(invalidCardData)
-                .expect(400);
-
-            // Should not have logged any activity for failed creation
-            const activities = await testPrisma.activity.findMany({
+            // Get count of activities before the failed operation
+            const activitiesBefore = await testPrisma.activity.count({
                 where: {
                     entityType: 'CARD',
                     action: 'CREATE'
                 }
             });
 
-            expect(activities).toHaveLength(0);
+            await request(app)
+                .post(`/api/columns/${testColumn.id}/cards`)
+                .set('x-test-user', JSON.stringify(testUser))
+                .send(invalidCardData)
+                .expect(400);
+
+            // Should not have logged any NEW activity for failed creation
+            const activitiesAfter = await testPrisma.activity.count({
+                where: {
+                    entityType: 'CARD',
+                    action: 'CREATE'
+                }
+            });
+
+            expect(activitiesAfter).toBe(activitiesBefore);
         });
     });
 });

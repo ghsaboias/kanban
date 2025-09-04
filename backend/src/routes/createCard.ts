@@ -2,11 +2,13 @@ import type { CardCreatedEvent } from '@kanban/shared/realtime';
 import { Request, Response } from 'express';
 import { prisma } from '../database';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
-import { ActivityLogger } from '../services/activityLogger';
+import { activityLogger } from '../services/activityLoggerSingleton';
 import { CreateCardRequest } from '../types/api';
 import { toPriority } from '../utils/priority';
 import { sanitizeDescription } from '../utils/sanitize';
 import { broadcastToRoom } from '../utils/socketBroadcaster';
+
+// Activity logger is shared via singleton
 
 export const createCardHandler = asyncHandler(async (req: Request, res: Response) => {
     const columnId = req.params.columnId;
@@ -98,7 +100,6 @@ export const createCardHandler = asyncHandler(async (req: Request, res: Response
 
     // Log activity
     try {
-        const activityLogger = new ActivityLogger(prisma);
         await activityLogger.logActivity({
             entityType: 'CARD',
             entityId: card.id,

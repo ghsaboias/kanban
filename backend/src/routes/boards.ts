@@ -1,13 +1,12 @@
 import { Request, Response, Router } from 'express';
 import { prisma } from '../database';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
-import { ActivityLogger } from '../services/activityLogger';
+import { activityLogger } from '../services/activityLoggerSingleton';
 import { CreateBoardRequest, UpdateBoardRequest } from '../types/api';
 
 const router = Router();
 
-// Initialize activity logger
-const activityLogger = new ActivityLogger(prisma);
+// Activity logger is shared via singleton
 
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
   const boards = await prisma.board.findMany({

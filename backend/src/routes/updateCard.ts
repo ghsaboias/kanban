@@ -2,11 +2,13 @@ import type { CardUpdatedEvent } from '@kanban/shared/realtime';
 import { Request, Response } from 'express';
 import { prisma } from '../database';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
-import { ActivityLogger } from '../services/activityLogger';
+import { activityLogger } from '../services/activityLoggerSingleton';
 import { UpdateCardRequest } from '../types/api';
 import { toPriority } from '../utils/priority';
 import { sanitizeDescription } from '../utils/sanitize';
 import { broadcastToRoom } from '../utils/socketBroadcaster';
+
+// Activity logger is shared via singleton
 
 export const updateCardHandler = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id;
@@ -174,7 +176,6 @@ export const updateCardHandler = asyncHandler(async (req: Request, res: Response
     if (isPositionChange && changes.length === 0) {
         // Pure position change = REORDER
         try {
-            const activityLogger = new ActivityLogger(prisma);
             await activityLogger.logActivity({
                 entityType: 'CARD',
                 entityId: card.id,
@@ -198,7 +199,6 @@ export const updateCardHandler = asyncHandler(async (req: Request, res: Response
     } else if (changes.length > 0) {
         // Field changes = UPDATE
         try {
-            const activityLogger = new ActivityLogger(prisma);
             const meta: Record<string, unknown> = {
                 changes,
                 oldValues,

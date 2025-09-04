@@ -1,26 +1,16 @@
-import type { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
-import app from '../../app';
 import { testPrisma } from '../setup';
+import { createTestApp } from '../testApp';
 import { setupGlobalMocks, setupTestData } from './cards.activity.setup';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 
 // Restore real ActivityLogger for activity logging tests
-jest.unmock('../../services/activityLogger');
 
 // Mock authentication middleware
-jest.mock('../../auth/clerk', () => ({
-    withAuth: (req: Request, res: Response, next: NextFunction) => next(),
-    requireAuthMw: (req: Request, res: Response, next: NextFunction) => next(),
-    ensureUser: (req: Request, res: Response, next: NextFunction) => {
-        res.locals.user = {
-            id: 'test-user-id',
-            name: 'Test User',
-            email: 'test@example.com',
-            clerkId: 'test-clerk-id',
-        }
-        next()
-    },
-}));
+// Note: Mocking is handled by the test app factory
+
+// Create test app instance
+const app = createTestApp();
 
 describe('Cards Routes - Authentication Activity Logging', () => {
     let testUser: { id: string; email: string; name: string; clerkId: string | null; };
@@ -50,6 +40,7 @@ describe('Cards Routes - Authentication Activity Logging', () => {
 
             const response = await request(app)
                 .post(`/api/columns/${testColumn.id}/cards`)
+                .set('x-test-user', JSON.stringify(testUser))
                 .send(cardData)
                 .expect(201);
 

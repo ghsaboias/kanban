@@ -1,16 +1,23 @@
 import { execSync } from 'child_process';
-import { existsSync } from 'fs';
 import { config } from 'dotenv';
+import { existsSync, mkdirSync } from 'fs';
 import path from 'path';
 import { PrismaClient } from '../../../generated/prisma';
+
+// Bun test globals - these are available at runtime
+declare const beforeAll: (fn: () => void | Promise<void>) => void;
+declare const afterAll: (fn: () => void | Promise<void>) => void;
+declare const beforeEach: (fn: () => void | Promise<void>) => void;
 
 // Load environment variables (root .env for development vars, .env.test for test overrides)
 config({ path: '../.env' });
 config({ path: '.env.test', override: true });
 
 // Get the worker-specific database URL
-const workerId = process.env.JEST_WORKER_ID || '1';
-const testDbDir = path.join(process.cwd(), '..', 'prisma', 'test-dbs');
+const workerId = process.env.BUN_TEST_WORKER_ID || process.pid?.toString() || '1';
+// Resolve repository root from this file location and keep DBs under repo/prisma
+const repoRoot = path.resolve(__dirname, '../../../');
+const testDbDir = path.join(repoRoot, 'prisma', 'test-dbs');
 const testDbPath = path.join(testDbDir, `test-${workerId}.db`);
 
 // Set the database URL for this worker
@@ -22,7 +29,7 @@ export const testPrisma = new PrismaClient({
     db: {
       url: process.env.DATABASE_URL
     }
-  }
+  },
 });
 
 beforeAll(async () => {
@@ -32,8 +39,13 @@ beforeAll(async () => {
 
     // Only create schema if DB file doesn't exist yet
     if (!existsSync(testDbPath)) {
+      // Ensure the directory for the test database exists
+      if (!existsSync(testDbDir)) {
+        mkdirSync(testDbDir, { recursive: true });
+      }
+      const schemaPath = path.join(repoRoot, 'prisma', 'schema.prisma');
       execSync(
-        `DATABASE_URL="file:${testDbPath}" npx prisma db push --skip-generate --schema ../prisma/schema.prisma`,
+        `DATABASE_URL="file:${testDbPath}" bunx prisma db push --skip-generate --schema ${schemaPath}`,
         {
           stdio: 'pipe',
           cwd: process.cwd(),
@@ -69,23 +81,53 @@ afterAll(async () => {
 
 beforeEach(async () => {
   // Clean database before each test
-  // Delete in correct order to respect foreign keys
-  await testPrisma.activity?.deleteMany();
-  await testPrisma.card.deleteMany();
-  await testPrisma.column.deleteMany();
-  await testPrisma.board.deleteMany();
-  await testPrisma.user.deleteMany();
+  // Delete in correct order to respect foreign keys with retry logic
+  const maxRetries = 3;
+  let retries = 0;
 
-  // Verify database is clean
-  const counts = await Promise.all([
-    testPrisma.user.count(),
-    testPrisma.board.count(),
-    testPrisma.column.count(),
-    testPrisma.card.count(),
-    testPrisma.activity.count()
-  ]);
+  while (retries < maxRetries) {
+    try {
+      console.log(`🧹 Cleaning database for test (attempt ${retries + 1})`);
 
-  if (counts.some(count => count > 0)) {
-    throw new Error(`Database not properly cleaned. Counts: users=${counts[0]}, boards=${counts[1]}, columns=${counts[2]}, cards=${counts[3]}, activities=${counts[4]}`);
+      // Use transactions for better cleanup reliability
+      await testPrisma.$transaction(async (tx) => {
+        await tx.activity.deleteMany();
+        await tx.card.deleteMany();
+        await tx.column.deleteMany();
+        await tx.board.deleteMany();
+        await tx.user.deleteMany();
+      });
+
+      // Verify database is clean
+      const counts = await Promise.all([
+        testPrisma.user.count(),
+        testPrisma.board.count(),
+        testPrisma.column.count(),
+        testPrisma.card.count(),
+        testPrisma.activity.count()
+      ]);
+
+      console.log(`📊 After cleanup - Counts: users=${counts[0]}, boards=${counts[1]}, columns=${counts[2]}, cards=${counts[3]}, activities=${counts[4]}`);
+
+      if (counts.some(count => count > 0)) {
+        if (retries < maxRetries - 1) {
+          retries++;
+          console.log(`⚠️  Database not clean, retrying in 200ms...`);
+          await new Promise(resolve => setTimeout(resolve, 200)); // Wait 200ms before retry
+          continue;
+        }
+        throw new Error(`Database not properly cleaned after ${maxRetries} retries. Counts: users=${counts[0]}, boards=${counts[1]}, columns=${counts[2]}, cards=${counts[3]}, activities=${counts[4]}`);
+      }
+      console.log(`✅ Database cleaned successfully`);
+      break;
+    } catch (error) {
+      if (retries < maxRetries - 1) {
+        retries++;
+        console.log(`❌ Cleanup failed, retrying in 200ms...`);
+        await new Promise(resolve => setTimeout(resolve, 200));
+        continue;
+      }
+      throw error;
+    }
   }
 });

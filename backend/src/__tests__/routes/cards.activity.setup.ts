@@ -1,42 +1,30 @@
-import type { NextFunction, Request, Response } from 'express';
+import { randomUUID } from 'crypto';
 import { testPrisma } from '../setup';
-
-// Restore real ActivityLogger for activity logging tests
-jest.unmock('../../services/activityLogger');
-
-// Mock authentication middleware
-jest.mock('../../auth/clerk', () => ({
-    withAuth: (req: Request, res: Response, next: NextFunction) => next(),
-    requireAuthMw: (req: Request, res: Response, next: NextFunction) => next(),
-    ensureUser: (req: Request, res: Response, next: NextFunction) => {
-        res.locals.user = {
-            id: 'test-user-id',
-            name: 'Test User',
-            email: 'test@example.com',
-            clerkId: 'test-clerk-id',
-        }
-        next()
-    },
-}));
+import { mock } from 'bun:test';
 
 export const setupTestData = async () => {
+    const uniqueId1 = randomUUID();
+    const uniqueId2 = randomUUID();
+    const userUniqueId = randomUUID();
+
     // Create test user for authentication
     const testUser = await testPrisma.user.create({
         data: {
-            id: 'test-user-id',
-            email: 'test@example.com',
+            id: `test-user-${userUniqueId}`,
+            email: `test-${uniqueId1}@example.com`,
             name: 'Test User',
-            clerkId: 'test-clerk-id'
+            clerkId: `test-clerk-${uniqueId1}`
         }
     });
 
     // Create test assignee
+    const assigneeUniqueId = randomUUID();
     const testAssignee = await testPrisma.user.create({
         data: {
-            id: 'assignee-user-id',
-            email: 'assignee@example.com',
+            id: `assignee-user-${assigneeUniqueId}`,
+            email: `assignee-${uniqueId2}@example.com`,
             name: 'Assignee User',
-            clerkId: 'assignee-clerk-id'
+            clerkId: `assignee-clerk-${uniqueId2}`
         }
     });
 
@@ -56,13 +44,17 @@ export const setupTestData = async () => {
         }
     });
 
+    // Test routes use a test app with a mock auth middleware that
+    // reads the user from the 'x-test-user' header, so no module
+    // mocking of auth is needed here.
+
     return { testUser, testAssignee, testBoard, testColumn };
 };
 
 export const setupGlobalMocks = () => {
-    const fakeBroadcaster: { emit: jest.Mock; except: jest.Mock } = {
-        emit: jest.fn(),
-        except: jest.fn(() => fakeBroadcaster)
+    const fakeBroadcaster: { emit: ReturnType<typeof mock>; except: ReturnType<typeof mock> } = {
+        emit: mock(),
+        except: mock(() => fakeBroadcaster)
     };
-    (global as unknown as { io: { to: jest.Mock } }).io = { to: jest.fn(() => fakeBroadcaster) };
+    (global as unknown as { io: { to: ReturnType<typeof mock> } }).io = { to: mock(() => fakeBroadcaster) };
 };

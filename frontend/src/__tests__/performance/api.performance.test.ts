@@ -1,10 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { api } from '../../api';
 
 // Mock fetch globally
-global.fetch = vi.fn();
-
-const mockFetch = global.fetch as ReturnType<typeof vi.fn>;
+const mockFetch = vi.fn();
+Object.defineProperty(global, 'fetch', {
+  value: mockFetch,
+  writable: true,
+  configurable: true,
+});
 
 describe('API Performance Tests', () => {
   beforeEach(() => {
@@ -106,7 +109,7 @@ describe('API Performance Tests', () => {
 
   it('should handle multiple concurrent API calls efficiently', async () => {
     const mockResponse = { success: true, data: { id: '1', title: 'Updated' } };
-    
+
     mockFetch.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(mockResponse),
@@ -141,15 +144,15 @@ describe('API Performance Tests', () => {
     mockFetch.mockRejectedValue(new Error('Network error'));
 
     const startTime = performance.now();
-    
+
     try {
       await api.get('/api/boards/non-existent');
     } catch (error) {
       const endTime = performance.now();
       const errorTime = endTime - startTime;
-      
+
       console.log(`API error handling time: ${errorTime.toFixed(2)}ms`);
-      
+
       // Error handling should be quick
       expect(errorTime).toBeLessThan(50);
       expect(error).toBeInstanceOf(Error);
@@ -165,7 +168,7 @@ describe('API Performance Tests', () => {
 
     // Simulate batch creation of boards
     const batchSize = 10;
-    const operations = Array.from({ length: batchSize }, (_, i) => 
+    const operations = Array.from({ length: batchSize }, (_, i) =>
       () => api.post('/api/boards', { title: `Batch Board ${i + 1}` })
     );
 
@@ -229,7 +232,7 @@ describe('API Performance Tests', () => {
     // Performance should be consistent
     expect(averageTime).toBeLessThan(100);
     expect(maxTime).toBeLessThan(200);
-    
+
     // Variation shouldn't be too high (max shouldn't be more than 20x min for test environment)
     // Note: Test environment timing can be highly variable
     expect(maxTime).toBeLessThan(Math.max(minTime * 20, 1)); // At least 1ms threshold

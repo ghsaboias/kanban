@@ -26,10 +26,15 @@ afterAll(() => {
   console.error = originalError; // Restore original console.error
 });
 
-// Mock fetch for API calls
-global.fetch = vi.fn();
+// Mock fetch for API calls - Vitest global setup
+const mockFetch = vi.fn();
+Object.defineProperty(global, 'fetch', {
+  value: mockFetch,
+  writable: true,
+  configurable: true,
+});
 
-// Mock Socket.IO client
+// Mock Socket.IO client - Global mock for all tests
 vi.mock('socket.io-client', () => ({
   io: vi.fn(() => ({
     on: vi.fn(),
@@ -42,7 +47,7 @@ vi.mock('socket.io-client', () => ({
   })),
 }));
 
-// Mock Clerk (including provider)
+// Mock Clerk (including provider) - Global mock for all tests
 vi.mock('@clerk/clerk-react', () => ({
   ClerkProvider: ({ children }: { children: React.ReactNode }) => children,
   useAuth: () => ({

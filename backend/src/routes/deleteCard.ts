@@ -2,8 +2,10 @@ import type { CardDeletedEvent } from '@kanban/shared/realtime';
 import { Request, Response } from 'express';
 import { prisma } from '../database';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
-import { ActivityLogger } from '../services/activityLogger';
+import { activityLogger } from '../services/activityLoggerSingleton';
 import { broadcastToRoom } from '../utils/socketBroadcaster';
+
+// Activity logger is shared via singleton
 
 export const deleteCardHandler = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id;
@@ -46,7 +48,6 @@ export const deleteCardHandler = asyncHandler(async (req: Request, res: Response
 
     // Log activity
     try {
-        const activityLogger = new ActivityLogger(prisma);
         await activityLogger.logActivity({
             entityType: 'CARD',
             entityId: id,
